@@ -86,12 +86,14 @@ class FoodItem(BaseModel):
     sources: List[str] = ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
 
 class QAQuestion(BaseModel):
-    question: str
+    query: str
 
 class QAResponse(BaseModel):
-    question: str
-    answer: str
+    query: str
+    topic_matched: str = None
+    information: str
     is_symptom_detected: bool = False
+    is_personal_question: bool = False
     sources: List[str] = ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
     disclaimer: str = "This is general educational reference information only and does not constitute medical advice, diagnosis, or treatment."
 
@@ -397,31 +399,56 @@ async def get_foods_by_safety(safety_level: str):
     ]
     return results
 
-@api_router.post("/qa/ask", response_model=QAResponse)
-async def ask_question(question_data: QAQuestion):
-    """Ask a question about pregnancy nutrition with symptom detection"""
-    question = question_data.question
+@api_router.post("/nutrition-topics/search", response_model=QAResponse)
+async def search_nutrition_topics(query_data: QAQuestion):
+    """Search nutrition topics - returns general educational information only"""
+    query = query_data.query
     
-    # Check for symptom keywords
-    if detect_symptoms(question):
+    # Check for symptom keywords first (safety)
+    if detect_symptoms(query):
         return QAResponse(
-            question=question,
-            answer="We cannot assess symptoms. Please contact a healthcare provider or local emergency service.",
+            query=query,
+            topic_matched=None,
+            information="We cannot assess symptoms. Please contact a healthcare provider or local emergency service.",
             is_symptom_detected=True,
+            is_personal_question=False,
             sources=["Medical Professional Consultation Suggested"],
             disclaimer="If you are experiencing a medical emergency, please call emergency services immediately."
         )
     
-    # Get educational answer
-    answer = get_qa_answer(question)
+    # Check for personal/individualized questions
+    if detect_personal_question(query):
+        return QAResponse(
+            query=query,
+            topic_matched=None,
+            information=PERSONAL_RESPONSE,
+            is_symptom_detected=False,
+            is_personal_question=True,
+            sources=["Healthcare Professional Consultation Suggested"],
+            disclaimer="This app provides general educational information only. Individual circumstances require professional guidance."
+        )
+    
+    # Map to nutrition topics and return general information
+    topic, info = get_topic_info(query)
+    
+    # Format response with required prefix
+    formatted_info = f"Here is general nutrition information related to your question.\n\n{info}"
     
     return QAResponse(
-        question=question,
-        answer=answer,
+        query=query,
+        topic_matched=topic,
+        information=formatted_info,
         is_symptom_detected=False,
+        is_personal_question=False,
         sources=["WHO", "CDC", "NHS pregnancy nutrition guidance"],
-        disclaimer="This is general educational reference information only. It does not constitute medical advice, diagnosis, or treatment. Consulting a qualified healthcare professional is suggested for personal health concerns."
+        disclaimer="This is general educational reference information only. It does not constitute individualized advice. Consulting a qualified healthcare professional is suggested for personal guidance."
     )
+
+# Keep old endpoint for backwards compatibility but redirect
+@api_router.post("/qa/ask", response_model=QAResponse)
+async def ask_question_legacy(question_data: QAQuestion):
+    """Legacy endpoint - redirects to nutrition topics search"""
+    return await search_nutrition_topics(question_data)
 
 @api_router.get("/categories")
 async def get_categories():
