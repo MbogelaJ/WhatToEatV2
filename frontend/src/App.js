@@ -363,10 +363,10 @@ const FoodDetailPage = () => {
   );
 };
 
-// Q&A Page
-const QAPage = () => {
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState(null);
+// Nutrition Topics Search Page (formerly Q&A)
+const NutritionTopicsPage = () => {
+  const [query, setQuery] = useState("");
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [emergencyInfo, setEmergencyInfo] = useState(null);
   const navigate = useNavigate();
@@ -386,21 +386,21 @@ const QAPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!question.trim()) return;
+    if (!query.trim()) return;
 
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/qa/ask`, { question });
-      setAnswer(response.data);
+      const response = await axios.post(`${API}/nutrition-topics/search`, { query });
+      setResult(response.data);
     } catch (error) {
-      console.error("Error asking question:", error);
+      console.error("Error searching topics:", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF8]" data-testid="qa-page">
+    <div className="min-h-screen bg-[#FDFCF8]" data-testid="nutrition-topics-page">
       {/* Header */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
         <div className="max-w-md mx-auto px-6 py-4 flex items-center gap-4">
@@ -412,7 +412,7 @@ const QAPage = () => {
             <ArrowLeft className="w-5 h-5 text-[#2D3748]" />
           </button>
           <h1 className="text-lg font-semibold text-[#2D3748]" style={{ fontFamily: 'Merriweather, serif' }}>
-            Ask a Question
+            Search Nutrition Topics
           </h1>
         </div>
       </div>
@@ -421,58 +421,81 @@ const QAPage = () => {
       <div className="max-w-md mx-auto px-6 py-8">
         <DisclaimerBanner />
 
-        {/* Question Form */}
+        {/* Search Form */}
         <form onSubmit={handleSubmit} className="mb-8">
           <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
             <label className="block text-sm font-semibold text-[#2D3748] mb-3">
-              Ask about pregnancy nutrition
+              Search for nutrition topics
             </label>
             <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="e.g., What foods are high in folate?"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g., folate, iron, calcium, fish"
               rows={3}
               className="w-full p-4 border border-slate-200 rounded-xl resize-none input-transition focus:border-[#7C9A92] focus:ring-2 focus:ring-[#7C9A92]/20"
-              data-testid="question-input"
+              data-testid="topic-search-input"
             />
             <button
               type="submit"
-              disabled={loading || !question.trim()}
+              disabled={loading || !query.trim()}
               className="w-full mt-4 py-4 px-8 bg-[#7C9A92] text-white font-semibold rounded-full btn-transition hover:bg-[#6B8A82] disabled:opacity-50 disabled:cursor-not-allowed"
-              data-testid="ask-btn"
+              data-testid="find-info-btn"
             >
-              {loading ? "Getting Answer..." : "Ask Question"}
+              {loading ? "Searching..." : "Find Information"}
             </button>
           </div>
         </form>
 
-        {/* Answer */}
-        {answer && (
-          <div className={`bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-8 animate-slide-up ${answer.is_symptom_detected ? 'border-[#E07A5F]' : ''}`} data-testid="qa-answer">
-            {answer.is_symptom_detected && (
+        {/* Result */}
+        {result && (
+          <div className={`bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-8 animate-slide-up ${result.is_symptom_detected ? 'border-[#E07A5F]' : ''} ${result.is_personal_question ? 'border-[#D97706]' : ''}`} data-testid="search-result">
+            
+            {/* Symptom Warning */}
+            {result.is_symptom_detected && (
               <div className="bg-[#E07A5F]/10 rounded-xl p-4 mb-4 border border-[#E07A5F]/20">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-[#E07A5F] flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold text-[#E07A5F] mb-1">Medical Attention Needed</p>
-                    <p className="text-sm text-[#2D3748]" data-testid="symptom-warning">{answer.answer}</p>
+                    <p className="text-sm text-[#2D3748]" data-testid="symptom-warning">{result.information}</p>
                   </div>
                 </div>
               </div>
             )}
             
-            {!answer.is_symptom_detected && (
+            {/* Personal Question Notice */}
+            {result.is_personal_question && !result.is_symptom_detected && (
+              <div className="bg-[#D97706]/10 rounded-xl p-4 mb-4 border border-[#D97706]/20">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-[#D97706] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-[#D97706] mb-1">Individualized Guidance Not Available</p>
+                    <p className="text-sm text-[#2D3748]" data-testid="personal-notice">{result.information}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* General Information */}
+            {!result.is_symptom_detected && !result.is_personal_question && (
               <>
-                <p className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">Educational Reference Information</p>
-                <p className="text-[#2D3748] mb-4">{answer.answer}</p>
+                {result.topic_matched && (
+                  <div className="mb-3">
+                    <span className="px-3 py-1 bg-[#7C9A92]/10 text-[#7C9A92] rounded-full text-sm font-medium">
+                      Topic: {result.topic_matched}
+                    </span>
+                  </div>
+                )}
+                <p className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">General Information</p>
+                <p className="text-[#2D3748] mb-4 whitespace-pre-line">{result.information}</p>
               </>
             )}
             
             <div className="disclaimer-banner rounded-xl p-4 mt-4">
-              <p className="text-sm text-[#2D3748]">{answer.disclaimer}</p>
+              <p className="text-sm text-[#2D3748]">{result.disclaimer}</p>
             </div>
             
-            <ReferenceBlock sources={answer.sources} />
+            <ReferenceBlock sources={result.sources} />
           </div>
         )}
 
