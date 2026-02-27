@@ -662,12 +662,12 @@ const Footer = () => (
           <span className="text-xs font-medium">Search</span>
         </Link>
         <Link 
-          to="/qa" 
+          to="/topics" 
           className="flex flex-col items-center gap-1 py-2 px-4 text-[#64748B] hover:text-[#7C9A92] btn-transition"
-          data-testid="nav-qa"
+          data-testid="nav-topics"
         >
-          <MessageCircle className="w-5 h-5" />
-          <span className="text-xs font-medium">Q&A</span>
+          <BookOpen className="w-5 h-5" />
+          <span className="text-xs font-medium">Topics</span>
         </Link>
         <Link 
           to="/about" 
@@ -718,7 +718,8 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/food/:id" element={<FoodDetailPage />} />
-            <Route path="/qa" element={<QAPage />} />
+            <Route path="/topics" element={<NutritionTopicsPage />} />
+            <Route path="/qa" element={<NutritionTopicsPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </MainLayout>
