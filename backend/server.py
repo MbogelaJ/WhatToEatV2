@@ -90,7 +90,7 @@ class QAQuestion(BaseModel):
 
 class QAResponse(BaseModel):
     query: str
-    topic_matched: str = None
+    topic_matched: Optional[str] = None
     information: str
     is_symptom_detected: bool = False
     is_personal_question: bool = False
