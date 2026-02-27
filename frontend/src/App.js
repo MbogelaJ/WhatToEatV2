@@ -643,6 +643,246 @@ const AboutPage = () => {
           <p>Version {about.version}</p>
           <p>Last updated: {about.last_updated}</p>
         </div>
+
+        {/* Links */}
+        <div className="mt-8 space-y-3">
+          <Link 
+            to="/sources" 
+            className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-slate-100 btn-transition hover:shadow-md"
+            data-testid="link-to-sources"
+          >
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 text-[#7C9A92]" />
+              <span className="font-medium text-[#2D3748]">Sources & References</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#64748B]" />
+          </Link>
+          <Link 
+            to="/settings" 
+            className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-slate-100 btn-transition hover:shadow-md"
+            data-testid="link-to-settings"
+          >
+            <div className="flex items-center gap-3">
+              <Settings className="w-5 h-5 text-[#7C9A92]" />
+              <span className="font-medium text-[#2D3748]">Settings</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#64748B]" />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Sources & References Page
+const SourcesPage = () => {
+  const navigate = useNavigate();
+
+  const sources = [
+    {
+      org: "WHO",
+      title: "Healthy diet during pregnancy",
+      description: "World Health Organization guidance on maternal nutrition"
+    },
+    {
+      org: "CDC",
+      title: "Food safety during pregnancy",
+      description: "Centers for Disease Control and Prevention food safety information"
+    },
+    {
+      org: "NHS",
+      title: "Foods to avoid in pregnancy",
+      description: "National Health Service pregnancy nutrition guidance"
+    },
+    {
+      org: "ACOG",
+      title: "Nutrition during pregnancy",
+      description: "American College of Obstetricians and Gynecologists nutritional guidance"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#FDFCF8]" data-testid="sources-page">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-6 py-4 flex items-center gap-4">
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center btn-transition hover:bg-slate-200"
+            data-testid="back-btn"
+          >
+            <ArrowLeft className="w-5 h-5 text-[#2D3748]" />
+          </button>
+          <h1 className="text-lg font-semibold text-[#2D3748]" style={{ fontFamily: 'Merriweather, serif' }}>
+            Sources & References
+          </h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-md mx-auto px-6 py-8">
+        {/* Icon */}
+        <div className="text-center mb-6 animate-fade-in">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#7C9A92]/10 flex items-center justify-center">
+            <FileText className="w-8 h-8 text-[#7C9A92]" />
+          </div>
+        </div>
+
+        {/* Intro */}
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up">
+          <p className="text-[#2D3748] leading-relaxed" data-testid="sources-intro">
+            This app summarizes publicly available guidance for educational use. 
+            The information presented is compiled from established public health organizations 
+            and is intended as general reference material only.
+          </p>
+        </div>
+
+        {/* Sources List */}
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up stagger-1" style={{ opacity: 0 }}>
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-4" style={{ fontFamily: 'Merriweather, serif' }}>
+            Reference Sources
+          </h3>
+          <ul className="space-y-4" data-testid="sources-list">
+            {sources.map((source, index) => (
+              <li key={index} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                <div className="w-10 h-10 rounded-full bg-[#7C9A92]/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-bold text-[#7C9A92]">{source.org}</span>
+                </div>
+                <div>
+                  <p className="font-medium text-[#2D3748]">{source.title}</p>
+                  <p className="text-sm text-[#64748B]">{source.description}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Last Reviewed */}
+        <div className="bg-slate-50 rounded-2xl p-4 mb-6 animate-slide-up stagger-2" style={{ opacity: 0 }}>
+          <div className="flex items-center gap-2 text-[#64748B]">
+            <CheckCircle className="w-4 h-4" />
+            <p className="text-sm" data-testid="last-reviewed">
+              <span className="font-medium">Last reviewed:</span> January 2026
+            </p>
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="disclaimer-banner rounded-2xl p-4 animate-slide-up stagger-3" style={{ opacity: 0 }} data-testid="sources-disclaimer">
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 text-[#7C9A92] flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-[#2D3748]">
+              This content is for educational purposes only. It does not constitute medical advice, 
+              diagnosis, or treatment. Individual circumstances vary; consulting healthcare 
+              professionals is suggested for personalized guidance.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Settings Page
+const SettingsPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-[#FDFCF8]" data-testid="settings-page">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-6 py-4 flex items-center gap-4">
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center btn-transition hover:bg-slate-200"
+            data-testid="back-btn"
+          >
+            <ArrowLeft className="w-5 h-5 text-[#2D3748]" />
+          </button>
+          <h1 className="text-lg font-semibold text-[#2D3748]" style={{ fontFamily: 'Merriweather, serif' }}>
+            Settings
+          </h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-md mx-auto px-6 py-8">
+        {/* Icon */}
+        <div className="text-center mb-6 animate-fade-in">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#7C9A92]/10 flex items-center justify-center">
+            <Settings className="w-8 h-8 text-[#7C9A92]" />
+          </div>
+          <h2 className="text-xl font-semibold text-[#2D3748]" style={{ fontFamily: 'Merriweather, serif' }}>
+            App Settings
+          </h2>
+        </div>
+
+        {/* Information Section */}
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up">
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-4" style={{ fontFamily: 'Merriweather, serif' }}>
+            Information
+          </h3>
+          <div className="space-y-3">
+            <Link 
+              to="/sources" 
+              className="flex items-center justify-between p-3 bg-slate-50 rounded-xl btn-transition hover:bg-slate-100"
+              data-testid="settings-link-sources"
+            >
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-[#7C9A92]" />
+                <span className="font-medium text-[#2D3748]">Sources & References</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#64748B]" />
+            </Link>
+            <Link 
+              to="/about" 
+              className="flex items-center justify-between p-3 bg-slate-50 rounded-xl btn-transition hover:bg-slate-100"
+              data-testid="settings-link-about"
+            >
+              <div className="flex items-center gap-3">
+                <Info className="w-5 h-5 text-[#7C9A92]" />
+                <span className="font-medium text-[#2D3748]">About This App</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#64748B]" />
+            </Link>
+          </div>
+        </div>
+
+        {/* App Info */}
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up stagger-1" style={{ opacity: 0 }}>
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-4" style={{ fontFamily: 'Merriweather, serif' }}>
+            App Details
+          </h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-[#64748B]">App Name</span>
+              <span className="font-medium text-[#2D3748]">NurtureNote</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-[#64748B]">Version</span>
+              <span className="font-medium text-[#2D3748]">1.0.0</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-slate-100">
+              <span className="text-[#64748B]">Purpose</span>
+              <span className="font-medium text-[#2D3748]">Educational Reference</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-[#64748B]">Last Updated</span>
+              <span className="font-medium text-[#2D3748]">January 2026</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="disclaimer-banner rounded-2xl p-4 animate-slide-up stagger-2" style={{ opacity: 0 }}>
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 text-[#7C9A92] flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-[#2D3748]">
+              This app provides general educational reference information only. 
+              It does not provide medical advice.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
