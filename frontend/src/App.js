@@ -105,6 +105,50 @@ const ReferenceBlock = ({ sources }) => (
   </div>
 );
 
+// Collapsible References Component for Food Detail Page
+const CollapsibleReferences = ({ sources }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="mt-8 border-t border-slate-100 pt-6" data-testid="collapsible-references">
+      {/* Label */}
+      <p className="text-xs text-[#64748B] mb-3" data-testid="references-label">
+        Based on public health guidance (educational summary).
+      </p>
+      
+      {/* Collapsible Header */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-3 bg-slate-50 rounded-xl btn-transition hover:bg-slate-100"
+        data-testid="references-toggle"
+        aria-expanded={isExpanded}
+      >
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-[#7C9A92]" />
+          <span className="text-sm font-medium text-[#2D3748]">View References</span>
+        </div>
+        <ChevronDown 
+          className={`w-5 h-5 text-[#64748B] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+        />
+      </button>
+      
+      {/* Expandable Content */}
+      {isExpanded && (
+        <div className="mt-3 p-4 bg-slate-50 rounded-xl animate-fade-in" data-testid="references-content">
+          <ul className="space-y-2">
+            {sources.map((source, index) => (
+              <li key={index} className="flex items-start gap-2 text-sm text-[#64748B]">
+                <span className="text-[#7C9A92] mt-1">•</span>
+                <span>{source}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Home Page
 const HomePage = () => {
   const [foods, setFoods] = useState([]);
