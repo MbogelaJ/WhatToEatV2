@@ -831,6 +831,46 @@ const SourcesPage = () => {
 // Settings Page
 const SettingsPage = () => {
   const navigate = useNavigate();
+  const [pregnancyStage, setPregnancyStage] = useState(() => {
+    return sessionStorage.getItem("pregnancyStage") || "";
+  });
+  const [conditions, setConditions] = useState(() => {
+    const saved = sessionStorage.getItem("conditions");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const pregnancyStages = [
+    { value: "", label: "Not specified" },
+    { value: "planning", label: "Planning pregnancy" },
+    { value: "trimester1", label: "First trimester (weeks 1-12)" },
+    { value: "trimester2", label: "Second trimester (weeks 13-26)" },
+    { value: "trimester3", label: "Third trimester (weeks 27-40)" },
+    { value: "postpartum", label: "Postpartum" }
+  ];
+
+  const conditionOptions = [
+    { value: "gestational_diabetes", label: "Gestational diabetes" },
+    { value: "hypertension", label: "High blood pressure" },
+    { value: "anemia", label: "Anemia" },
+    { value: "food_allergies", label: "Food allergies" },
+    { value: "vegetarian", label: "Vegetarian diet" },
+    { value: "vegan", label: "Vegan diet" },
+    { value: "gluten_free", label: "Gluten-free diet" },
+    { value: "lactose_intolerant", label: "Lactose intolerance" }
+  ];
+
+  const handleStageChange = (value) => {
+    setPregnancyStage(value);
+    sessionStorage.setItem("pregnancyStage", value);
+  };
+
+  const handleConditionToggle = (value) => {
+    const newConditions = conditions.includes(value)
+      ? conditions.filter(c => c !== value)
+      : [...conditions, value];
+    setConditions(newConditions);
+    sessionStorage.setItem("conditions", JSON.stringify(newConditions));
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFCF8]" data-testid="settings-page">
@@ -852,18 +892,65 @@ const SettingsPage = () => {
 
       {/* Content */}
       <div className="max-w-md mx-auto px-6 py-8">
-        {/* Icon */}
-        <div className="text-center mb-6 animate-fade-in">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#7C9A92]/10 flex items-center justify-center">
-            <Settings className="w-8 h-8 text-[#7C9A92]" />
+        {/* Pregnancy Stage Selector */}
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up">
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-2" style={{ fontFamily: 'Merriweather, serif' }}>
+            Pregnancy Stage
+          </h3>
+          <p className="text-sm text-[#64748B] mb-4">
+            Select your current stage for personalized content display (optional).
+          </p>
+          <div className="space-y-2" data-testid="pregnancy-stage-selector">
+            {pregnancyStages.map((stage) => (
+              <button
+                key={stage.value}
+                onClick={() => handleStageChange(stage.value)}
+                className={`w-full flex items-center justify-between p-3 rounded-xl btn-transition ${
+                  pregnancyStage === stage.value
+                    ? 'bg-[#7C9A92]/10 border-2 border-[#7C9A92]'
+                    : 'bg-slate-50 border-2 border-transparent hover:bg-slate-100'
+                }`}
+                data-testid={`stage-${stage.value || 'none'}`}
+              >
+                <span className={`font-medium ${pregnancyStage === stage.value ? 'text-[#7C9A92]' : 'text-[#2D3748]'}`}>
+                  {stage.label}
+                </span>
+                {pregnancyStage === stage.value && (
+                  <CheckCircle className="w-5 h-5 text-[#7C9A92]" />
+                )}
+              </button>
+            ))}
           </div>
-          <h2 className="text-xl font-semibold text-[#2D3748]" style={{ fontFamily: 'Merriweather, serif' }}>
-            App Settings
-          </h2>
         </div>
 
-        {/* Information Section */}
-        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up">
+        {/* Conditions Selector */}
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up stagger-1" style={{ opacity: 0 }}>
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-2" style={{ fontFamily: 'Merriweather, serif' }}>
+            Dietary Considerations
+          </h3>
+          <p className="text-sm text-[#64748B] mb-4">
+            Select any that apply to help filter content (optional). This does not replace medical advice.
+          </p>
+          <div className="flex flex-wrap gap-2" data-testid="conditions-selector">
+            {conditionOptions.map((condition) => (
+              <button
+                key={condition.value}
+                onClick={() => handleConditionToggle(condition.value)}
+                className={`px-4 py-2 rounded-full text-sm font-medium btn-transition ${
+                  conditions.includes(condition.value)
+                    ? 'bg-[#7C9A92] text-white'
+                    : 'bg-slate-100 text-[#2D3748] hover:bg-slate-200'
+                }`}
+                data-testid={`condition-${condition.value}`}
+              >
+                {condition.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Information Links */}
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up stagger-2" style={{ opacity: 0 }}>
           <h3 className="text-lg font-semibold text-[#2D3748] mb-4" style={{ fontFamily: 'Merriweather, serif' }}>
             Information
           </h3>
@@ -886,7 +973,38 @@ const SettingsPage = () => {
             >
               <div className="flex items-center gap-3">
                 <Info className="w-5 h-5 text-[#7C9A92]" />
-                <span className="font-medium text-[#2D3748]">About This App</span>
+                <span className="font-medium text-[#2D3748]">About Our Information</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#64748B]" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Legal Links */}
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up stagger-3" style={{ opacity: 0 }}>
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-4" style={{ fontFamily: 'Merriweather, serif' }}>
+            Legal
+          </h3>
+          <div className="space-y-3">
+            <Link 
+              to="/terms" 
+              className="flex items-center justify-between p-3 bg-slate-50 rounded-xl btn-transition hover:bg-slate-100"
+              data-testid="settings-link-terms"
+            >
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-[#7C9A92]" />
+                <span className="font-medium text-[#2D3748]">Terms of Use</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#64748B]" />
+            </Link>
+            <Link 
+              to="/privacy" 
+              className="flex items-center justify-between p-3 bg-slate-50 rounded-xl btn-transition hover:bg-slate-100"
+              data-testid="settings-link-privacy"
+            >
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-[#7C9A92]" />
+                <span className="font-medium text-[#2D3748]">Privacy Policy</span>
               </div>
               <ChevronRight className="w-5 h-5 text-[#64748B]" />
             </Link>
@@ -894,37 +1012,164 @@ const SettingsPage = () => {
         </div>
 
         {/* App Info */}
-        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6 animate-slide-up stagger-1" style={{ opacity: 0 }}>
-          <h3 className="text-lg font-semibold text-[#2D3748] mb-4" style={{ fontFamily: 'Merriweather, serif' }}>
-            App Details
+        <div className="text-center text-sm text-[#64748B] animate-slide-up stagger-4" style={{ opacity: 0 }}>
+          <p>NurtureNote v1.0.0</p>
+          <p>Educational Reference Only</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Terms of Use Page
+const TermsPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-[#FDFCF8]" data-testid="terms-page">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-6 py-4 flex items-center gap-4">
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center btn-transition hover:bg-slate-200"
+            data-testid="back-btn"
+          >
+            <ArrowLeft className="w-5 h-5 text-[#2D3748]" />
+          </button>
+          <h1 className="text-lg font-semibold text-[#2D3748]" style={{ fontFamily: 'Merriweather, serif' }}>
+            Terms of Use
+          </h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-md mx-auto px-6 py-8">
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6">
+          <p className="text-sm text-[#64748B] mb-4">Last updated: January 2026</p>
+          
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            1. Educational Purpose
           </h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-[#64748B]">App Name</span>
-              <span className="font-medium text-[#2D3748]">NurtureNote</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-[#64748B]">Version</span>
-              <span className="font-medium text-[#2D3748]">1.0.0</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-[#64748B]">Purpose</span>
-              <span className="font-medium text-[#2D3748]">Educational Reference</span>
-            </div>
-            <div className="flex justify-between py-2">
-              <span className="text-[#64748B]">Last Updated</span>
-              <span className="font-medium text-[#2D3748]">January 2026</span>
-            </div>
-          </div>
+          <p className="text-[#2D3748] mb-6">
+            NurtureNote provides general educational reference information about nutrition during pregnancy. 
+            This app is intended for informational purposes only and does not provide medical advice, 
+            diagnosis, or treatment.
+          </p>
+
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            2. No Medical Advice
+          </h3>
+          <p className="text-[#2D3748] mb-6">
+            The content in this app is not intended to be a substitute for professional medical advice, 
+            diagnosis, or treatment. Always seek the advice of your physician or other qualified health 
+            provider with any questions you may have regarding a medical condition or dietary choices.
+          </p>
+
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            3. Use of Information
+          </h3>
+          <p className="text-[#2D3748] mb-6">
+            You acknowledge that any information provided in this app is general in nature and may not 
+            apply to your specific circumstances. You use this information at your own risk.
+          </p>
+
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            4. Information Sources
+          </h3>
+          <p className="text-[#2D3748] mb-6">
+            Information in this app is compiled from publicly available guidance from organizations 
+            including WHO, CDC, NHS, and ACOG. We strive for accuracy but cannot guarantee that all 
+            information is current or complete.
+          </p>
+
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            5. Acceptance
+          </h3>
+          <p className="text-[#2D3748]">
+            By using this app, you acknowledge that you have read and understood these terms and agree 
+            to be bound by them.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Privacy Policy Page
+const PrivacyPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-[#FDFCF8]" data-testid="privacy-page">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-6 py-4 flex items-center gap-4">
+          <button 
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center btn-transition hover:bg-slate-200"
+            data-testid="back-btn"
+          >
+            <ArrowLeft className="w-5 h-5 text-[#2D3748]" />
+          </button>
+          <h1 className="text-lg font-semibold text-[#2D3748]" style={{ fontFamily: 'Merriweather, serif' }}>
+            Privacy Policy
+          </h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-md mx-auto px-6 py-8">
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-6">
+          <p className="text-sm text-[#64748B] mb-4">Last updated: January 2026</p>
+          
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            1. Information We Collect
+          </h3>
+          <p className="text-[#2D3748] mb-6">
+            NurtureNote stores your preferences (pregnancy stage, dietary considerations) locally on 
+            your device using session storage. This information is not transmitted to any server and 
+            is cleared when you close your browser session.
+          </p>
+
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            2. Data Storage
+          </h3>
+          <p className="text-[#2D3748] mb-6">
+            All preference data is stored locally on your device only. We do not collect, store, or 
+            process any personal health information on our servers.
+          </p>
+
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            3. No Account Required
+          </h3>
+          <p className="text-[#2D3748] mb-6">
+            This app does not require you to create an account or provide any personal information 
+            to use its features.
+          </p>
+
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            4. Third-Party Services
+          </h3>
+          <p className="text-[#2D3748] mb-6">
+            This app does not share any information with third-party services or advertisers.
+          </p>
+
+          <h3 className="text-lg font-semibold text-[#2D3748] mb-3" style={{ fontFamily: 'Merriweather, serif' }}>
+            5. Contact
+          </h3>
+          <p className="text-[#2D3748]">
+            If you have questions about this privacy policy, please contact us through the app store 
+            listing or our website.
+          </p>
         </div>
 
-        {/* Disclaimer */}
-        <div className="disclaimer-banner rounded-2xl p-4 animate-slide-up stagger-2" style={{ opacity: 0 }}>
+        <div className="disclaimer-banner rounded-2xl p-4">
           <div className="flex items-start gap-3">
             <Shield className="w-5 h-5 text-[#7C9A92] flex-shrink-0 mt-0.5" />
             <p className="text-sm text-[#2D3748]">
-              This app provides general educational reference information only. 
-              It does not provide medical advice.
+              Your privacy is important to us. This app is designed to work without collecting 
+              personal data.
             </p>
           </div>
         </div>
