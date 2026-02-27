@@ -73,7 +73,7 @@ class QAResponse(BaseModel):
     answer: str
     is_symptom_detected: bool = False
     sources: List[str] = ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
-    disclaimer: str = "This information is for educational purposes only and does not constitute medical advice."
+    disclaimer: str = "This is general educational reference information only and does not constitute medical advice, diagnosis, or treatment."
 
 class SearchQuery(BaseModel):
     query: str
@@ -362,7 +362,7 @@ async def ask_question(question_data: QAQuestion):
             question=question,
             answer="We cannot assess symptoms. Please contact a healthcare provider or local emergency service.",
             is_symptom_detected=True,
-            sources=["Medical Professional Consultation Recommended"],
+            sources=["Medical Professional Consultation Suggested"],
             disclaimer="If you are experiencing a medical emergency, please call emergency services immediately."
         )
     
@@ -374,7 +374,7 @@ async def ask_question(question_data: QAQuestion):
         answer=answer,
         is_symptom_detected=False,
         sources=["WHO", "CDC", "NHS pregnancy nutrition guidance"],
-        disclaimer="This information is for educational purposes only and does not constitute medical advice. Always consult a qualified healthcare professional regarding personal health concerns."
+        disclaimer="This is general educational reference information only. It does not constitute medical advice, diagnosis, or treatment. Consulting a qualified healthcare professional is suggested for personal health concerns."
     )
 
 @api_router.get("/categories")
@@ -389,15 +389,15 @@ async def get_about():
     return {
         "app_name": "NurtureNote",
         "purpose": "Educational Pregnancy Nutrition Reference",
-        "description": "NurtureNote provides general educational nutrition information for pregnancy. It is designed to help expectant mothers learn about nutrition during pregnancy in an accessible and easy-to-understand format.",
+        "description": "NurtureNote provides general educational reference information about nutrition during pregnancy. It is designed as an informational resource to help users learn about nutrition topics commonly discussed in public health literature.",
         "data_sources": [
             "World Health Organization (WHO)",
             "Centers for Disease Control and Prevention (CDC)",
             "National Health Service (NHS) Pregnancy Nutrition Guidance",
             "American College of Obstetricians and Gynecologists (ACOG)"
         ],
-        "disclaimer": "This app provides general educational nutrition information for pregnancy. It does not provide medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional regarding personal health concerns.",
-        "non_medical_statement": "NurtureNote is not a medical app. The information provided is for educational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment. Never disregard professional medical advice or delay in seeking it because of something you have read in this app.",
+        "disclaimer": "This app provides general educational reference information about pregnancy nutrition. It does not provide medical advice, diagnosis, or treatment. This content is not a substitute for professional medical guidance. Consulting a qualified healthcare professional is suggested for personal health concerns.",
+        "non_medical_statement": "NurtureNote is not a medical app and does not provide medical advice. The information provided is general educational reference material compiled from public health sources. It is not intended for use in making health decisions. Individual circumstances vary; consulting healthcare professionals is suggested for personalized guidance. Do not disregard professional medical advice or delay seeking it because of information in this app.",
         "version": "1.0.0",
         "last_updated": "January 2026"
     }
