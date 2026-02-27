@@ -59,8 +59,8 @@ class FoodItem(BaseModel):
     category: str
     safety_level: str  # "safe", "limit", "avoid"
     description: str
-    recommendation: str  # Educational language
-    reason: Optional[str] = None
+    nutrition_note: str  # Educational reference information
+    context: Optional[str] = None
     alternatives: Optional[List[str]] = None
     nutrients: Optional[List[str]] = None
     sources: List[str] = ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -86,8 +86,8 @@ FOOD_DATABASE = [
         "category": "Fish & Seafood",
         "safety_level": "safe",
         "description": "Rich in omega-3 fatty acids and protein",
-        "recommendation": "Generally considered beneficial during pregnancy when cooked thoroughly",
-        "reason": "Provides essential omega-3 fatty acids for fetal brain development",
+        "nutrition_note": "Commonly included in balanced pregnancy diets when thoroughly cooked. Contains nutrients often mentioned in prenatal nutrition literature.",
+        "context": "Fish like salmon are frequently referenced in public health nutrition guidance as a source of omega-3 fatty acids.",
         "alternatives": None,
         "nutrients": ["Omega-3", "Protein", "Vitamin D", "B12"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -98,8 +98,8 @@ FOOD_DATABASE = [
         "category": "Fish & Seafood",
         "safety_level": "avoid",
         "description": "Raw or undercooked fish dishes",
-        "recommendation": "Generally recommended to avoid during pregnancy due to potential bacterial and parasitic contamination",
-        "reason": "Raw fish may contain parasites or bacteria that could affect pregnancy",
+        "nutrition_note": "Sometimes restricted in food safety guidance due to potential bacterial and parasitic contamination concerns.",
+        "context": "Public health organizations often note that raw fish may carry parasites or bacteria.",
         "alternatives": ["Cooked sushi rolls", "Vegetable sushi", "Fully cooked shrimp tempura rolls"],
         "nutrients": ["Protein", "Omega-3"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -110,8 +110,8 @@ FOOD_DATABASE = [
         "category": "Dairy",
         "safety_level": "avoid",
         "description": "Includes brie, camembert, blue cheese made from unpasteurized milk",
-        "recommendation": "Generally recommended to avoid during pregnancy due to potential listeria contamination",
-        "reason": "Unpasteurized soft cheeses may harbor listeria bacteria",
+        "nutrition_note": "Sometimes restricted in food safety guidance due to potential listeria contamination concerns.",
+        "context": "Unpasteurized soft cheeses are noted in public health literature as potential carriers of listeria bacteria.",
         "alternatives": ["Hard cheeses", "Pasteurized soft cheeses", "Cream cheese"],
         "nutrients": ["Calcium", "Protein"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -121,9 +121,9 @@ FOOD_DATABASE = [
         "name": "Eggs",
         "category": "Protein",
         "safety_level": "safe",
-        "description": "Excellent source of protein and choline",
-        "recommendation": "Generally considered beneficial during pregnancy when fully cooked",
-        "reason": "Provides choline essential for fetal brain development",
+        "description": "Source of protein and choline",
+        "nutrition_note": "Commonly included in balanced pregnancy diets when fully cooked. Eggs are noted as a choline source in nutrition literature.",
+        "context": "Choline is a nutrient frequently mentioned in prenatal nutrition educational materials.",
         "alternatives": None,
         "nutrients": ["Protein", "Choline", "B12", "Iron"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -134,8 +134,8 @@ FOOD_DATABASE = [
         "category": "Protein",
         "safety_level": "avoid",
         "description": "Found in homemade mayonnaise, some desserts, raw cookie dough",
-        "recommendation": "Generally recommended to avoid during pregnancy due to salmonella risk",
-        "reason": "Raw eggs may contain salmonella bacteria",
+        "nutrition_note": "Sometimes restricted in food safety guidance due to salmonella concerns.",
+        "context": "Food safety literature notes that raw eggs may contain salmonella bacteria.",
         "alternatives": ["Fully cooked eggs", "Pasteurized egg products", "Store-bought pasteurized mayonnaise"],
         "nutrients": ["Protein"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -146,9 +146,9 @@ FOOD_DATABASE = [
         "category": "Beverages",
         "safety_level": "limit",
         "description": "Found in coffee, tea, chocolate, and some sodas",
-        "recommendation": "Often limited during pregnancy; many health organizations suggest keeping under 200mg daily",
-        "reason": "High caffeine intake has been associated with increased pregnancy risks in some studies",
-        "alternatives": ["Decaf coffee", "Herbal teas (check which are safe)", "Water with lemon"],
+        "nutrition_note": "Often limited in public health guidance. Many organizations reference 200mg daily as a common threshold mentioned in literature.",
+        "context": "Research studies have examined associations between caffeine intake and pregnancy outcomes.",
+        "alternatives": ["Decaf coffee", "Herbal teas (verify individual types)", "Water with lemon"],
         "nutrients": None,
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
     },
@@ -158,8 +158,8 @@ FOOD_DATABASE = [
         "category": "Beverages",
         "safety_level": "avoid",
         "description": "All alcoholic beverages including wine, beer, and spirits",
-        "recommendation": "Generally recommended to avoid during pregnancy as no safe amount has been established",
-        "reason": "Alcohol can cross the placenta and may affect fetal development",
+        "nutrition_note": "Public health organizations consistently note that no amount has been established as without risk during pregnancy.",
+        "context": "Alcohol is noted in medical literature to cross the placenta.",
         "alternatives": ["Sparkling water", "Mocktails", "Fruit juices"],
         "nutrients": None,
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -170,8 +170,8 @@ FOOD_DATABASE = [
         "category": "Vegetables",
         "safety_level": "safe",
         "description": "Spinach, kale, swiss chard, and other dark leafy vegetables",
-        "recommendation": "Generally considered highly beneficial during pregnancy when washed thoroughly",
-        "reason": "Excellent source of folate, iron, and fiber essential for pregnancy",
+        "nutrition_note": "Commonly included in balanced pregnancy diets when washed thoroughly. Noted as a folate source in nutrition literature.",
+        "context": "Leafy greens are frequently referenced in prenatal nutrition educational materials for their nutrient content.",
         "alternatives": None,
         "nutrients": ["Folate", "Iron", "Fiber", "Vitamin K", "Calcium"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -182,8 +182,8 @@ FOOD_DATABASE = [
         "category": "Meat",
         "safety_level": "limit",
         "description": "Pre-packaged or deli-sliced cold cuts",
-        "recommendation": "Often limited during pregnancy; consider safer alternatives or heat until steaming",
-        "reason": "Deli meats may contain listeria bacteria which can survive refrigeration",
+        "nutrition_note": "Often limited in public health guidance. Typically prepared carefully (heated until steaming) according to food safety literature.",
+        "context": "Food safety literature notes that deli meats may contain listeria bacteria which can survive refrigeration.",
         "alternatives": ["Freshly cooked meats", "Heated deli meats (steaming hot)", "Canned chicken or tuna"],
         "nutrients": ["Protein", "Iron"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -194,8 +194,8 @@ FOOD_DATABASE = [
         "category": "Fruits",
         "safety_level": "safe",
         "description": "Strawberries, blueberries, raspberries, and blackberries",
-        "recommendation": "Generally considered highly beneficial during pregnancy when washed thoroughly",
-        "reason": "Rich in antioxidants, fiber, and vitamin C",
+        "nutrition_note": "May be included as part of a varied diet when washed thoroughly. Noted for antioxidant content in nutrition literature.",
+        "context": "Berries are referenced in general nutrition guidance as sources of fiber and vitamin C.",
         "alternatives": None,
         "nutrients": ["Vitamin C", "Fiber", "Antioxidants", "Folate"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -206,8 +206,8 @@ FOOD_DATABASE = [
         "category": "Fish & Seafood",
         "safety_level": "avoid",
         "description": "Shark, swordfish, king mackerel, tilefish, bigeye tuna",
-        "recommendation": "Generally recommended to avoid during pregnancy due to high mercury content",
-        "reason": "Mercury can accumulate and may affect fetal nervous system development",
+        "nutrition_note": "Sometimes restricted in food safety guidance due to mercury content concerns noted in public health literature.",
+        "context": "Mercury accumulation is a topic discussed in environmental health and nutrition literature.",
         "alternatives": ["Salmon", "Sardines", "Anchovies", "Tilapia", "Cod"],
         "nutrients": ["Protein", "Omega-3"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -218,8 +218,8 @@ FOOD_DATABASE = [
         "category": "Dairy",
         "safety_level": "safe",
         "description": "Pasteurized yogurt high in protein and probiotics",
-        "recommendation": "Generally considered highly beneficial during pregnancy",
-        "reason": "Excellent source of calcium, protein, and beneficial probiotics",
+        "nutrition_note": "Commonly included in balanced pregnancy diets. Noted as a calcium and protein source in nutrition literature.",
+        "context": "Dairy products are frequently referenced in prenatal nutrition educational materials.",
         "alternatives": None,
         "nutrients": ["Calcium", "Protein", "Probiotics", "B12"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -230,8 +230,8 @@ FOOD_DATABASE = [
         "category": "Meat",
         "safety_level": "limit",
         "description": "All types of liver and liver products like pate",
-        "recommendation": "Often limited during pregnancy due to very high vitamin A content",
-        "reason": "Excessive vitamin A intake has been associated with developmental concerns",
+        "nutrition_note": "Often limited in public health guidance due to very high vitamin A content noted in nutrition literature.",
+        "context": "Vitamin A intake thresholds are discussed in prenatal nutrition educational materials.",
         "alternatives": ["Lean beef", "Chicken breast", "Legumes for iron"],
         "nutrients": ["Iron", "Vitamin A", "B12"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -242,8 +242,8 @@ FOOD_DATABASE = [
         "category": "Fruits",
         "safety_level": "safe",
         "description": "Nutrient-dense fruit rich in healthy fats",
-        "recommendation": "Generally considered highly beneficial during pregnancy",
-        "reason": "Provides folate, potassium, and healthy monounsaturated fats",
+        "nutrition_note": "May be included as part of a varied diet. Noted as a folate and potassium source in nutrition literature.",
+        "context": "Avocados are referenced in general nutrition guidance for their nutrient density.",
         "alternatives": None,
         "nutrients": ["Folate", "Potassium", "Fiber", "Healthy Fats", "Vitamin K"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
@@ -254,31 +254,31 @@ FOOD_DATABASE = [
         "category": "Vegetables",
         "safety_level": "avoid",
         "description": "Raw alfalfa, clover, radish, and mung bean sprouts",
-        "recommendation": "Generally recommended to avoid raw during pregnancy due to bacterial risk",
-        "reason": "The warm, humid conditions for growing sprouts are also ideal for bacteria",
+        "nutrition_note": "Sometimes restricted in food safety guidance when raw due to bacterial concerns noted in public health literature.",
+        "context": "Food safety literature notes that sprout growing conditions may also support bacterial growth.",
         "alternatives": ["Cooked sprouts", "Leafy greens", "Other cooked vegetables"],
         "nutrients": ["Fiber", "Vitamins"],
         "sources": ["WHO", "CDC", "NHS pregnancy nutrition guidance"]
     }
 ]
 
-# Educational Q&A responses
+# Educational Q&A responses - General nutrition information only
 QA_DATABASE = {
-    "folate": "Folate is essential during pregnancy, particularly in the first trimester, as it supports neural tube development. Many health organizations recommend 400-800mcg daily from food sources and supplements. Good sources include leafy greens, legumes, and fortified cereals.",
-    "folic acid": "Folic acid is the synthetic form of folate. Most prenatal vitamins contain folic acid. Many health organizations recommend starting supplementation before conception and continuing through early pregnancy.",
-    "iron": "Iron needs typically increase during pregnancy to support increased blood volume and fetal development. Good sources include lean meats, beans, fortified cereals, and leafy greens. Vitamin C can help with iron absorption.",
-    "calcium": "Calcium is important during pregnancy for developing bones and teeth. Good sources include dairy products, fortified plant milks, leafy greens, and almonds. Many health organizations suggest 1000mg daily during pregnancy.",
-    "vitamin d": "Vitamin D supports calcium absorption and bone health. Sources include sunlight exposure, fortified foods, and fatty fish. Discuss supplementation needs with your healthcare provider.",
-    "omega-3": "Omega-3 fatty acids, particularly DHA, are associated with fetal brain and eye development. Good sources include fatty fish (like salmon), walnuts, and flaxseeds.",
-    "protein": "Protein needs generally increase during pregnancy to support fetal growth. Good sources include lean meats, poultry, fish, eggs, dairy, legumes, and nuts.",
-    "water": "Staying well-hydrated during pregnancy is important for many bodily functions including amniotic fluid maintenance. Many healthcare providers suggest drinking 8-12 glasses of water daily.",
-    "morning sickness": "Morning sickness is common during pregnancy. Dietary strategies that some find helpful include eating small, frequent meals, avoiding strong smells, and having crackers before getting out of bed. Consult your healthcare provider if symptoms are severe.",
-    "cravings": "Food cravings during pregnancy are common and may be related to hormonal changes. It's generally fine to indulge occasionally while maintaining overall nutritional balance. Discuss unusual cravings with your healthcare provider.",
-    "weight gain": "Healthy weight gain varies based on pre-pregnancy weight. Your healthcare provider can give personalized guidance. Generally, balanced nutrition and regular physical activity as approved by your provider are recommended.",
-    "fish": "Fish can be a nutritious part of pregnancy diet due to omega-3 content. Many health organizations recommend 2-3 servings weekly of low-mercury fish. Consider safer alternatives to high-mercury fish.",
-    "vegetarian": "A well-planned vegetarian diet can meet pregnancy nutritional needs. Focus on getting adequate protein, iron, B12, calcium, and omega-3s from plant sources and/or supplements. Consult a registered dietitian if needed.",
-    "organic": "Whether to choose organic foods is a personal decision. Both organic and conventionally grown foods can be part of a healthy pregnancy diet. Thorough washing of all produce is recommended.",
-    "default": "Thank you for your question about pregnancy nutrition. For personalized guidance, we recommend consulting with your healthcare provider or a registered dietitian who can provide advice tailored to your specific situation."
+    "folate": "General nutrition information: Folate is a B-vitamin discussed extensively in prenatal nutrition literature, particularly regarding neural tube formation in early pregnancy. Public health guidance commonly references 400-800mcg daily. Food sources noted in educational materials include leafy greens, legumes, and fortified cereals.",
+    "folic acid": "General nutrition information: Folic acid is the synthetic form of folate found in supplements and fortified foods. Prenatal nutrition literature frequently discusses supplementation timing. For personalized guidance, consulting a healthcare provider is suggested.",
+    "iron": "General nutrition information: Iron is discussed in prenatal literature in relation to blood volume changes during pregnancy. Food sources commonly noted include lean meats, beans, fortified cereals, and leafy greens. Vitamin C is referenced as supporting iron absorption.",
+    "calcium": "General nutrition information: Calcium is discussed in nutrition literature regarding bone and teeth formation. Food sources commonly noted include dairy products, fortified plant milks, leafy greens, and almonds. Public health materials often reference 1000mg daily as a common threshold.",
+    "vitamin d": "General nutrition information: Vitamin D is discussed in nutrition literature regarding calcium absorption and bone health. Sources noted include sunlight exposure, fortified foods, and fatty fish. Individual needs vary; consulting a healthcare provider is suggested for personalized guidance.",
+    "omega-3": "General nutrition information: Omega-3 fatty acids, particularly DHA, are frequently discussed in prenatal nutrition literature. Food sources commonly noted include fatty fish (like salmon), walnuts, and flaxseeds.",
+    "protein": "General nutrition information: Protein needs are discussed in prenatal nutrition literature as typically increasing during pregnancy. Food sources commonly noted include lean meats, poultry, fish, eggs, dairy, legumes, and nuts.",
+    "water": "General nutrition information: Hydration is discussed in prenatal literature regarding various bodily functions. Educational materials commonly reference 8-12 glasses daily, though individual needs vary.",
+    "morning sickness": "General nutrition information: Morning sickness is commonly discussed in pregnancy literature. Dietary strategies noted in educational materials include small, frequent meals, avoiding strong smells, and crackers before rising. Individual experiences vary; consulting a healthcare provider is suggested for persistent concerns.",
+    "cravings": "General nutrition information: Food cravings are commonly discussed in pregnancy literature and may relate to hormonal changes. Educational materials generally note maintaining overall nutritional variety. Consulting a healthcare provider is suggested for unusual or persistent cravings.",
+    "weight gain": "General nutrition information: Weight changes during pregnancy are discussed in prenatal literature and vary based on individual factors. For personalized guidance, consulting a healthcare provider is suggested.",
+    "fish": "General nutrition information: Fish is discussed in prenatal nutrition literature as a source of omega-3 fatty acids. Public health guidance commonly references 2-3 servings weekly of lower-mercury varieties. Mercury content varies by fish type and is discussed in food safety literature.",
+    "vegetarian": "General nutrition information: Vegetarian diets are discussed in prenatal nutrition literature. Key nutrients commonly noted include protein, iron, B12, calcium, and omega-3s. Consulting a registered dietitian is suggested for personalized meal planning.",
+    "organic": "General nutrition information: Organic and conventional foods are both discussed in nutrition literature. Thorough washing of all produce is commonly noted in food safety guidance. Food choice is a personal decision.",
+    "default": "Thank you for your question about pregnancy nutrition. This app provides general educational nutrition information only. For personalized guidance tailored to your specific situation, consulting with a healthcare provider or registered dietitian is suggested."
 }
 
 def detect_symptoms(text: str) -> bool:
