@@ -356,7 +356,8 @@ const FoodDetailPage = () => {
             </div>
           )}
 
-          <ReferenceBlock sources={food.sources} />
+          {/* Collapsible References Section */}
+          <CollapsibleReferences sources={food.sources} />
         </div>
       </div>
     </div>
