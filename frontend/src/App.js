@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { Search, Info, AlertTriangle, CheckCircle, MessageCircle, BookOpen, ChevronRight, Shield, Heart, Phone, X, ArrowLeft, ExternalLink } from "lucide-react";
+import { Search, Info, AlertTriangle, CheckCircle, MessageCircle, BookOpen, ChevronRight, Shield, Heart, Phone, X, ArrowLeft, ExternalLink, Settings, FileText } from "lucide-react";
 import "@/App.css";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
