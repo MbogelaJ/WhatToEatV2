@@ -344,7 +344,7 @@ const FoodDetailPage = () => {
           {/* Alternatives */}
           {food.alternatives && food.alternatives.length > 0 && (
             <div className="bg-[#5D8AA8]/5 rounded-xl p-4 mb-6 border border-[#5D8AA8]/10">
-              <p className="text-sm font-semibold text-[#5D8AA8] uppercase tracking-wider mb-2">Consider Safer Alternatives</p>
+              <p className="text-sm font-semibold text-[#5D8AA8] uppercase tracking-wider mb-2">Alternative Options Noted in Literature</p>
               <ul className="space-y-2">
                 {food.alternatives.map((alt) => (
                   <li key={alt} className="flex items-center gap-2 text-[#2D3748]">
@@ -463,7 +463,7 @@ const QAPage = () => {
             
             {!answer.is_symptom_detected && (
               <>
-                <p className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">Answer</p>
+                <p className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">Educational Reference Information</p>
                 <p className="text-[#2D3748] mb-4">{answer.answer}</p>
               </>
             )}
