@@ -961,6 +961,8 @@ function App() {
             <Route path="/topics" element={<NutritionTopicsPage />} />
             <Route path="/qa" element={<NutritionTopicsPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/sources" element={<SourcesPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </MainLayout>
       </BrowserRouter>
