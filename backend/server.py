@@ -32,7 +32,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Symptom keywords for Q&A safety guard
+# Symptom keywords for safety guard
 SYMPTOM_KEYWORDS = [
     'bleeding', 'bleed', 'blood', 'bloody',
     'severe pain', 'sharp pain', 'extreme pain', 'intense pain',
@@ -44,6 +44,26 @@ SYMPTOM_KEYWORDS = [
     'swelling', 'swollen',
     'chest pain', 'difficulty breathing', 'shortness of breath'
 ]
+
+# Personal question indicators - questions seeking individualized guidance
+PERSONAL_INDICATORS = [
+    'i am', 'i\'m', 'im ', 'i have', 'i\'ve',
+    'my doctor', 'my pregnancy', 'my baby', 'my condition',
+    'should i', 'can i', 'is it safe for me', 'is it ok for me',
+    'weeks pregnant', 'trimester', 'due date',
+    'diabetes', 'diabetic', 'gestational diabetes',
+    'high blood pressure', 'hypertension', 'preeclampsia',
+    'anemia', 'anemic',
+    'allergic', 'allergy', 'allergies',
+    'medication', 'medicine', 'prescription',
+    'diagnosed', 'diagnosis',
+    'my weight', 'my age', 'my health',
+    'for me', 'in my case', 'my situation',
+    'what should i do', 'what do you recommend', 'what do you suggest',
+    'is it okay if i', 'am i allowed'
+]
+
+PERSONAL_RESPONSE = "This app cannot provide individualized guidance. Please consult a healthcare professional."
 
 SYMPTOM_RESPONSE = {
     "is_symptom_detected": True,
@@ -289,13 +309,39 @@ def detect_symptoms(text: str) -> bool:
             return True
     return False
 
-def get_qa_answer(question: str) -> str:
-    """Get an appropriate answer based on the question"""
-    question_lower = question.lower()
+def detect_personal_question(text: str) -> bool:
+    """Check if the question is seeking personalized/individualized guidance"""
+    text_lower = text.lower()
+    for indicator in PERSONAL_INDICATORS:
+        if indicator in text_lower:
+            return True
+    return False
+
+def get_topic_info(query: str) -> tuple:
+    """Map query to existing nutrition topics and return educational information"""
+    query_lower = query.lower()
+    
+    # First check QA database for topic matches
     for key, answer in QA_DATABASE.items():
-        if key in question_lower:
-            return answer
-    return QA_DATABASE["default"]
+        if key != "default" and key in query_lower:
+            return (key, answer)
+    
+    # Check if query matches any food items
+    for food in FOOD_DATABASE:
+        food_name_lower = food["name"].lower()
+        if food_name_lower in query_lower or any(word in query_lower for word in food_name_lower.split()):
+            return (food["name"], f"Food item: {food['name']} ({food['category']}). {food['nutrition_note']} {food.get('context', '')}")
+    
+    # Check category matches
+    categories = ["fish", "seafood", "dairy", "protein", "beverages", "vegetables", "fruits", "meat"]
+    for cat in categories:
+        if cat in query_lower:
+            matching_foods = [f for f in FOOD_DATABASE if cat in f["category"].lower()]
+            if matching_foods:
+                food_list = ", ".join([f["name"] for f in matching_foods[:3]])
+                return (cat, f"Category: {cat.title()}. Related items in our database include: {food_list}. Each food item has specific information noted in public health literature.")
+    
+    return (None, QA_DATABASE["default"])
 
 # API Routes
 @api_router.get("/")
