@@ -7,7 +7,7 @@ import "@/App.css";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const DISCLAIMER_TEXT = "This app provides general educational nutrition information for pregnancy. It does not provide medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional regarding personal health concerns.";
+const DISCLAIMER_TEXT = "This app provides general educational reference information about pregnancy nutrition. It does not provide medical advice, diagnosis, or treatment. Consulting a qualified healthcare professional is suggested for personal health concerns.";
 
 // Disclaimer Modal Component
 const DisclaimerModal = ({ onAccept }) => {
@@ -90,7 +90,7 @@ const FoodCard = ({ food, onClick }) => (
       <SafetyBadge level={food.safety_level} />
     </div>
     <p className="text-sm text-[#64748B] mb-3">{food.category}</p>
-    <p className="text-sm text-[#2D3748] line-clamp-2">{food.recommendation}</p>
+    <p className="text-sm text-[#2D3748] line-clamp-2">{food.nutrition_note}</p>
     <div className="mt-4 flex items-center text-[#7C9A92] text-sm font-medium">
       Learn more <ChevronRight className="w-4 h-4 ml-1" />
     </div>
@@ -313,17 +313,17 @@ const FoodDetailPage = () => {
 
           <p className="text-[#2D3748] mb-6">{food.description}</p>
 
-          {/* Recommendation */}
+          {/* General Nutrition Note */}
           <div className="bg-slate-50 rounded-xl p-4 mb-6">
-            <p className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">Recommendation</p>
-            <p className="text-[#2D3748]" data-testid="food-recommendation">{food.recommendation}</p>
+            <p className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">General Nutrition Note</p>
+            <p className="text-[#2D3748]" data-testid="food-nutrition-note">{food.nutrition_note}</p>
           </div>
 
-          {/* Reason */}
-          {food.reason && (
+          {/* Context */}
+          {food.context && (
             <div className="mb-6">
-              <p className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">Why?</p>
-              <p className="text-[#2D3748]">{food.reason}</p>
+              <p className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-2">Educational Context</p>
+              <p className="text-[#2D3748]">{food.context}</p>
             </div>
           )}
 
