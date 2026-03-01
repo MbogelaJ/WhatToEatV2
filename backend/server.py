@@ -709,6 +709,71 @@ async def trigger_daily_notification_now():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/tips/today")
+async def get_todays_tip(trimester: Optional[int] = None):
+    """
+    Get today's daily tip with full expanded content
+    
+    Args:
+        trimester: Optional filter (1, 2, or 3) to get trimester-specific tip
+    """
+    if trimester is not None and trimester not in [1, 2, 3]:
+        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
+    
+    tip = get_daily_tip(trimester)
+    return {
+        "tip": tip,
+        "trimester_filter": trimester,
+        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
+    }
+
+
+@api_router.get("/tips/all")
+async def get_all_nutrition_tips(trimester: Optional[int] = None):
+    """
+    Get all daily tips, optionally filtered by trimester
+    
+    Args:
+        trimester: Optional filter (1, 2, or 3)
+    """
+    if trimester is not None and trimester not in [1, 2, 3]:
+        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
+    
+    tips = get_all_tips(trimester)
+    counts = get_tips_count(trimester)
+    
+    return {
+        "tips": tips,
+        "counts": counts,
+        "trimester_filter": trimester,
+        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
+    }
+
+
+@api_router.get("/tips/{tip_index}")
+async def get_tip_by_number(tip_index: int, trimester: Optional[int] = None):
+    """
+    Get a specific tip by index (0-29 for all, 0-9 for trimester-specific)
+    
+    Args:
+        tip_index: Index of the tip to retrieve
+        trimester: Optional filter (1, 2, or 3)
+    """
+    if trimester is not None and trimester not in [1, 2, 3]:
+        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
+    
+    tip = get_tip_by_index(tip_index, trimester)
+    counts = get_tips_count(trimester)
+    
+    return {
+        "tip": tip,
+        "tip_index": tip_index % counts["selected_count"],
+        "total_tips": counts["selected_count"],
+        "trimester_filter": trimester,
+        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
+    }
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
