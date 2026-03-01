@@ -124,6 +124,9 @@ async def lifespan(app: FastAPI):
 # Create the main app with lifespan handler
 app = FastAPI(lifespan=lifespan)
 
+# Create a router with the /api prefix
+api_router = APIRouter(prefix="/api")
+
 # Symptom keywords for safety guard
 SYMPTOM_KEYWORDS = [
     'bleeding', 'bleed', 'blood', 'bloody',
