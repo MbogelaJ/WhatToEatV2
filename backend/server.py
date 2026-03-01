@@ -16,7 +16,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
 
-from push_notifications import get_fcm_service, get_daily_tip
+from push_notifications import get_fcm_service, get_daily_tip, get_all_tips, get_tips_count, get_tip_by_index
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
