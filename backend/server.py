@@ -195,6 +195,22 @@ class QAResponse(BaseModel):
 class SearchQuery(BaseModel):
     query: str
 
+# Device token models for push notifications
+class DeviceTokenRequest(BaseModel):
+    token: str = Field(..., min_length=1, description="FCM device token")
+    platform: Optional[str] = Field(default="ios", description="Device platform (ios/android)")
+    trimester: Optional[int] = Field(default=None, ge=1, le=3, description="User's trimester (1, 2, or 3)")
+
+class DeviceTokenResponse(BaseModel):
+    success: bool
+    message: str
+    token_id: Optional[str] = None
+
+class NotificationTestRequest(BaseModel):
+    token: str = Field(..., min_length=1, description="FCM device token to test")
+    title: Optional[str] = Field(default="Test Notification", description="Notification title")
+    body: Optional[str] = Field(default="This is a test notification from NurtureNote", description="Notification body")
+
 # Comprehensive food database with educational language - 85 items
 FOOD_DATABASE = [
     # ===== FISH & SEAFOOD (12 items) =====
