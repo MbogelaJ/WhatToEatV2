@@ -1,0 +1,21 @@
+{
+	"appId": "com.nurturenote.app",
+	"appName": "NurtureNote",
+	"webDir": "build",
+	"server": {
+		"androidScheme": "https"
+	},
+	"ios": {
+		"contentInset": "automatic",
+		"backgroundColor": "#FDFCF8"
+	},
+	"plugins": {
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		}
+	}
+}
