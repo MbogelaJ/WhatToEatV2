@@ -26,11 +26,11 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# Collections
+device_tokens_collection = db["device_tokens"]
 
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
+# Timezone for scheduler
+SCHEDULER_TIMEZONE = pytz.timezone('Africa/Dar_es_Salaam')
 
 # Configure logging
 logging.basicConfig(
@@ -38,6 +38,91 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# APScheduler instance
+scheduler = AsyncIOScheduler(timezone=SCHEDULER_TIMEZONE)
+
+
+async def send_daily_notifications():
+    """
+    Scheduled job to send daily pregnancy nutrition tips to all registered devices
+    Runs at 3:00 PM Africa/Dar_es_Salaam timezone
+    """
+    logger.info("Starting daily notification job...")
+    
+    try:
+        # Get today's tip
+        tip = get_daily_tip()
+        title = tip["title"]
+        body = tip["body"]
+        data = tip.get("data", {})
+        
+        # Get all registered device tokens
+        tokens = []
+        async for doc in device_tokens_collection.find({}, {"_id": 0, "token": 1}):
+            tokens.append(doc["token"])
+        
+        if not tokens:
+            logger.info("No registered device tokens found. Skipping notification.")
+            return
+        
+        logger.info(f"Sending daily tip to {len(tokens)} devices: {title}")
+        
+        # Send notifications
+        fcm = get_fcm_service()
+        results = fcm.send_multicast(tokens, title, body, data)
+        
+        logger.info(f"Notification results: {results['success_count']} success, {results['failure_count']} failures")
+        
+        # Remove invalid tokens from database
+        if results["invalid_tokens"]:
+            logger.info(f"Removing {len(results['invalid_tokens'])} invalid tokens")
+            for invalid_token in results["invalid_tokens"]:
+                await device_tokens_collection.delete_one({"token": invalid_token})
+            logger.info(f"Removed {len(results['invalid_tokens'])} invalid tokens from database")
+        
+    except Exception as e:
+        logger.error(f"Error in daily notification job: {e}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler for startup and shutdown"""
+    # Startup
+    logger.info("Starting NurtureNote API...")
+    
+    # Initialize FCM service
+    fcm = get_fcm_service()
+    if fcm.project_id:
+        logger.info(f"FCM service initialized for project: {fcm.project_id}")
+    else:
+        logger.warning("FCM service not configured - push notifications disabled")
+    
+    # Create index on device_tokens collection
+    await device_tokens_collection.create_index("token", unique=True)
+    logger.info("Device tokens collection index created")
+    
+    # Schedule daily notification job at 3:00 PM Africa/Dar_es_Salaam
+    scheduler.add_job(
+        send_daily_notifications,
+        trigger=CronTrigger(hour=15, minute=0, timezone=SCHEDULER_TIMEZONE),
+        id="daily_notification",
+        name="Daily Pregnancy Nutrition Tip",
+        replace_existing=True
+    )
+    scheduler.start()
+    logger.info("Daily notification scheduler started - scheduled for 3:00 PM Africa/Dar_es_Salaam")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down NurtureNote API...")
+    scheduler.shutdown()
+    client.close()
+
+
+# Create the main app with lifespan handler
+app = FastAPI(lifespan=lifespan)
 
 # Symptom keywords for safety guard
 SYMPTOM_KEYWORDS = [
