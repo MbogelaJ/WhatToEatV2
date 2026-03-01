@@ -34,8 +34,15 @@ Refactor pregnancy nutrition app for Apple App Store health compliance to be cle
 - **Notification Status**: `/api/notification_status` - Check FCM config, scheduler, device count
 - **Test Notification**: `/api/test_notification` - Send test push to specific device
 - **Daily Notification Trigger**: `/api/trigger_daily_notification` - Manual job trigger
+- **Today's Tip**: `/api/tips/today` - Get today's tip with expanded content
+- **All Tips**: `/api/tips/all` - Get all 30 tips, filterable by trimester
+- **Specific Tip**: `/api/tips/{index}` - Get tip by index
 - **Scheduled Daily Tips**: APScheduler job at 3:00 PM Africa/Dar_es_Salaam timezone
-- **Trimester-Based Tips**: 30 rotating educational tips (10 per trimester)
+- **30 Educational Trimester-Based Tips**: 
+  - 10 First Trimester tips (folate, hydration, small meals, iron, B6, ginger, protein, citrus, whole grains, food safety)
+  - 10 Second Trimester tips (calcium, omega-3, iron, protein, vitamin D, fiber, healthy fats, magnesium, seafood, snacking)
+  - 10 Third Trimester tips (energy foods, iron, protein, hydration, calcium, DHA, small meals, fiber, potassium, balanced nutrition)
+- **Tip Structure**: Title, short body (<100 chars), expanded content (265-380 chars), sources (WHO/CDC/NHS/ACOG)
 - **Invalid Token Handling**: Auto-removal of invalid/expired FCM tokens from database
 
 ### iOS App Store Preparation (January 2026)
