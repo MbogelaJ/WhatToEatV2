@@ -548,6 +548,167 @@ async def get_emergency_info():
         "disclaimer": "This information is for educational purposes. Always err on the side of caution and seek medical care if you are concerned."
     }
 
+# ===== PUSH NOTIFICATION ENDPOINTS =====
+
+@api_router.post("/register_device", response_model=DeviceTokenResponse)
+async def register_device_token(request: DeviceTokenRequest):
+    """
+    Register a device token for push notifications
+    Stores token in MongoDB with optional platform and trimester info
+    """
+    try:
+        token = request.token.strip()
+        if not token:
+            raise HTTPException(status_code=400, detail="Token cannot be empty")
+        
+        # Check if token already exists
+        existing = await device_tokens_collection.find_one({"token": token})
+        
+        if existing:
+            # Update existing token with new info
+            await device_tokens_collection.update_one(
+                {"token": token},
+                {"$set": {
+                    "platform": request.platform,
+                    "trimester": request.trimester,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            logger.info(f"Device token updated: {token[:20]}...")
+            return DeviceTokenResponse(
+                success=True,
+                message="Device token updated successfully",
+                token_id=token[:20] + "..."
+            )
+        else:
+            # Insert new token
+            doc = {
+                "token": token,
+                "platform": request.platform,
+                "trimester": request.trimester,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            await device_tokens_collection.insert_one(doc)
+            logger.info(f"Device token registered: {token[:20]}...")
+            return DeviceTokenResponse(
+                success=True,
+                message="Device token registered successfully",
+                token_id=token[:20] + "..."
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error registering device token: {e}")
+        raise HTTPException(status_code=500, detail="Failed to register device token")
+
+
+@api_router.delete("/unregister_device/{token}")
+async def unregister_device_token(token: str):
+    """
+    Unregister a device token from push notifications
+    """
+    try:
+        result = await device_tokens_collection.delete_one({"token": token})
+        
+        if result.deleted_count > 0:
+            logger.info(f"Device token unregistered: {token[:20]}...")
+            return {"success": True, "message": "Device token unregistered successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Device token not found")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error unregistering device token: {e}")
+        raise HTTPException(status_code=500, detail="Failed to unregister device token")
+
+
+@api_router.post("/test_notification")
+async def test_push_notification(request: NotificationTestRequest):
+    """
+    Send a test push notification to a specific device token
+    Useful for testing the push notification setup
+    """
+    try:
+        fcm = get_fcm_service()
+        
+        if not fcm.project_id:
+            raise HTTPException(
+                status_code=503,
+                detail="Push notification service not configured"
+            )
+        
+        result = fcm.send_notification(
+            token=request.token,
+            title=request.title,
+            body=request.body,
+            data={"screen": "home", "test": "true"}
+        )
+        
+        if result.get("success"):
+            return {
+                "success": True,
+                "message": "Test notification sent successfully",
+                "message_id": result.get("message_id")
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Failed to send notification",
+                "error": result.get("error"),
+                "invalid_token": result.get("invalid_token", False)
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error sending test notification: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/notification_status")
+async def get_notification_status():
+    """
+    Get the status of the push notification service and scheduler
+    """
+    fcm = get_fcm_service()
+    
+    # Get registered device count
+    device_count = await device_tokens_collection.count_documents({})
+    
+    # Get next scheduled job time
+    next_run = None
+    job = scheduler.get_job("daily_notification")
+    if job and job.next_run_time:
+        next_run = job.next_run_time.isoformat()
+    
+    return {
+        "fcm_configured": fcm.project_id is not None,
+        "fcm_project_id": fcm.project_id,
+        "scheduler_running": scheduler.running,
+        "next_notification_time": next_run,
+        "timezone": "Africa/Dar_es_Salaam",
+        "scheduled_time": "15:00 (3:00 PM)",
+        "registered_devices": device_count,
+        "daily_tip_preview": get_daily_tip()
+    }
+
+
+@api_router.post("/trigger_daily_notification")
+async def trigger_daily_notification_now():
+    """
+    Manually trigger the daily notification job (for testing)
+    """
+    try:
+        await send_daily_notifications()
+        return {"success": True, "message": "Daily notification job triggered"}
+    except Exception as e:
+        logger.error(f"Error triggering daily notification: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
