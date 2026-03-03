@@ -7,12 +7,9 @@ use_frameworks!
 install! 'cocoapods', :disable_input_output_paths => true
 
 def capacitor_pods
-  # Capacitor Core - use specific version
-  pod 'Capacitor', '~> 5.0'
-  pod 'CapacitorCordova', '~> 5.0'
-  
-  # Push Notifications Plugin
-  pod 'CapacitorPushNotifications', '~> 5.0'
+  pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
+  pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
+  pod 'CapacitorPushNotifications', :path => '../../node_modules/@capacitor/push-notifications'
 end
 
 target 'App' do
