@@ -5,13 +5,7 @@ import { useUser } from '../context/UserContext';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { user, isPremium, clearUser, getTrimester } = useUser();
-
-  const trimesterLabels = {
-    1: 'First Trimester',
-    2: 'Second Trimester',
-    3: 'Third Trimester',
-  };
+  const { user, isPremium, clearUser, getPregnancyStageLabel } = useUser();
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to reset your profile? This will clear all your data.')) {
@@ -77,12 +71,10 @@ export default function SettingsPage() {
               </div>
               <div className="text-sm text-stone-500 mt-1">
                 <span>Age: {user.age}</span>
-                <span className="mx-2">•</span>
-                <span>Week {user.pregnancyWeeks}</span>
-                {getTrimester() && (
+                {getPregnancyStageLabel() && (
                   <>
                     <span className="mx-2">•</span>
-                    <span>{trimesterLabels[getTrimester()]}</span>
+                    <span>{getPregnancyStageLabel()}</span>
                   </>
                 )}
               </div>

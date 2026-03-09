@@ -22,13 +22,20 @@ const dietaryOptions = [
   { id: 'anemia', label: 'Anemia', description: 'Iron deficiency concerns' },
 ];
 
+const pregnancyStages = [
+  { id: 'first-trimester', label: 'First Trimester', weeks: 'Weeks 1-12', trimester: 1 },
+  { id: 'second-trimester', label: 'Second Trimester', weeks: 'Weeks 13-26', trimester: 2 },
+  { id: 'third-trimester', label: 'Third Trimester', weeks: 'Weeks 27-40', trimester: 3 },
+  { id: 'postpartum', label: 'Postpartum', weeks: 'After delivery', trimester: 4 },
+];
+
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const { saveUser } = useUser();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     age: '',
-    pregnancyWeeks: '',
+    pregnancyStage: '',
     dietaryRestrictions: [],
   });
   const [errors, setErrors] = useState({});
@@ -44,10 +51,8 @@ export default function OnboardingPage() {
       newErrors.age = 'Please enter a valid age (18-55)';
     }
 
-    if (!formData.pregnancyWeeks) {
-      newErrors.pregnancyWeeks = 'Please enter your pregnancy week';
-    } else if (parseInt(formData.pregnancyWeeks) < 1 || parseInt(formData.pregnancyWeeks) > 42) {
-      newErrors.pregnancyWeeks = 'Please enter a valid week (1-42)';
+    if (!formData.pregnancyStage) {
+      newErrors.pregnancyStage = 'Please select your pregnancy stage';
     }
 
     setErrors(newErrors);
@@ -61,10 +66,13 @@ export default function OnboardingPage() {
     } else if (step === 2) {
       // Validate and complete onboarding
       if (validateStep2()) {
+        const selectedStage = pregnancyStages.find(s => s.id === formData.pregnancyStage);
         const userData = {
           ...formData,
           age: parseInt(formData.age),
-          pregnancyWeeks: parseInt(formData.pregnancyWeeks),
+          trimester: selectedStage?.trimester || null,
+          pregnancyStageLabel: selectedStage?.label || '',
+          pregnancyStageWeeks: selectedStage?.weeks || '',
           onboardingCompleted: true,
           disclaimerAccepted: true,
           isPremium: false,
@@ -93,15 +101,16 @@ export default function OnboardingPage() {
     }));
   };
 
-  const getTrimesterFromWeeks = (weeks) => {
-    if (!weeks) return null;
-    const w = parseInt(weeks);
-    if (w <= 12) return { number: 1, label: 'First Trimester', range: 'Weeks 1-12' };
-    if (w <= 27) return { number: 2, label: 'Second Trimester', range: 'Weeks 13-27' };
-    return { number: 3, label: 'Third Trimester', range: 'Weeks 28-42' };
+  const selectPregnancyStage = (stageId) => {
+    setFormData((prev) => ({
+      ...prev,
+      pregnancyStage: stageId,
+    }));
+    // Clear error when selection is made
+    if (errors.pregnancyStage) {
+      setErrors((prev) => ({ ...prev, pregnancyStage: null }));
+    }
   };
-
-  const trimester = getTrimesterFromWeeks(formData.pregnancyWeeks);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white" data-testid="onboarding-page">
@@ -222,7 +231,7 @@ export default function OnboardingPage() {
               )}
             </div>
 
-            {/* Pregnancy Week Input */}
+            {/* Pregnancy Stage Selection */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-stone-100">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -230,28 +239,34 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <h2 className="font-semibold text-stone-800">Pregnancy Stage</h2>
+                  <p className="text-xs text-stone-500">Select your current stage</p>
                 </div>
               </div>
 
-              <input
-                type="number"
-                value={formData.pregnancyWeeks}
-                onChange={(e) => setFormData({ ...formData, pregnancyWeeks: e.target.value })}
-                placeholder="Enter weeks (1-42)"
-                min="1"
-                max="42"
-                className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                data-testid="pregnancy-weeks-input"
-              />
-              {errors.pregnancyWeeks && (
-                <p className="text-red-500 text-sm mt-1">{errors.pregnancyWeeks}</p>
-              )}
-
-              {trimester && (
-                <div className="mt-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <p className="font-medium text-emerald-800">{trimester.label}</p>
-                  <p className="text-sm text-emerald-600">{trimester.range}</p>
-                </div>
+              <div className="space-y-2">
+                {pregnancyStages.map((stage) => (
+                  <button
+                    key={stage.id}
+                    onClick={() => selectPregnancyStage(stage.id)}
+                    className={`w-full p-4 rounded-xl border text-left transition-colors flex items-center justify-between ${
+                      formData.pregnancyStage === stage.id
+                        ? 'bg-emerald-50 border-emerald-300'
+                        : 'bg-white border-stone-200 hover:border-stone-300'
+                    }`}
+                    data-testid={`stage-${stage.id}`}
+                  >
+                    <div>
+                      <p className="font-medium text-stone-800">{stage.label}</p>
+                      <p className="text-sm text-stone-500">{stage.weeks}</p>
+                    </div>
+                    {formData.pregnancyStage === stage.id && (
+                      <Check className="text-emerald-600" size={20} />
+                    )}
+                  </button>
+                ))}
+              </div>
+              {errors.pregnancyStage && (
+                <p className="text-red-500 text-sm mt-2">{errors.pregnancyStage}</p>
               )}
             </div>
 

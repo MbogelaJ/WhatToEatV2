@@ -42,13 +42,16 @@ export function UserProvider({ children }) {
     return user && user.isPremium;
   };
 
-  // Calculate trimester from pregnancy weeks
+  // Get trimester from saved data
   const getTrimester = () => {
-    if (!user || !user.pregnancyWeeks) return null;
-    const weeks = user.pregnancyWeeks;
-    if (weeks <= 12) return 1;
-    if (weeks <= 27) return 2;
-    return 3;
+    if (!user) return null;
+    return user.trimester || null;
+  };
+
+  // Get pregnancy stage label
+  const getPregnancyStageLabel = () => {
+    if (!user) return null;
+    return user.pregnancyStageLabel || null;
   };
 
   // Get dietary restrictions
@@ -67,6 +70,7 @@ export function UserProvider({ children }) {
         hasCompletedOnboarding,
         isPremium,
         getTrimester,
+        getPregnancyStageLabel,
         getDietaryRestrictions,
       }}
     >
