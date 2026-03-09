@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, ExternalLink, Sparkles, AlertTriangle, Check, Info } from 'lucide-react';
 import { foodsApi } from '../api';
 import { SafetyBadge, NutrientTag } from '../components/food/FoodCard';
 import { Disclaimer } from '../components/common/Filters';
+import { useUser } from '../context/UserContext';
 
 export default function FoodDetailPage() {
   const { id } = useParams();
+  const { getTrimester, getDietaryRestrictions } = useUser();
   const [food, setFood] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,8 +17,24 @@ export default function FoodDetailPage() {
   useEffect(() => {
     async function fetchFood() {
       try {
-        const response = await foodsApi.getById(id);
-        setFood(response.data);
+        // Try to get personalized food data first
+        const trimester = getTrimester();
+        const healthConditions = getDietaryRestrictions();
+        
+        if (healthConditions.length > 0 || trimester) {
+          const response = await foodsApi.getPersonalized(healthConditions, trimester);
+          const foundFood = response.data.foods.find(f => f.id === id);
+          if (foundFood) {
+            setFood(foundFood);
+          } else {
+            // Fallback to regular endpoint
+            const regularResponse = await foodsApi.getById(id);
+            setFood(regularResponse.data);
+          }
+        } else {
+          const response = await foodsApi.getById(id);
+          setFood(response.data);
+        }
       } catch (err) {
         setError('Food not found');
         console.error('Error fetching food:', err);
@@ -25,7 +43,7 @@ export default function FoodDetailPage() {
       }
     }
     fetchFood();
-  }, [id]);
+  }, [id, getTrimester, getDietaryRestrictions]);
 
   if (loading) {
     return (
@@ -53,6 +71,9 @@ export default function FoodDetailPage() {
     );
   }
 
+  const isRecommended = food.is_recommended;
+  const shouldLimit = food.should_limit;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6" data-testid="food-detail-page">
       <Link 
@@ -74,6 +95,49 @@ export default function FoodDetailPage() {
           <p className="text-stone-500">{food.category}</p>
         </div>
 
+        {/* Personalization Banners */}
+        {isRecommended && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <Sparkles className="text-emerald-600 flex-shrink-0 mt-0.5" size={20} />
+              <div>
+                <h3 className="font-semibold text-emerald-800">Recommended for You</h3>
+                {food.recommendation_reasons?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {food.recommendation_reasons.map((reason, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+                        <Check size={12} />
+                        {reason}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {shouldLimit && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+              <div>
+                <h3 className="font-semibold text-amber-800">Consider Limiting</h3>
+                {food.caution_reasons?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {food.caution_reasons.map((reason, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 text-sm bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
+                        <Info size={12} />
+                        {reason}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Description */}
         <div className="bg-white rounded-xl p-4 border border-stone-200">
           <p className="text-stone-700">{food.description}</p>
@@ -87,6 +151,54 @@ export default function FoodDetailPage() {
             <p className="text-stone-500 text-sm mt-2 italic">{food.context}</p>
           )}
         </div>
+
+        {/* Health Tags */}
+        {food.health_tags?.length > 0 && (
+          <div>
+            <h2 className="font-semibold text-stone-800 mb-3">Health Properties</h2>
+            <div className="flex flex-wrap gap-2">
+              {food.health_tags.map((tag) => (
+                <span 
+                  key={tag} 
+                  className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full"
+                >
+                  {tag.replace(/-/g, ' ')}
+                </span>
+              ))}
+            </div>
+            
+            {/* Iron/Sugar/Sodium Levels */}
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+              {food.iron_level && food.iron_level !== 'unknown' && (
+                <span className={`px-2 py-1 rounded ${
+                  food.iron_level === 'high' || food.iron_level === 'very-high' 
+                    ? 'bg-emerald-100 text-emerald-700' 
+                    : 'bg-stone-100 text-stone-600'
+                }`}>
+                  Iron: {food.iron_level}
+                </span>
+              )}
+              {food.sugar_level && food.sugar_level !== 'unknown' && (
+                <span className={`px-2 py-1 rounded ${
+                  food.sugar_level === 'high' || food.sugar_level === 'very-high' 
+                    ? 'bg-amber-100 text-amber-700' 
+                    : 'bg-emerald-100 text-emerald-700'
+                }`}>
+                  Sugar: {food.sugar_level}
+                </span>
+              )}
+              {food.sodium_level && food.sodium_level !== 'unknown' && (
+                <span className={`px-2 py-1 rounded ${
+                  food.sodium_level === 'high' || food.sodium_level === 'very-high' 
+                    ? 'bg-amber-100 text-amber-700' 
+                    : 'bg-emerald-100 text-emerald-700'
+                }`}>
+                  Sodium: {food.sodium_level}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Nutrients */}
         {food.nutrients && food.nutrients.length > 0 && (

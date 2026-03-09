@@ -16,8 +16,15 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
 
-from push_notifications import get_fcm_service, get_daily_tip, get_all_tips, get_tips_count, get_tip_by_index
+from push_notifications import get_fcm_service, get_daily_tip, get_all_tips, get_tips_count, get_tip_by_index, FIRST_TRIMESTER_TIPS, SECOND_TRIMESTER_TIPS, THIRD_TRIMESTER_TIPS
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
+from health_filters import (
+    get_food_health_tags, 
+    get_personalized_recommendations, 
+    filter_food_for_user,
+    TRIMESTER_PRIORITIES,
+    HEALTH_CONDITION_TAGS
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -562,6 +569,139 @@ async def get_emergency_info():
         "action": "If you experience any of these symptoms, please contact your healthcare provider immediately or call emergency services.",
         "disclaimer": "This information is for educational purposes. Always err on the side of caution and seek medical care if you are concerned."
     }
+
+# ===== PERSONALIZATION ENDPOINTS =====
+
+class PersonalizationRequest(BaseModel):
+    health_conditions: List[str] = Field(default=[], description="User's health conditions and dietary restrictions")
+    trimester: Optional[int] = Field(default=None, ge=1, le=4, description="User's pregnancy trimester (1-4, 4=postpartum)")
+
+@api_router.post("/foods/personalized")
+async def get_personalized_foods(request: PersonalizationRequest):
+    """
+    Get all foods with personalization flags based on user's health conditions and trimester.
+    Returns foods with recommendation/caution flags.
+    """
+    health_conditions = request.health_conditions
+    trimester = request.trimester
+    
+    # Get personalization recommendations
+    recommendations = get_personalized_recommendations(health_conditions, trimester)
+    
+    # Filter and enhance each food
+    personalized_foods = []
+    for food in FOOD_DATABASE:
+        enhanced_food = filter_food_for_user(food, health_conditions, trimester)
+        personalized_foods.append(enhanced_food)
+    
+    # Sort: recommended first, then should_limit last
+    personalized_foods.sort(key=lambda x: (
+        -1 if x["is_recommended"] else (1 if x["should_limit"] else 0),
+        x["name"]
+    ))
+    
+    return {
+        "foods": personalized_foods,
+        "recommendations": recommendations,
+        "total_count": len(personalized_foods),
+        "recommended_count": sum(1 for f in personalized_foods if f["is_recommended"]),
+        "caution_count": sum(1 for f in personalized_foods if f["should_limit"]),
+        "disclaimer": "This information is for educational purposes only. Consult your healthcare provider for personalized dietary advice."
+    }
+
+
+@api_router.get("/foods/recommended/{condition}")
+async def get_foods_for_condition(condition: str):
+    """
+    Get foods recommended for a specific health condition.
+    """
+    if condition not in HEALTH_CONDITION_TAGS:
+        raise HTTPException(status_code=404, detail=f"Unknown condition: {condition}")
+    
+    config = HEALTH_CONDITION_TAGS[condition]
+    
+    # Filter foods for this condition
+    recommended_foods = []
+    avoid_foods = []
+    
+    for food in FOOD_DATABASE:
+        enhanced = filter_food_for_user(food, [condition])
+        if enhanced["is_recommended"]:
+            recommended_foods.append(enhanced)
+        elif enhanced["should_limit"]:
+            avoid_foods.append(enhanced)
+    
+    return {
+        "condition": condition,
+        "description": config.get("description", ""),
+        "highlight_nutrients": config.get("highlight_nutrients", []),
+        "recommended_foods": recommended_foods,
+        "foods_to_limit": avoid_foods,
+        "disclaimer": "This information is for educational purposes only. Consult your healthcare provider for personalized dietary advice."
+    }
+
+
+@api_router.get("/recommendations/trimester/{trimester}")
+async def get_trimester_recommendations(trimester: int):
+    """
+    Get nutrition recommendations for a specific trimester.
+    """
+    if trimester not in TRIMESTER_PRIORITIES:
+        raise HTTPException(status_code=404, detail="Trimester must be 1, 2, 3, or 4 (postpartum)")
+    
+    config = TRIMESTER_PRIORITIES[trimester]
+    
+    # Get recommended foods for this trimester
+    recommended_tags = config.get("recommended_tags", [])
+    recommended_foods = []
+    
+    for food in FOOD_DATABASE:
+        enhanced = filter_food_for_user(food, [], trimester)
+        if enhanced["is_recommended"] or any(tag in enhanced.get("health_tags", []) for tag in recommended_tags):
+            enhanced["is_recommended"] = True
+            recommended_foods.append(enhanced)
+    
+    # Get trimester-specific tips
+    if trimester == 1:
+        tips = FIRST_TRIMESTER_TIPS[:5]
+    elif trimester == 2:
+        tips = SECOND_TRIMESTER_TIPS[:5]
+    elif trimester == 3:
+        tips = THIRD_TRIMESTER_TIPS[:5]
+    else:
+        tips = THIRD_TRIMESTER_TIPS[:5]  # Postpartum uses third trimester tips as base
+    
+    return {
+        "trimester": trimester,
+        "name": config["name"],
+        "weeks": config["weeks"],
+        "priority_nutrients": config["priority_nutrients"],
+        "focus_areas": config["focus_areas"],
+        "recommended_foods": recommended_foods[:20],  # Top 20
+        "daily_tips": tips,
+        "disclaimer": "This information is for educational purposes only. Consult your healthcare provider for personalized dietary advice."
+    }
+
+
+@api_router.get("/health-conditions")
+async def get_health_conditions():
+    """
+    Get list of all supported health conditions with their descriptions.
+    """
+    conditions = []
+    for condition_id, config in HEALTH_CONDITION_TAGS.items():
+        conditions.append({
+            "id": condition_id,
+            "description": config.get("description", ""),
+            "highlight_nutrients": config.get("highlight_nutrients", []),
+            "recommended_tags": config.get("recommended_tags", [])
+        })
+    
+    return {
+        "conditions": conditions,
+        "total": len(conditions)
+    }
+
 
 # ===== PUSH NOTIFICATION ENDPOINTS =====
 
