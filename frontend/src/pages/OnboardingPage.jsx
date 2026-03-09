@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, User, Calendar, Utensils, Check } from 'lucide-react';
+import { ChevronRight, ChevronLeft, User, Calendar, Utensils, Shield, Check, AlertTriangle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
 const dietaryOptions = [
@@ -25,25 +25,21 @@ export default function OnboardingPage() {
   });
   const [errors, setErrors] = useState({});
 
-  const totalSteps = 3;
+  const totalSteps = 2;
 
-  const validateStep = () => {
+  const validateStep2 = () => {
     const newErrors = {};
 
-    if (step === 1) {
-      if (!formData.age) {
-        newErrors.age = 'Please enter your age';
-      } else if (parseInt(formData.age) < 18 || parseInt(formData.age) > 55) {
-        newErrors.age = 'Please enter a valid age (18-55)';
-      }
+    if (!formData.age) {
+      newErrors.age = 'Please enter your age';
+    } else if (parseInt(formData.age) < 18 || parseInt(formData.age) > 55) {
+      newErrors.age = 'Please enter a valid age (18-55)';
     }
 
-    if (step === 2) {
-      if (!formData.pregnancyWeeks) {
-        newErrors.pregnancyWeeks = 'Please enter your pregnancy week';
-      } else if (parseInt(formData.pregnancyWeeks) < 1 || parseInt(formData.pregnancyWeeks) > 42) {
-        newErrors.pregnancyWeeks = 'Please enter a valid week (1-42)';
-      }
+    if (!formData.pregnancyWeeks) {
+      newErrors.pregnancyWeeks = 'Please enter your pregnancy week';
+    } else if (parseInt(formData.pregnancyWeeks) < 1 || parseInt(formData.pregnancyWeeks) > 42) {
+      newErrors.pregnancyWeeks = 'Please enter a valid week (1-42)';
     }
 
     setErrors(newErrors);
@@ -51,20 +47,24 @@ export default function OnboardingPage() {
   };
 
   const handleNext = () => {
-    if (validateStep()) {
-      if (step < totalSteps) {
-        setStep(step + 1);
-      } else {
-        // Complete onboarding
+    if (step === 1) {
+      // Move from disclaimer to profile page
+      setStep(2);
+    } else if (step === 2) {
+      // Validate and complete onboarding
+      if (validateStep2()) {
         const userData = {
           ...formData,
           age: parseInt(formData.age),
           pregnancyWeeks: parseInt(formData.pregnancyWeeks),
           onboardingCompleted: true,
+          disclaimerAccepted: true,
           isPremium: false,
           createdAt: new Date().toISOString(),
         };
         saveUser(userData);
+        // Also set session storage so disclaimer modal doesn't show again
+        sessionStorage.setItem('disclaimer_accepted', 'true');
         navigate('/');
       }
     }
@@ -111,13 +111,13 @@ export default function OnboardingPage() {
           <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span className="text-white font-bold text-2xl">W</span>
           </div>
-          <h1 className="text-2xl font-bold text-stone-800">Welcome to WhatToEat</h1>
-          <p className="text-stone-500 mt-2">Let's personalize your experience</p>
+          <h1 className="text-2xl font-bold text-stone-800">WhatToEat</h1>
+          <p className="text-stone-500 mt-2">Pregnancy Nutrition Guide</p>
         </div>
 
         {/* Step Indicator */}
         <div className="flex justify-center gap-2 mb-8">
-          {[1, 2, 3].map((s) => (
+          {[1, 2].map((s) => (
             <div
               key={s}
               className={`w-3 h-3 rounded-full transition-colors ${
@@ -127,125 +127,159 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        {/* Step 1: Age */}
+        {/* Step 1: Disclaimer */}
         {step === 1 && (
-          <div className="space-y-6" data-testid="step-age">
+          <div className="space-y-6" data-testid="step-disclaimer">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                  <Shield className="text-amber-600" size={20} />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-stone-800">Important Notice</h2>
+                  <p className="text-sm text-stone-500">Please read before continuing</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 text-sm text-stone-600">
+                <div className="flex gap-3">
+                  <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
+                  <p>
+                    This app provides <strong>general educational information</strong> about 
+                    nutrition during pregnancy compiled from public health sources.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
+                  <p>
+                    This is <strong>not medical advice</strong>. It does not replace consultation 
+                    with qualified healthcare professionals.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
+                  <p>
+                    Individual circumstances vary. Please consult your healthcare provider for 
+                    personalized guidance about your diet and nutrition.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
+                  <p>
+                    If you experience any concerning symptoms, <strong>seek medical attention 
+                    immediately</strong>. Do not rely on this app for medical decisions.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <p className="text-xs text-amber-700">
+                  By continuing, you acknowledge that you have read and understood this disclaimer, 
+                  and agree that this app is for educational purposes only.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Profile Information */}
+        {step === 2 && (
+          <div className="space-y-6" data-testid="step-profile">
+            {/* Age Input */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-stone-100">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
                   <User className="text-emerald-600" size={20} />
                 </div>
                 <div>
                   <h2 className="font-semibold text-stone-800">Your Age</h2>
-                  <p className="text-sm text-stone-500">This helps us provide relevant information</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-stone-700">
-                  How old are you?
-                </label>
-                <input
-                  type="number"
-                  value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                  placeholder="Enter your age"
-                  min="18"
-                  max="55"
-                  className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg"
-                  data-testid="age-input"
-                />
-                {errors.age && (
-                  <p className="text-red-500 text-sm">{errors.age}</p>
-                )}
-              </div>
+              <input
+                type="number"
+                value={formData.age}
+                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                placeholder="Enter your age (18-55)"
+                min="18"
+                max="55"
+                className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                data-testid="age-input"
+              />
+              {errors.age && (
+                <p className="text-red-500 text-sm mt-1">{errors.age}</p>
+              )}
             </div>
-          </div>
-        )}
 
-        {/* Step 2: Pregnancy Week */}
-        {step === 2 && (
-          <div className="space-y-6" data-testid="step-pregnancy">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
+            {/* Pregnancy Week Input */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-stone-100">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
                   <Calendar className="text-emerald-600" size={20} />
                 </div>
                 <div>
                   <h2 className="font-semibold text-stone-800">Pregnancy Stage</h2>
-                  <p className="text-sm text-stone-500">To show trimester-specific content</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-stone-700">
-                  How many weeks pregnant are you?
-                </label>
-                <input
-                  type="number"
-                  value={formData.pregnancyWeeks}
-                  onChange={(e) => setFormData({ ...formData, pregnancyWeeks: e.target.value })}
-                  placeholder="Enter weeks (1-42)"
-                  min="1"
-                  max="42"
-                  className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg"
-                  data-testid="pregnancy-weeks-input"
-                />
-                {errors.pregnancyWeeks && (
-                  <p className="text-red-500 text-sm">{errors.pregnancyWeeks}</p>
-                )}
-              </div>
+              <input
+                type="number"
+                value={formData.pregnancyWeeks}
+                onChange={(e) => setFormData({ ...formData, pregnancyWeeks: e.target.value })}
+                placeholder="Enter weeks (1-42)"
+                min="1"
+                max="42"
+                className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                data-testid="pregnancy-weeks-input"
+              />
+              {errors.pregnancyWeeks && (
+                <p className="text-red-500 text-sm mt-1">{errors.pregnancyWeeks}</p>
+              )}
 
               {trimester && (
-                <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                <div className="mt-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
                   <p className="font-medium text-emerald-800">{trimester.label}</p>
                   <p className="text-sm text-emerald-600">{trimester.range}</p>
                 </div>
               )}
             </div>
-          </div>
-        )}
 
-        {/* Step 3: Dietary Considerations */}
-        {step === 3 && (
-          <div className="space-y-6" data-testid="step-dietary">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
+            {/* Dietary Considerations */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-stone-100">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
                   <Utensils className="text-emerald-600" size={20} />
                 </div>
                 <div>
                   <h2 className="font-semibold text-stone-800">Dietary Considerations</h2>
-                  <p className="text-sm text-stone-500">Optional - helps filter content</p>
+                  <p className="text-xs text-stone-500">Optional - helps personalize content</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
                 {dietaryOptions.map((option) => (
                   <button
                     key={option.id}
                     onClick={() => toggleDietaryOption(option.id)}
-                    className={`w-full p-3 rounded-xl border text-left transition-colors flex items-center justify-between ${
+                    className={`p-3 rounded-xl border text-left transition-colors ${
                       formData.dietaryRestrictions.includes(option.id)
                         ? 'bg-emerald-50 border-emerald-300'
                         : 'bg-white border-stone-200 hover:border-stone-300'
                     }`}
                     data-testid={`dietary-${option.id}`}
                   >
-                    <div>
-                      <p className="font-medium text-stone-800">{option.label}</p>
-                      <p className="text-xs text-stone-500">{option.description}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-stone-800 text-sm">{option.label}</p>
+                      {formData.dietaryRestrictions.includes(option.id) && (
+                        <Check className="text-emerald-600" size={16} />
+                      )}
                     </div>
-                    {formData.dietaryRestrictions.includes(option.id) && (
-                      <Check className="text-emerald-600" size={20} />
-                    )}
                   </button>
                 ))}
               </div>
-
-              <p className="text-xs text-stone-400 mt-4 text-center">
-                You can skip this step or change it later in Settings
-              </p>
             </div>
           </div>
         )}
@@ -267,21 +301,10 @@ export default function OnboardingPage() {
             className="flex-1 py-3 px-4 bg-emerald-600 rounded-xl text-white font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
             data-testid="next-btn"
           >
-            {step === totalSteps ? 'Get Started' : 'Continue'}
+            {step === 1 ? 'I Understand' : 'Get Started'}
             <ChevronRight size={20} />
           </button>
         </div>
-
-        {/* Skip Option */}
-        {step === 3 && (
-          <button
-            onClick={handleNext}
-            className="w-full mt-4 py-2 text-stone-500 text-sm hover:text-stone-700 transition-colors"
-            data-testid="skip-btn"
-          >
-            Skip for now
-          </button>
-        )}
       </div>
     </div>
   );

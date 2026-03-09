@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Layout, DisclaimerModal } from './components/layout/Layout';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Layout } from './components/layout/Layout';
 import { UserProvider, useUser } from './context/UserContext';
 import HomePage from './pages/HomePage';
 import FoodDetailPage from './pages/FoodDetailPage';
@@ -13,7 +13,7 @@ import SubscribePage from './pages/SubscribePage';
 import { TermsPage, PrivacyPage, SupportPage } from './pages/LegalPages';
 import './App.css';
 
-// Protected Route wrapper
+// Protected Route wrapper - requires completed onboarding
 function ProtectedRoute({ children }) {
   const { hasCompletedOnboarding } = useUser();
   
@@ -26,32 +26,11 @@ function ProtectedRoute({ children }) {
 
 // Layout wrapper for main app routes
 function MainLayout({ children }) {
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const { hasCompletedOnboarding } = useUser();
-
-  useEffect(() => {
-    const hasAccepted = sessionStorage.getItem('disclaimer_accepted');
-    if (!hasAccepted && hasCompletedOnboarding()) {
-      setShowDisclaimer(true);
-    }
-  }, [hasCompletedOnboarding]);
-
-  const handleAcceptDisclaimer = () => {
-    sessionStorage.setItem('disclaimer_accepted', 'true');
-    setShowDisclaimer(false);
-  };
-
-  return (
-    <>
-      {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
-      <Layout>{children}</Layout>
-    </>
-  );
+  return <Layout>{children}</Layout>;
 }
 
 function AppContent() {
   const { loading, hasCompletedOnboarding } = useUser();
-  const location = useLocation();
 
   if (loading) {
     return (
@@ -63,7 +42,7 @@ function AppContent() {
 
   return (
     <Routes>
-      {/* Onboarding - no layout */}
+      {/* Onboarding - includes disclaimer as step 1 */}
       <Route
         path="/onboarding"
         element={
