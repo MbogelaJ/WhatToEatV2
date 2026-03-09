@@ -1,17 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, BookOpen, Info, Settings } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Search, BookOpen, Info, Settings, ChevronLeft } from 'lucide-react';
 
 export function Header() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Don't show back button on home page
+  const showBackButton = location.pathname !== '/';
+  
   return (
     <header className="bg-white border-b border-stone-200 sticky top-0 z-40">
       <div className="max-w-4xl mx-auto px-4 py-3">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">W</span>
-          </div>
-          <h1 className="text-lg font-semibold text-stone-800">WhatToEat</h1>
-        </Link>
+        <div className="flex items-center gap-3">
+          {showBackButton && (
+            <button
+              onClick={() => navigate(-1)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors text-stone-600"
+              data-testid="back-button"
+            >
+              <ChevronLeft size={24} />
+            </button>
+          )}
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">W</span>
+            </div>
+            <h1 className="text-lg font-semibold text-stone-800">WhatToEat</h1>
+          </Link>
+        </div>
       </div>
     </header>
   );

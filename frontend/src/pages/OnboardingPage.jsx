@@ -23,10 +23,10 @@ const dietaryOptions = [
 ];
 
 const pregnancyStages = [
-  { id: 'first-trimester', label: 'First Trimester', weeks: 'Weeks 1-12', trimester: 1 },
-  { id: 'second-trimester', label: 'Second Trimester', weeks: 'Weeks 13-26', trimester: 2 },
-  { id: 'third-trimester', label: 'Third Trimester', weeks: 'Weeks 27-40', trimester: 3 },
-  { id: 'postpartum', label: 'Postpartum', weeks: 'After delivery', trimester: 4 },
+  { id: 'first-trimester', label: 'First Trimester (Weeks 1-12)', trimester: 1 },
+  { id: 'second-trimester', label: 'Second Trimester (Weeks 13-26)', trimester: 2 },
+  { id: 'third-trimester', label: 'Third Trimester (Weeks 27-40)', trimester: 3 },
+  { id: 'postpartum', label: 'Postpartum (After delivery)', trimester: 4 },
 ];
 
 export default function OnboardingPage() {
@@ -34,15 +34,37 @@ export default function OnboardingPage() {
   const { saveUser } = useUser();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    authMode: 'signup', // 'signup' or 'signin'
     age: '',
     pregnancyStage: '',
     dietaryRestrictions: [],
   });
   const [errors, setErrors] = useState({});
 
-  const totalSteps = 2;
+  const totalSteps = 3;
 
   const validateStep2 = () => {
+    const newErrors = {};
+    
+    if (!formData.email) {
+      newErrors.email = 'Please enter your email';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Please enter a password';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep3 = () => {
     const newErrors = {};
 
     if (!formData.age) {
@@ -61,11 +83,16 @@ export default function OnboardingPage() {
 
   const handleNext = () => {
     if (step === 1) {
-      // Move from disclaimer to profile page
+      // Move from disclaimer to auth page
       setStep(2);
     } else if (step === 2) {
-      // Validate and complete onboarding
+      // Validate auth and move to profile page
       if (validateStep2()) {
+        setStep(3);
+      }
+    } else if (step === 3) {
+      // Validate and complete onboarding
+      if (validateStep3()) {
         const selectedStage = pregnancyStages.find(s => s.id === formData.pregnancyStage);
         // Generate a unique user ID for tracking payments
         const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -75,7 +102,6 @@ export default function OnboardingPage() {
           age: parseInt(formData.age),
           trimester: selectedStage?.trimester || null,
           pregnancyStageLabel: selectedStage?.label || '',
-          pregnancyStageWeeks: selectedStage?.weeks || '',
           onboardingCompleted: true,
           disclaimerAccepted: true,
           isPremium: false,
@@ -137,7 +163,7 @@ export default function OnboardingPage() {
 
         {/* Step Indicator */}
         <div className="flex justify-center gap-2 mb-8">
-          {[1, 2].map((s) => (
+          {[1, 2, 3].map((s) => (
             <div
               key={s}
               className={`w-3 h-3 rounded-full transition-colors ${
@@ -205,8 +231,86 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 2: Profile Information */}
+        {/* Step 2: Sign In / Sign Up */}
         {step === 2 && (
+          <div className="space-y-6" data-testid="step-auth">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
+              {/* Auth Mode Toggle */}
+              <div className="flex bg-stone-100 rounded-xl p-1 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, authMode: 'signup' })}
+                  className={`flex-1 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    formData.authMode === 'signup'
+                      ? 'bg-white text-emerald-600 shadow-sm'
+                      : 'text-stone-500'
+                  }`}
+                >
+                  Sign Up
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, authMode: 'signin' })}
+                  className={`flex-1 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    formData.authMode === 'signin'
+                      ? 'bg-white text-emerald-600 shadow-sm'
+                      : 'text-stone-500'
+                  }`}
+                >
+                  Sign In
+                </button>
+              </div>
+
+              <h2 className="text-xl font-semibold text-stone-800 mb-2 text-center">
+                {formData.authMode === 'signup' ? 'Create Your Account' : 'Welcome Back'}
+              </h2>
+              <p className="text-sm text-stone-500 mb-6 text-center">
+                {formData.authMode === 'signup' 
+                  ? 'Sign up to save your preferences' 
+                  : 'Sign in to access your profile'}
+              </p>
+
+              {/* Email Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-stone-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  data-testid="email-input"
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Password Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-stone-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder={formData.authMode === 'signup' ? 'Create a password (min 6 chars)' : 'Enter your password'}
+                  className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  data-testid="password-input"
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
+              </div>
+
+              <p className="text-xs text-stone-400 text-center mt-4">
+                Your data is stored locally on your device for privacy
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Profile Information */}
+        {step === 3 && (
           <div className="space-y-6" data-testid="step-profile">
             {/* Age Input */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-stone-100">
@@ -258,10 +362,7 @@ export default function OnboardingPage() {
                     }`}
                     data-testid={`stage-${stage.id}`}
                   >
-                    <div>
-                      <p className="font-medium text-stone-800">{stage.label}</p>
-                      <p className="text-sm text-stone-500">{stage.weeks}</p>
-                    </div>
+                    <p className="font-medium text-stone-800">{stage.label}</p>
                     {formData.pregnancyStage === stage.id && (
                       <Check className="text-emerald-600" size={20} />
                     )}
@@ -327,7 +428,7 @@ export default function OnboardingPage() {
             className="flex-1 py-3 px-4 bg-emerald-600 rounded-xl text-white font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
             data-testid="next-btn"
           >
-            {step === 1 ? 'I Understand' : 'Get Started'}
+            {step === 1 ? 'I Understand' : step === 2 ? (formData.authMode === 'signup' ? 'Create Account' : 'Sign In') : 'Get Started'}
             <ChevronRight size={20} />
           </button>
         </div>
