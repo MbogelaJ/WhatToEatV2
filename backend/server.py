@@ -1,20 +1,24 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 import re
+import hashlib
+import secrets
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from contextlib import asynccontextmanager
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import pytz
+import jwt
 
 from push_notifications import get_fcm_service, get_daily_tip, get_all_tips, get_tips_count, get_tip_by_index, FIRST_TRIMESTER_TIPS, SECOND_TRIMESTER_TIPS, THIRD_TRIMESTER_TIPS
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
@@ -38,10 +42,19 @@ db = client[os.environ['DB_NAME']]
 device_tokens_collection = db["device_tokens"]
 payment_transactions_collection = db["payment_transactions"]
 foods_collection = db["foods"]
+users_collection = db["users"]
 
 # Stripe configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
 PREMIUM_PRICE = 0.99  # Fixed price for premium - one-time payment
+
+# JWT configuration
+JWT_SECRET = os.environ.get('JWT_SECRET', secrets.token_hex(32))
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
+
+# Security
+security = HTTPBearer(auto_error=False)
 
 # Timezone for scheduler
 SCHEDULER_TIMEZONE = pytz.timezone('Africa/Dar_es_Salaam')
@@ -55,6 +68,88 @@ logger = logging.getLogger(__name__)
 
 # APScheduler instance
 scheduler = AsyncIOScheduler(timezone=SCHEDULER_TIMEZONE)
+
+
+# ============== AUTH MODELS ==============
+
+class UserRegister(BaseModel):
+    email: str
+    password: str
+    age: Optional[int] = None
+    trimester: Optional[int] = None
+    pregnancy_stage_label: Optional[str] = None
+    dietary_restrictions: Optional[List[str]] = []
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    age: Optional[int] = None
+    trimester: Optional[int] = None
+    pregnancy_stage_label: Optional[str] = None
+    dietary_restrictions: List[str] = []
+    is_premium: bool = False
+    created_at: str
+
+class AuthResponse(BaseModel):
+    user: UserResponse
+    token: str
+    message: str
+
+class UserUpdate(BaseModel):
+    age: Optional[int] = None
+    trimester: Optional[int] = None
+    pregnancy_stage_label: Optional[str] = None
+    dietary_restrictions: Optional[List[str]] = None
+
+
+# ============== AUTH HELPER FUNCTIONS ==============
+
+def hash_password(password: str) -> str:
+    """Hash password with SHA-256"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash"""
+    return hash_password(password) == hashed
+
+def create_jwt_token(user_id: str, email: str) -> str:
+    """Create JWT token for user"""
+    payload = {
+        "user_id": user_id,
+        "email": email,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS),
+        "iat": datetime.now(timezone.utc)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_jwt_token(token: str) -> Optional[Dict]:
+    """Decode and verify JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[Dict]:
+    """Get current user from JWT token"""
+    if not credentials:
+        return None
+    
+    payload = decode_jwt_token(credentials.credentials)
+    if not payload:
+        return None
+    
+    user = await users_collection.find_one(
+        {"_id": payload["user_id"]},
+        {"password": 0}
+    )
+    return user
 
 
 async def send_daily_notifications():
@@ -413,7 +508,180 @@ def get_topic_info(query: str) -> tuple:
     
     return (None, QA_DATABASE["default"])
 
-# API Routes
+# ============== AUTH ROUTES ==============
+
+@api_router.post("/auth/register", response_model=AuthResponse)
+async def register_user(user_data: UserRegister):
+    """Register a new user"""
+    # Validate email format
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_regex, user_data.email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    # Check password length
+    if len(user_data.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Check if email already exists
+    existing_user = await users_collection.find_one({"email": user_data.email.lower()})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user
+    user_id = f"user_{int(datetime.now(timezone.utc).timestamp())}_{secrets.token_hex(4)}"
+    now = datetime.now(timezone.utc).isoformat()
+    
+    user_doc = {
+        "_id": user_id,
+        "email": user_data.email.lower(),
+        "password": hash_password(user_data.password),
+        "age": user_data.age,
+        "trimester": user_data.trimester,
+        "pregnancy_stage_label": user_data.pregnancy_stage_label,
+        "dietary_restrictions": user_data.dietary_restrictions or [],
+        "is_premium": False,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await users_collection.insert_one(user_doc)
+    
+    # Create JWT token
+    token = create_jwt_token(user_id, user_data.email.lower())
+    
+    return AuthResponse(
+        user=UserResponse(
+            id=user_id,
+            email=user_data.email.lower(),
+            age=user_data.age,
+            trimester=user_data.trimester,
+            pregnancy_stage_label=user_data.pregnancy_stage_label,
+            dietary_restrictions=user_data.dietary_restrictions or [],
+            is_premium=False,
+            created_at=now
+        ),
+        token=token,
+        message="Registration successful"
+    )
+
+@api_router.post("/auth/login", response_model=AuthResponse)
+async def login_user(credentials: UserLogin):
+    """Login user with email and password"""
+    # Find user by email
+    user = await users_collection.find_one({"email": credentials.email.lower()})
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Verify password
+    if not verify_password(credentials.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Check premium status from payments
+    paid_transaction = await payment_transactions_collection.find_one({
+        "user_id": user["_id"],
+        "payment_status": "paid"
+    })
+    
+    is_premium = paid_transaction is not None
+    
+    # Update premium status if changed
+    if is_premium != user.get("is_premium", False):
+        await users_collection.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"is_premium": is_premium, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    # Create JWT token
+    token = create_jwt_token(user["_id"], user["email"])
+    
+    return AuthResponse(
+        user=UserResponse(
+            id=user["_id"],
+            email=user["email"],
+            age=user.get("age"),
+            trimester=user.get("trimester"),
+            pregnancy_stage_label=user.get("pregnancy_stage_label"),
+            dietary_restrictions=user.get("dietary_restrictions", []),
+            is_premium=is_premium,
+            created_at=user.get("created_at", "")
+        ),
+        token=token,
+        message="Login successful"
+    )
+
+@api_router.get("/auth/me")
+async def get_current_user_profile(current_user: Dict = Depends(get_current_user)):
+    """Get current user profile"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Check premium status
+    paid_transaction = await payment_transactions_collection.find_one({
+        "user_id": current_user["_id"],
+        "payment_status": "paid"
+    })
+    is_premium = paid_transaction is not None
+    
+    return UserResponse(
+        id=current_user["_id"],
+        email=current_user["email"],
+        age=current_user.get("age"),
+        trimester=current_user.get("trimester"),
+        pregnancy_stage_label=current_user.get("pregnancy_stage_label"),
+        dietary_restrictions=current_user.get("dietary_restrictions", []),
+        is_premium=is_premium,
+        created_at=current_user.get("created_at", "")
+    )
+
+@api_router.put("/auth/profile")
+async def update_user_profile(
+    update_data: UserUpdate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update current user profile"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    update_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if update_data.age is not None:
+        update_fields["age"] = update_data.age
+    if update_data.trimester is not None:
+        update_fields["trimester"] = update_data.trimester
+    if update_data.pregnancy_stage_label is not None:
+        update_fields["pregnancy_stage_label"] = update_data.pregnancy_stage_label
+    if update_data.dietary_restrictions is not None:
+        update_fields["dietary_restrictions"] = update_data.dietary_restrictions
+    
+    await users_collection.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": update_fields}
+    )
+    
+    # Get updated user
+    updated_user = await users_collection.find_one({"_id": current_user["_id"]})
+    
+    # Check premium status
+    paid_transaction = await payment_transactions_collection.find_one({
+        "user_id": current_user["_id"],
+        "payment_status": "paid"
+    })
+    is_premium = paid_transaction is not None
+    
+    return UserResponse(
+        id=updated_user["_id"],
+        email=updated_user["email"],
+        age=updated_user.get("age"),
+        trimester=updated_user.get("trimester"),
+        pregnancy_stage_label=updated_user.get("pregnancy_stage_label"),
+        dietary_restrictions=updated_user.get("dietary_restrictions", []),
+        is_premium=is_premium,
+        created_at=updated_user.get("created_at", "")
+    )
+
+# ============== API Routes ==============
+
 @api_router.get("/")
 async def root():
     return {"message": "NurtureNote - Pregnancy Nutrition Education API"}

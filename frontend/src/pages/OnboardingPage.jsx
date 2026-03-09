@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, User, Calendar, Utensils, Shield, Check, AlertTriangle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, User, Calendar, Utensils, Shield, Check, AlertTriangle, Loader } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
 const dietaryOptions = [
@@ -31,8 +31,9 @@ const pregnancyStages = [
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const { saveUser } = useUser();
+  const { register, login, saveUser } = useUser();
   const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -81,36 +82,62 @@ export default function OnboardingPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1) {
       // Move from disclaimer to auth page
       setStep(2);
     } else if (step === 2) {
-      // Validate auth and move to profile page
+      // Validate auth and either login or register
       if (validateStep2()) {
-        setStep(3);
+        setIsLoading(true);
+        setErrors({});
+        
+        try {
+          if (formData.authMode === 'signin') {
+            // Login existing user
+            const result = await login(formData.email, formData.password);
+            if (result.success) {
+              navigate('/');
+              return;
+            } else {
+              setErrors({ auth: result.error });
+            }
+          } else {
+            // For signup, move to profile step to collect more info
+            setStep(3);
+          }
+        } catch (err) {
+          setErrors({ auth: 'An error occurred. Please try again.' });
+        } finally {
+          setIsLoading(false);
+        }
       }
     } else if (step === 3) {
-      // Validate and complete onboarding
+      // Validate and complete registration
       if (validateStep3()) {
+        setIsLoading(true);
+        setErrors({});
+        
         const selectedStage = pregnancyStages.find(s => s.id === formData.pregnancyStage);
-        // Generate a unique user ID for tracking payments
-        const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const userData = {
-          ...formData,
-          id: userId,
-          age: parseInt(formData.age),
-          trimester: selectedStage?.trimester || null,
-          pregnancyStageLabel: selectedStage?.label || '',
-          onboardingCompleted: true,
-          disclaimerAccepted: true,
-          isPremium: false,
-          createdAt: new Date().toISOString(),
-        };
-        saveUser(userData);
-        // Also set session storage so disclaimer modal doesn't show again
-        sessionStorage.setItem('disclaimer_accepted', 'true');
-        navigate('/');
+        
+        try {
+          const result = await register(formData.email, formData.password, {
+            age: parseInt(formData.age),
+            trimester: selectedStage?.trimester || null,
+            pregnancyStageLabel: selectedStage?.label || '',
+            dietaryRestrictions: formData.dietaryRestrictions
+          });
+          
+          if (result.success) {
+            navigate('/');
+          } else {
+            setErrors({ auth: result.error });
+          }
+        } catch (err) {
+          setErrors({ auth: 'Registration failed. Please try again.' });
+        } finally {
+          setIsLoading(false);
+        }
       }
     }
   };
@@ -302,6 +329,13 @@ export default function OnboardingPage() {
                 )}
               </div>
 
+              {/* Auth Error Message */}
+              {errors.auth && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-600 text-sm text-center">{errors.auth}</p>
+                </div>
+              )}
+
               {/* Divider */}
               <div className="flex items-center gap-4 my-6">
                 <div className="flex-1 h-px bg-stone-200"></div>
@@ -473,7 +507,8 @@ export default function OnboardingPage() {
           {step > 1 && (
             <button
               onClick={handleBack}
-              className="flex-1 py-3 px-4 border border-stone-200 rounded-xl text-stone-600 font-medium hover:bg-stone-50 transition-colors flex items-center justify-center gap-2"
+              disabled={isLoading}
+              className="flex-1 py-3 px-4 border border-stone-200 rounded-xl text-stone-600 font-medium hover:bg-stone-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               data-testid="back-btn"
             >
               <ChevronLeft size={20} />
@@ -482,11 +517,21 @@ export default function OnboardingPage() {
           )}
           <button
             onClick={handleNext}
-            className="flex-1 py-3 px-4 bg-emerald-600 rounded-xl text-white font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+            disabled={isLoading}
+            className="flex-1 py-3 px-4 bg-emerald-600 rounded-xl text-white font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             data-testid="next-btn"
           >
-            {step === 1 ? 'I Understand' : step === 2 ? (formData.authMode === 'signup' ? 'Create Account' : 'Sign In') : 'Get Started'}
-            <ChevronRight size={20} />
+            {isLoading ? (
+              <>
+                <Loader size={20} className="animate-spin" />
+                Please wait...
+              </>
+            ) : (
+              <>
+                {step === 1 ? 'I Understand' : step === 2 ? (formData.authMode === 'signup' ? 'Continue' : 'Sign In') : 'Get Started'}
+                <ChevronRight size={20} />
+              </>
+            )}
           </button>
         </div>
       </div>

@@ -1,24 +1,35 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { paymentsApi } from '../api';
+import { authApi, paymentsApi } from '../api';
 
 const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load user data from localStorage on mount
+    // Load user data and token from localStorage on mount
+    const savedToken = localStorage.getItem('whattoeat_token');
     const savedUser = localStorage.getItem('whattoeat_user');
-    if (savedUser) {
+    
+    if (savedToken && savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setToken(savedToken);
+        setUser(parsedUser);
+        
+        // Verify token and sync user data from server
+        syncUserFromServer(savedToken);
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        clearUser();
+      }
+    } else if (savedUser) {
+      // Legacy: user without token (localStorage-only)
       try {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
-        
-        // Sync premium status from server if user has an ID
-        if (parsedUser.id) {
-          syncPremiumStatus(parsedUser);
-        }
       } catch (e) {
         console.error('Error parsing user data:', e);
       }
@@ -26,29 +37,144 @@ export function UserProvider({ children }) {
     setLoading(false);
   }, []);
 
-  // Sync premium status from payments collection
-  const syncPremiumStatus = async (currentUser) => {
+  // Sync user data from server using auth token
+  const syncUserFromServer = async (authToken) => {
     try {
-      const response = await paymentsApi.getPremiumStatus(currentUser.id);
-      const data = response.data;
+      const response = await authApi.getProfile();
+      const serverUser = response.data;
       
-      if (data.is_premium && !currentUser.isPremium) {
-        // User has a paid transaction but localStorage doesn't reflect it
-        const updatedUser = {
-          ...currentUser,
-          isPremium: true,
-          premiumPurchasedAt: data.purchased_at
-        };
-        setUser(updatedUser);
-        localStorage.setItem('whattoeat_user', JSON.stringify(updatedUser));
-        console.log('Premium status synced from server');
-      }
+      // Update local user with server data
+      const updatedUser = {
+        id: serverUser.id,
+        email: serverUser.email,
+        age: serverUser.age,
+        trimester: serverUser.trimester,
+        pregnancyStageLabel: serverUser.pregnancy_stage_label,
+        dietaryRestrictions: serverUser.dietary_restrictions || [],
+        isPremium: serverUser.is_premium,
+        onboardingCompleted: true,
+        createdAt: serverUser.created_at
+      };
+      
+      setUser(updatedUser);
+      localStorage.setItem('whattoeat_user', JSON.stringify(updatedUser));
     } catch (err) {
-      // Silently fail - premium status check is non-critical
-      console.log('Premium status sync skipped:', err.message);
+      console.log('Server sync skipped:', err.message);
+      // Token might be expired, clear auth
+      if (err.response?.status === 401) {
+        clearUser();
+      }
     }
   };
 
+  // Register new user
+  const register = async (email, password, profileData = {}) => {
+    try {
+      const response = await authApi.register({
+        email,
+        password,
+        age: profileData.age,
+        trimester: profileData.trimester,
+        pregnancy_stage_label: profileData.pregnancyStageLabel,
+        dietary_restrictions: profileData.dietaryRestrictions || []
+      });
+      
+      const { user: serverUser, token: authToken } = response.data;
+      
+      // Save token
+      setToken(authToken);
+      localStorage.setItem('whattoeat_token', authToken);
+      
+      // Save user
+      const userData = {
+        id: serverUser.id,
+        email: serverUser.email,
+        age: serverUser.age,
+        trimester: serverUser.trimester,
+        pregnancyStageLabel: serverUser.pregnancy_stage_label,
+        dietaryRestrictions: serverUser.dietary_restrictions || [],
+        isPremium: serverUser.is_premium,
+        onboardingCompleted: true,
+        createdAt: serverUser.created_at
+      };
+      
+      setUser(userData);
+      localStorage.setItem('whattoeat_user', JSON.stringify(userData));
+      sessionStorage.setItem('disclaimer_accepted', 'true');
+      
+      return { success: true, user: userData };
+    } catch (err) {
+      const message = err.response?.data?.detail || 'Registration failed';
+      return { success: false, error: message };
+    }
+  };
+
+  // Login user
+  const login = async (email, password) => {
+    try {
+      const response = await authApi.login(email, password);
+      const { user: serverUser, token: authToken } = response.data;
+      
+      // Save token
+      setToken(authToken);
+      localStorage.setItem('whattoeat_token', authToken);
+      
+      // Save user
+      const userData = {
+        id: serverUser.id,
+        email: serverUser.email,
+        age: serverUser.age,
+        trimester: serverUser.trimester,
+        pregnancyStageLabel: serverUser.pregnancy_stage_label,
+        dietaryRestrictions: serverUser.dietary_restrictions || [],
+        isPremium: serverUser.is_premium,
+        onboardingCompleted: true,
+        createdAt: serverUser.created_at
+      };
+      
+      setUser(userData);
+      localStorage.setItem('whattoeat_user', JSON.stringify(userData));
+      sessionStorage.setItem('disclaimer_accepted', 'true');
+      
+      return { success: true, user: userData };
+    } catch (err) {
+      const message = err.response?.data?.detail || 'Login failed';
+      return { success: false, error: message };
+    }
+  };
+
+  // Update user profile on server
+  const updateProfile = async (updates) => {
+    try {
+      const response = await authApi.updateProfile({
+        age: updates.age,
+        trimester: updates.trimester,
+        pregnancy_stage_label: updates.pregnancyStageLabel,
+        dietary_restrictions: updates.dietaryRestrictions
+      });
+      
+      const serverUser = response.data;
+      
+      const userData = {
+        ...user,
+        age: serverUser.age,
+        trimester: serverUser.trimester,
+        pregnancyStageLabel: serverUser.pregnancy_stage_label,
+        dietaryRestrictions: serverUser.dietary_restrictions || [],
+        isPremium: serverUser.is_premium
+      };
+      
+      setUser(userData);
+      localStorage.setItem('whattoeat_user', JSON.stringify(userData));
+      
+      return { success: true, user: userData };
+    } catch (err) {
+      const message = err.response?.data?.detail || 'Update failed';
+      return { success: false, error: message };
+    }
+  };
+
+  // Legacy: Save user locally (for users who skip auth)
   const saveUser = (userData) => {
     setUser(userData);
     localStorage.setItem('whattoeat_user', JSON.stringify(userData));
@@ -61,7 +187,10 @@ export function UserProvider({ children }) {
 
   const clearUser = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('whattoeat_user');
+    localStorage.removeItem('whattoeat_token');
+    sessionStorage.removeItem('disclaimer_accepted');
   };
 
   const hasCompletedOnboarding = () => {
@@ -72,27 +201,37 @@ export function UserProvider({ children }) {
     return user && user.isPremium;
   };
 
-  // Get trimester from saved data
+  const isAuthenticated = () => {
+    return !!token;
+  };
+
   const getTrimester = () => {
     if (!user) return null;
     return user.trimester || null;
   };
 
-  // Get pregnancy stage label
   const getPregnancyStageLabel = () => {
     if (!user) return null;
     return user.pregnancyStageLabel || null;
   };
 
-  // Get dietary restrictions
   const getDietaryRestrictions = () => {
     return user?.dietaryRestrictions || [];
   };
 
-  // Manual sync of premium status (useful after user creates ID)
+  // Sync premium status from payments
   const checkAndSyncPremiumStatus = async () => {
     if (user?.id) {
-      await syncPremiumStatus(user);
+      try {
+        const response = await paymentsApi.getPremiumStatus(user.id);
+        if (response.data.is_premium && !user.isPremium) {
+          const updatedUser = { ...user, isPremium: true };
+          setUser(updatedUser);
+          localStorage.setItem('whattoeat_user', JSON.stringify(updatedUser));
+        }
+      } catch (err) {
+        console.log('Premium sync skipped:', err.message);
+      }
     }
   };
 
@@ -100,12 +239,17 @@ export function UserProvider({ children }) {
     <UserContext.Provider
       value={{
         user,
+        token,
         loading,
+        register,
+        login,
+        updateProfile,
         saveUser,
         updateUser,
         clearUser,
         hasCompletedOnboarding,
         isPremium,
+        isAuthenticated,
         getTrimester,
         getPregnancyStageLabel,
         getDietaryRestrictions,

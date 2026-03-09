@@ -15,6 +15,15 @@ const api = axios.create({
   },
 });
 
+// Add auth token to requests if available
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('whattoeat_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Helper function to fetch with cache
 async function fetchWithCache(key, fetcher, duration = CACHE_DURATIONS.LONG) {
   // Try to get from cache first
@@ -31,6 +40,14 @@ async function fetchWithCache(key, fetcher, duration = CACHE_DURATIONS.LONG) {
   
   return response;
 }
+
+// Auth API
+export const authApi = {
+  register: (userData) => api.post('/auth/register', userData),
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  getProfile: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/profile', data),
+};
 
 // Foods API with caching
 export const foodsApi = {
