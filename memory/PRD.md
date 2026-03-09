@@ -58,9 +58,16 @@ Build a pregnancy nutrition education app with:
 
 ### Onboarding Flow (March 2026)
 - Step 1: Disclaimer acceptance
-- Step 2: Age (18-55), pregnancy stage, health conditions
-- User data persisted to localStorage
+- Step 2: Sign Up / Sign In with email and password
+- Step 3: Age (18-55), pregnancy stage, health conditions
+- Pregnancy stages format: "First Trimester (Weeks 1-12)"
 - User ID generated for payment tracking
+- User data persisted to localStorage
+
+### Back Button Navigation (March 2026)
+- Back button added to header on all non-home pages
+- Uses browser history navigation (navigate(-1))
+- ChevronLeft icon from lucide-react
 
 ### Premium & Payment System (March 2026)
 - Premium Page: Feature comparison (Free vs Premium)
