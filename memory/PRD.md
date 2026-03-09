@@ -1,140 +1,143 @@
-# NurtureNote - Pregnancy Nutrition Education App
+# WhatToEat - Pregnancy Nutrition Education App
 
 ## Original Problem Statement
-Refactor pregnancy nutrition app for Apple App Store health compliance to be clearly an EDUCATIONAL nutrition reference, not a medical advice or diagnostic app.
+Build a pregnancy nutrition education app with onboarding, premium features, and Stripe payment integration.
 
 ## Architecture
-- **Frontend**: React with Tailwind CSS
+- **Frontend**: React with Tailwind CSS, React Router
 - **Backend**: FastAPI (Python)
-- **Database**: MongoDB (device_tokens collection for push notifications, in-memory food database)
-- **Push Notifications**: Firebase Cloud Messaging (FCM) HTTP v1 API with APNs production
-- **Scheduler**: APScheduler for daily notifications
-- **Mobile**: Capacitor for iOS native app wrapper
-- **Deployment**: Preview environment at health-ed-guide.preview.emergentagent.com
+- **Database**: MongoDB (device_tokens, payment_transactions)
+- **Push Notifications**: Firebase Cloud Messaging (FCM)
+- **Payments**: Stripe Checkout ($0.99 one-time)
+- **Mobile**: Capacitor for iOS
+- **Deployment**: Preview at health-ed-guide.preview.emergentagent.com
 
 ## User Personas
 - Pregnant women seeking nutrition information
 - Health-conscious parents-to-be
 - Users looking for food safety guidance during pregnancy
 
-## Core Requirements (Static)
-1. Mandatory disclaimer modal on first load (session gate)
-2. Inline disclaimers on all main pages
-3. Educational language (no absolute statements)
-4. Q&A with symptom detection safety guard
-5. When to Seek Care section
-6. References/sources on all content
-7. About page with educational purpose, data sources, non-medical statement
-
 ## What's Been Implemented
 
+### Onboarding Flow (March 2026)
+- **Step 1**: Age input (18-55 years validation)
+- **Step 2**: Pregnancy weeks (1-42) with automatic trimester calculation
+- **Step 3**: Dietary considerations (optional multi-select)
+  - Options: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Nut Allergy, Shellfish Allergy, Halal, Kosher
+- User data persisted to localStorage
+
+### Premium & Payment System (March 2026)
+- **Premium Page**: Feature comparison (Free vs Premium)
+- **Subscription Page**: Stripe checkout integration
+- **Price**: $0.99 one-time payment for entire pregnancy
+- **Payment Endpoints**:
+  - `POST /api/payments/checkout` - Create Stripe checkout session
+  - `GET /api/payments/status/{session_id}` - Check payment status
+  - `POST /api/webhook/stripe` - Handle Stripe webhooks
+- **MongoDB**: payment_transactions collection
+
 ### Push Notification System (March 2026)
-- **Device Token Registration**: `/api/register_device` - Store FCM tokens in MongoDB
-- **Device Token Unregistration**: `/api/unregister_device/{token}` - Remove tokens
-- **Notification Status**: `/api/notification_status` - Check FCM config, scheduler, device count
-- **Test Notification**: `/api/test_notification` - Send test push to specific device
-- **Daily Notification Trigger**: `/api/trigger_daily_notification` - Manual job trigger
-- **Today's Tip**: `/api/tips/today` - Get today's tip with expanded content
-- **All Tips**: `/api/tips/all` - Get all 30 tips, filterable by trimester
-- **Specific Tip**: `/api/tips/{index}` - Get tip by index
-- **Scheduled Daily Tips**: APScheduler job at 3:00 PM Africa/Dar_es_Salaam timezone
-- **30 Educational Trimester-Based Tips**: 
-  - 10 First Trimester tips (folate, hydration, small meals, iron, B6, ginger, protein, citrus, whole grains, food safety)
-  - 10 Second Trimester tips (calcium, omega-3, iron, protein, vitamin D, fiber, healthy fats, magnesium, seafood, snacking)
-  - 10 Third Trimester tips (energy foods, iron, protein, hydration, calcium, DHA, small meals, fiber, potassium, balanced nutrition)
-- **Tip Structure**: Title, short body (<100 chars), expanded content (265-380 chars), sources (WHO/CDC/NHS/ACOG)
-- **Invalid Token Handling**: Auto-removal of invalid/expired FCM tokens from database
+- Device token registration and storage
+- Daily scheduled tips at 3:00 PM Africa/Dar_es_Salaam
+- 30 trimester-based nutrition tips with expanded content
+- Invalid token auto-removal
 
-### iOS App Store Preparation (January 2026)
-- Capacitor iOS project with push notification capabilities
-- App Store screenshots (iPhone 6.5" and iPad 13")
-- Privacy Policy, Terms of Use, Support hosted pages
-- App Icon generator HTML tool
-- Xcode troubleshooting guide
+### Core Features
+- **Home Page**: Food search, category filters, safety filters
+- **Food Detail**: Nutrition info, safety badges, references
+- **Topics Search**: Educational nutrition content with safety guards
+- **Settings**: User profile, premium upgrade, legal pages
 
-### Backend API (server.py)
-- `/api/foods` - Get all foods (85 items)
-- `/api/foods/search?q=` - Search foods by name/category
-- `/api/foods/{id}` - Get food details
-- `/api/foods/category/{category}` - Filter by category
-- `/api/foods/safety/{level}` - Filter by safety level
-- `/api/nutrition-topics/search` - Nutrition topics with safety guards
-- `/api/qa/ask` - Legacy Q&A endpoint (redirects to topics)
-- `/api/categories` - Get all categories
-- `/api/about` - About page data
-- `/api/emergency-info` - When to seek care data
-
-### Frontend (App.js)
-- DisclaimerModal with session storage gate
-- HomePage with search, category filters, food cards
-- FoodDetailPage with sources, educational language, view references
-- Nutrition Topics search (refactored from Q&A)
-- AboutPage with purpose, sources, disclaimer
-- SettingsPage with pregnancy stage selector, conditions, links
-- SourcesPage with data source references
-- Terms of Use and Privacy Policy pages
-- Footer navigation
-
-### Compliance Features
-1. Disclaimer modal with "I Understand" button
-2. Session-only storage (reappears each visit)
-3. Inline disclaimers on all pages
-4. Educational language: "Generally recommended to avoid", "Often limited", etc.
-5. Symptom detection for: bleeding, pain, fever, vomiting, dizziness, etc.
-6. Personal question detection with redirect to healthcare provider
-7. When to Seek Care section with symptoms list
-8. Sources on food detail pages (WHO, CDC, NHS, ACOG)
-9. About page with educational purpose, data sources, non-medical statement
-
-## Key Files
-- `/app/backend/server.py` - Main FastAPI application with all endpoints
-- `/app/backend/push_notifications.py` - FCM service and daily tips
-- `/app/backend/credentials/firebase_service_account.json` - Firebase credentials
-- `/app/frontend/src/App.js` - Full React application (monolithic, needs refactoring)
-- `/app/frontend/ios/` - Capacitor iOS project
-- `/app/frontend/public/ios_project.zip` - Downloadable iOS project archive
-- `/app/frontend/public/*.html` - Hosted legal pages
+## Project Structure
+```
+/app
+├── backend/
+│   ├── server.py              # FastAPI app with all endpoints
+│   ├── push_notifications.py  # FCM service and daily tips
+│   └── credentials/           # Firebase service account
+├── frontend/
+│   ├── src/
+│   │   ├── api/index.js       # API client
+│   │   ├── context/UserContext.jsx  # User state management
+│   │   ├── components/
+│   │   │   ├── layout/Layout.jsx    # Header, Footer, Layout
+│   │   │   ├── food/FoodCard.jsx    # Food cards and grid
+│   │   │   └── common/Filters.jsx   # Search, filters
+│   │   └── pages/
+│   │       ├── OnboardingPage.jsx   # 3-step onboarding
+│   │       ├── PremiumPage.jsx      # Premium features
+│   │       ├── SubscribePage.jsx    # Stripe checkout
+│   │       ├── HomePage.jsx         # Food search
+│   │       ├── FoodDetailPage.jsx   # Food details
+│   │       ├── TopicsPage.jsx       # Nutrition topics
+│   │       ├── SettingsPage.jsx     # Settings & profile
+│   │       └── LegalPages.jsx       # Terms, Privacy, Support
+│   └── ios/                   # Capacitor iOS project
+```
 
 ## Database Schema
 
-### device_tokens (MongoDB)
+### payment_transactions
 ```json
 {
-  "token": "string (unique, indexed)",
-  "platform": "ios|android",
-  "trimester": 1|2|3|null,
+  "session_id": "string (Stripe session ID)",
+  "user_id": "string",
+  "amount": 0.99,
+  "currency": "usd",
+  "product": "whattoeat_premium",
+  "payment_status": "pending|paid|failed",
+  "status": "initiated|complete|expired",
   "created_at": "ISO datetime",
   "updated_at": "ISO datetime"
 }
 ```
 
-### FOOD_DATABASE (In-memory)
-- 85 food items across 9 categories
-- Each item: id, name, category, safety_level, description, nutrition_note, context, alternatives, nutrients, sources
+### device_tokens
+```json
+{
+  "token": "string (FCM token)",
+  "platform": "ios|android",
+  "trimester": 1|2|3|null,
+  "created_at": "ISO datetime"
+}
+```
 
-## Prioritized Backlog
+## API Endpoints
 
-### P0 (Critical) - DONE
-- All compliance features implemented
-- Push notification backend system implemented
+### Foods
+- `GET /api/foods` - All foods (85 items)
+- `GET /api/foods/{id}` - Food details
+- `GET /api/foods/search?q=` - Search foods
+- `GET /api/categories` - All categories
+
+### Payments
+- `POST /api/payments/checkout` - Create Stripe session
+- `GET /api/payments/status/{session_id}` - Payment status
+- `POST /api/webhook/stripe` - Stripe webhook
+
+### Push Notifications
+- `POST /api/register_device` - Register FCM token
+- `GET /api/notification_status` - Scheduler status
+- `GET /api/tips/today` - Today's tip
+- `GET /api/tips/all` - All 30 tips
+
+## Testing Status
+- Backend: 100% (all tests passed)
+- Frontend: 100% (Playwright tests passed)
+- Stripe Integration: Working (test mode)
+
+## Backlog
 
 ### P1 (High Priority)
-- Add food images to the database
-- Expand nutrition topics database
-- Refactor App.js into separate component files
+- Add food images to database
+- Implement dietary filtering on food list
+- Use trimester for personalized content filtering
 
 ### P2 (Medium Priority)
-- User settings implementation (text size, theme)
-- Pregnancy stage filtering for food content
 - Multi-language support
+- Offline caching
+- User analytics
 
 ### P3 (Low Priority)
-- Social sharing features
-- User-submitted food questions
-- Integration with healthcare provider portals
-
-## Technical Notes
-- Frontend App.js is over 3,000 lines and needs component extraction
-- Food database is in-memory (not MongoDB) - consider migration
-- Push notifications use FCM as bridge to APNs for iOS devices
-- Scheduler uses Africa/Dar_es_Salaam timezone (UTC+3)
+- Social sharing
+- Healthcare provider integration
