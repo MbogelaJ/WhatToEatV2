@@ -25,6 +25,23 @@ Build a pregnancy nutrition education app with:
 
 ## What's Been Implemented
 
+### Backend Authentication API (March 2026)
+- POST /api/auth/register - Create new user with email/password
+- POST /api/auth/login - Authenticate and return JWT token (7-day expiry)
+- GET /api/auth/me - Get current user profile (requires Bearer token)
+- PUT /api/auth/profile - Update user profile fields
+- JWT-based authentication with SHA-256 password hashing
+- Email and password validation
+- Duplicate email prevention
+- Users stored in MongoDB 'users' collection
+
+### Auto-Highlight Foods on Home Page (March 2026)
+- Recommended foods show emerald gradient + sparkle badge
+- Caution foods show amber gradient + warning badge
+- Food tags display "Good for anemia", "High in iron", etc.
+- Personalization banners show trimester focus and health condition info
+- Already implemented via personalized API and FoodCard component
+
 ### MongoDB Food Database (March 2026)
 - Migrated 85 foods from in-memory to MongoDB `foods` collection
 - All food endpoints query MongoDB with _id excluded
