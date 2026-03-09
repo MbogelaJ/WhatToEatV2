@@ -4,14 +4,22 @@ import { ChevronRight, ChevronLeft, User, Calendar, Utensils, Shield, Check, Ale
 import { useUser } from '../context/UserContext';
 
 const dietaryOptions = [
+  // Dietary preferences
   { id: 'vegetarian', label: 'Vegetarian', description: 'No meat or fish' },
   { id: 'vegan', label: 'Vegan', description: 'No animal products' },
   { id: 'gluten-free', label: 'Gluten-Free', description: 'No gluten-containing foods' },
   { id: 'dairy-free', label: 'Dairy-Free', description: 'No dairy products' },
-  { id: 'nut-allergy', label: 'Nut Allergy', description: 'Avoid all nuts' },
-  { id: 'shellfish-allergy', label: 'Shellfish Allergy', description: 'Avoid shellfish' },
   { id: 'halal', label: 'Halal', description: 'Halal diet requirements' },
   { id: 'kosher', label: 'Kosher', description: 'Kosher diet requirements' },
+  // Allergies
+  { id: 'nut-allergy', label: 'Nut Allergy', description: 'Avoid all nuts' },
+  { id: 'shellfish-allergy', label: 'Shellfish Allergy', description: 'Avoid shellfish' },
+  { id: 'food-allergies', label: 'Food Allergies', description: 'Other food allergies' },
+  { id: 'lactose-intolerance', label: 'Lactose Intolerance', description: 'Difficulty digesting lactose' },
+  // Health conditions
+  { id: 'gestational-diabetes', label: 'Gestational Diabetes', description: 'Blood sugar management' },
+  { id: 'high-blood-pressure', label: 'High Blood Pressure', description: 'Hypertension considerations' },
+  { id: 'anemia', label: 'Anemia', description: 'Iron deficiency concerns' },
 ];
 
 export default function OnboardingPage() {
