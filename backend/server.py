@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Request
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -7,7 +7,7 @@ import logging
 import re
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -17,6 +17,7 @@ from apscheduler.triggers.cron import CronTrigger
 import pytz
 
 from push_notifications import get_fcm_service, get_daily_tip, get_all_tips, get_tips_count, get_tip_by_index
+from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -28,6 +29,11 @@ db = client[os.environ['DB_NAME']]
 
 # Collections
 device_tokens_collection = db["device_tokens"]
+payment_transactions_collection = db["payment_transactions"]
+
+# Stripe configuration
+STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
+PREMIUM_PRICE = 0.99  # Fixed price for premium - one-time payment
 
 # Timezone for scheduler
 SCHEDULER_TIMEZONE = pytz.timezone('Africa/Dar_es_Salaam')
@@ -210,6 +216,15 @@ class NotificationTestRequest(BaseModel):
     token: str = Field(..., min_length=1, description="FCM device token to test")
     title: Optional[str] = Field(default="Test Notification", description="Notification title")
     body: Optional[str] = Field(default="This is a test notification from NurtureNote", description="Notification body")
+
+# Payment models
+class CheckoutRequest(BaseModel):
+    origin_url: str = Field(..., description="Frontend origin URL for redirect")
+    user_id: Optional[str] = Field(default=None, description="User identifier")
+
+class CheckoutResponse(BaseModel):
+    url: str
+    session_id: str
 
 # Comprehensive food database with educational language - 85 items
 FOOD_DATABASE = [
@@ -772,6 +787,154 @@ async def get_tip_by_number(tip_index: int, trimester: Optional[int] = None):
         "trimester_filter": trimester,
         "disclaimer": "This is general educational reference information only and does not constitute medical advice."
     }
+
+
+# ===== STRIPE PAYMENT ENDPOINTS =====
+
+@api_router.post("/payments/checkout", response_model=CheckoutResponse)
+async def create_checkout_session(request: CheckoutRequest, http_request: Request):
+    """
+    Create a Stripe checkout session for premium purchase
+    """
+    if not STRIPE_API_KEY:
+        raise HTTPException(status_code=503, detail="Payment service not configured")
+    
+    try:
+        # Initialize Stripe checkout
+        host_url = str(http_request.base_url).rstrip('/')
+        webhook_url = f"{host_url}/api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+        
+        # Build URLs from frontend origin
+        origin_url = request.origin_url.rstrip('/')
+        success_url = f"{origin_url}/subscribe?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{origin_url}/subscribe"
+        
+        # Create checkout session with fixed price
+        checkout_request = CheckoutSessionRequest(
+            amount=PREMIUM_PRICE,
+            currency="usd",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "product": "whattoeat_premium",
+                "user_id": request.user_id or "guest",
+                "type": "one_time_pregnancy"
+            }
+        )
+        
+        session = await stripe_checkout.create_checkout_session(checkout_request)
+        
+        # Create payment transaction record
+        transaction = {
+            "session_id": session.session_id,
+            "user_id": request.user_id or "guest",
+            "amount": PREMIUM_PRICE,
+            "currency": "usd",
+            "product": "whattoeat_premium",
+            "payment_status": "pending",
+            "status": "initiated",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await payment_transactions_collection.insert_one(transaction)
+        
+        logger.info(f"Checkout session created: {session.session_id}")
+        
+        return CheckoutResponse(url=session.url, session_id=session.session_id)
+        
+    except Exception as e:
+        logger.error(f"Error creating checkout session: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create checkout session")
+
+
+@api_router.get("/payments/status/{session_id}")
+async def get_payment_status(session_id: str, http_request: Request):
+    """
+    Get the status of a checkout session
+    """
+    if not STRIPE_API_KEY:
+        raise HTTPException(status_code=503, detail="Payment service not configured")
+    
+    try:
+        # Initialize Stripe checkout
+        host_url = str(http_request.base_url).rstrip('/')
+        webhook_url = f"{host_url}/api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+        
+        # Get checkout status from Stripe
+        status = await stripe_checkout.get_checkout_status(session_id)
+        
+        # Update transaction in database
+        update_data = {
+            "payment_status": status.payment_status,
+            "status": status.status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Only update if not already processed (prevent duplicate credits)
+        existing = await payment_transactions_collection.find_one({"session_id": session_id})
+        if existing and existing.get("payment_status") != "paid":
+            await payment_transactions_collection.update_one(
+                {"session_id": session_id},
+                {"$set": update_data}
+            )
+            logger.info(f"Payment status updated: {session_id} -> {status.payment_status}")
+        
+        return {
+            "session_id": session_id,
+            "status": status.status,
+            "payment_status": status.payment_status,
+            "amount_total": status.amount_total,
+            "currency": status.currency
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting payment status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get payment status")
+
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """
+    Handle Stripe webhook events
+    """
+    if not STRIPE_API_KEY:
+        raise HTTPException(status_code=503, detail="Payment service not configured")
+    
+    try:
+        # Get request body
+        body = await request.body()
+        signature = request.headers.get("Stripe-Signature")
+        
+        # Initialize Stripe checkout
+        host_url = str(request.base_url).rstrip('/')
+        webhook_url = f"{host_url}/api/webhook/stripe"
+        stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+        
+        # Handle webhook
+        webhook_response = await stripe_checkout.handle_webhook(body, signature)
+        
+        # Update transaction based on event
+        if webhook_response.session_id:
+            update_data = {
+                "payment_status": webhook_response.payment_status,
+                "webhook_event_id": webhook_response.event_id,
+                "webhook_event_type": webhook_response.event_type,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await payment_transactions_collection.update_one(
+                {"session_id": webhook_response.session_id},
+                {"$set": update_data}
+            )
+            logger.info(f"Webhook processed: {webhook_response.event_type} for {webhook_response.session_id}")
+        
+        return {"received": True}
+        
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # Include the router in the main app
