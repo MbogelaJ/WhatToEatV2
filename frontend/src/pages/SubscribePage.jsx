@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CreditCard, Shield, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { useUser } from '../context/UserContext';
-import api from '../api';
+import { paymentsApi } from '../api';
 
 export default function SubscribePage() {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export default function SubscribePage() {
     setPolling(true);
 
     try {
-      const response = await api.get(`/payments/status/${sessionId}`);
+      const response = await paymentsApi.getStatus(sessionId);
       const data = response.data;
 
       if (data.payment_status === 'paid') {
@@ -69,10 +69,8 @@ export default function SubscribePage() {
 
     try {
       const originUrl = window.location.origin;
-      const response = await api.post('/payments/checkout', {
-        origin_url: originUrl,
-        user_id: user?.id || 'guest',
-      });
+      const userId = user?.id || `guest_${Date.now()}`;
+      const response = await paymentsApi.createCheckout(originUrl, userId);
 
       // Redirect to Stripe Checkout
       if (response.data.url) {

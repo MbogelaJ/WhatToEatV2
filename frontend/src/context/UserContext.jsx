@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { paymentsApi } from '../api';
 
 const UserContext = createContext(null);
 
@@ -11,13 +12,42 @@ export function UserProvider({ children }) {
     const savedUser = localStorage.getItem('whattoeat_user');
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        
+        // Sync premium status from server if user has an ID
+        if (parsedUser.id) {
+          syncPremiumStatus(parsedUser);
+        }
       } catch (e) {
         console.error('Error parsing user data:', e);
       }
     }
     setLoading(false);
   }, []);
+
+  // Sync premium status from payments collection
+  const syncPremiumStatus = async (currentUser) => {
+    try {
+      const response = await paymentsApi.getPremiumStatus(currentUser.id);
+      const data = response.data;
+      
+      if (data.is_premium && !currentUser.isPremium) {
+        // User has a paid transaction but localStorage doesn't reflect it
+        const updatedUser = {
+          ...currentUser,
+          isPremium: true,
+          premiumPurchasedAt: data.purchased_at
+        };
+        setUser(updatedUser);
+        localStorage.setItem('whattoeat_user', JSON.stringify(updatedUser));
+        console.log('Premium status synced from server');
+      }
+    } catch (err) {
+      // Silently fail - premium status check is non-critical
+      console.log('Premium status sync skipped:', err.message);
+    }
+  };
 
   const saveUser = (userData) => {
     setUser(userData);
@@ -59,6 +89,13 @@ export function UserProvider({ children }) {
     return user?.dietaryRestrictions || [];
   };
 
+  // Manual sync of premium status (useful after user creates ID)
+  const checkAndSyncPremiumStatus = async () => {
+    if (user?.id) {
+      await syncPremiumStatus(user);
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -72,6 +109,7 @@ export function UserProvider({ children }) {
         getTrimester,
         getPregnancyStageLabel,
         getDietaryRestrictions,
+        checkAndSyncPremiumStatus,
       }}
     >
       {children}

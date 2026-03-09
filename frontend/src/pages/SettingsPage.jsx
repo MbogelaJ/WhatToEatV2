@@ -1,11 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, FileText, Shield, HelpCircle, Bell, Crown, User, LogOut } from 'lucide-react';
+import { ChevronRight, FileText, Shield, HelpCircle, Bell, Crown, User, LogOut, Database, Trash2 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import { getCacheStats, clearAllCache } from '../utils/cache';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { user, isPremium, clearUser, getPregnancyStageLabel } = useUser();
+  const [cacheStats, setCacheStats] = useState({ entryCount: 0, sizeKB: 0 });
+
+  useEffect(() => {
+    setCacheStats(getCacheStats());
+  }, []);
+
+  const handleClearCache = () => {
+    if (window.confirm('Clear offline cache? Data will be re-downloaded next time you connect.')) {
+      clearAllCache();
+      setCacheStats(getCacheStats());
+    }
+  };
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to reset your profile? This will clear all your data.')) {
@@ -167,6 +180,37 @@ export default function SettingsPage() {
             <ChevronRight className="text-red-400" size={20} />
           </div>
         </button>
+      </div>
+
+      {/* Offline Cache Section */}
+      <div className="mt-6 bg-white rounded-2xl p-5 border border-stone-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <Database className="text-blue-600" size={20} />
+          </div>
+          <div>
+            <h3 className="font-semibold text-stone-800">Offline Cache</h3>
+            <p className="text-xs text-stone-500">Food data cached for offline use</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+          <div>
+            <p className="text-sm font-medium text-stone-700">
+              {cacheStats.entryCount} items cached
+            </p>
+            <p className="text-xs text-stone-500">
+              {cacheStats.sizeKB} KB storage used
+            </p>
+          </div>
+          <button
+            onClick={handleClearCache}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-200 hover:bg-stone-300 rounded-lg transition-colors text-stone-700 text-sm"
+            data-testid="clear-cache-btn"
+          >
+            <Trash2 size={14} />
+            Clear
+          </button>
+        </div>
       </div>
 
       {/* App Version */}

@@ -67,8 +67,11 @@ export default function OnboardingPage() {
       // Validate and complete onboarding
       if (validateStep2()) {
         const selectedStage = pregnancyStages.find(s => s.id === formData.pregnancyStage);
+        // Generate a unique user ID for tracking payments
+        const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const userData = {
           ...formData,
+          id: userId,
           age: parseInt(formData.age),
           trimester: selectedStage?.trimester || null,
           pregnancyStageLabel: selectedStage?.label || '',

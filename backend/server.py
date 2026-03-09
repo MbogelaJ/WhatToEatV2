@@ -37,6 +37,7 @@ db = client[os.environ['DB_NAME']]
 # Collections
 device_tokens_collection = db["device_tokens"]
 payment_transactions_collection = db["payment_transactions"]
+foods_collection = db["foods"]
 
 # Stripe configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
@@ -114,6 +115,18 @@ async def lifespan(app: FastAPI):
     # Create index on device_tokens collection
     await device_tokens_collection.create_index("token", unique=True)
     logger.info("Device tokens collection index created")
+    
+    # Seed foods collection if empty (migrate from in-memory to MongoDB)
+    foods_count = await foods_collection.count_documents({})
+    if foods_count == 0:
+        logger.info("Seeding foods collection with initial data...")
+        # Create index on food id
+        await foods_collection.create_index("id", unique=True)
+        # Insert all foods
+        await foods_collection.insert_many(FOOD_DATABASE)
+        logger.info(f"Seeded {len(FOOD_DATABASE)} foods to MongoDB")
+    else:
+        logger.info(f"Foods collection already has {foods_count} documents")
     
     # Schedule daily notification job at 3:00 PM Africa/Dar_es_Salaam
     scheduler.add_job(
@@ -408,39 +421,51 @@ async def root():
 @api_router.get("/foods", response_model=List[dict])
 async def get_all_foods():
     """Get all foods in the database"""
-    return FOOD_DATABASE
+    foods = await foods_collection.find({}, {"_id": 0}).to_list(length=None)
+    # Fallback to in-memory if MongoDB is empty
+    if not foods:
+        return FOOD_DATABASE
+    return foods
 
 @api_router.get("/foods/search")
 async def search_foods(q: str = ""):
     """Search foods by name or category"""
     if not q:
-        return FOOD_DATABASE
+        foods = await foods_collection.find({}, {"_id": 0}).to_list(length=None)
+        return foods if foods else FOOD_DATABASE
     
-    query_lower = q.lower()
-    results = [
-        food for food in FOOD_DATABASE
-        if query_lower in food["name"].lower() 
-        or query_lower in food["category"].lower()
-        or query_lower in food.get("description", "").lower()
-    ]
-    return results
+    # Use MongoDB text search or regex
+    query_regex = {"$regex": q, "$options": "i"}
+    foods = await foods_collection.find(
+        {
+            "$or": [
+                {"name": query_regex},
+                {"category": query_regex},
+                {"description": query_regex}
+            ]
+        },
+        {"_id": 0}
+    ).to_list(length=None)
+    return foods
 
 @api_router.get("/foods/{food_id}")
 async def get_food_detail(food_id: str):
     """Get detailed information about a specific food"""
-    for food in FOOD_DATABASE:
-        if food["id"] == food_id:
-            return food
+    food = await foods_collection.find_one({"id": food_id}, {"_id": 0})
+    if food:
+        return food
+    # Fallback to in-memory
+    for f in FOOD_DATABASE:
+        if f["id"] == food_id:
+            return f
     raise HTTPException(status_code=404, detail="Food not found")
 
 @api_router.get("/foods/category/{category}")
 async def get_foods_by_category(category: str):
     """Get foods by category"""
-    results = [
-        food for food in FOOD_DATABASE
-        if category.lower() in food["category"].lower()
-    ]
-    return results
+    query_regex = {"$regex": category, "$options": "i"}
+    foods = await foods_collection.find({"category": query_regex}, {"_id": 0}).to_list(length=None)
+    return foods
 
 @api_router.get("/foods/safety/{safety_level}")
 async def get_foods_by_safety(safety_level: str):
@@ -448,11 +473,8 @@ async def get_foods_by_safety(safety_level: str):
     if safety_level not in ["safe", "limit", "avoid"]:
         raise HTTPException(status_code=400, detail="Invalid safety level. Use: safe, limit, or avoid")
     
-    results = [
-        food for food in FOOD_DATABASE
-        if food["safety_level"] == safety_level
-    ]
-    return results
+    foods = await foods_collection.find({"safety_level": safety_level}, {"_id": 0}).to_list(length=None)
+    return foods
 
 @api_router.post("/nutrition-topics/search", response_model=QAResponse)
 async def search_nutrition_topics(query_data: QAQuestion):
@@ -508,7 +530,11 @@ async def ask_question_legacy(question_data: QAQuestion):
 @api_router.get("/categories")
 async def get_categories():
     """Get all food categories"""
-    categories = list(set(food["category"] for food in FOOD_DATABASE))
+    # Use MongoDB distinct to get unique categories
+    categories = await foods_collection.distinct("category")
+    if not categories:
+        # Fallback to in-memory
+        categories = list(set(food["category"] for food in FOOD_DATABASE))
     return sorted(categories)
 
 @api_router.get("/about")
@@ -588,9 +614,15 @@ async def get_personalized_foods(request: PersonalizationRequest):
     # Get personalization recommendations
     recommendations = get_personalized_recommendations(health_conditions, trimester)
     
+    # Get all foods from MongoDB
+    foods = await foods_collection.find({}, {"_id": 0}).to_list(length=None)
+    # Fallback to in-memory if MongoDB is empty
+    if not foods:
+        foods = FOOD_DATABASE
+    
     # Filter and enhance each food
     personalized_foods = []
-    for food in FOOD_DATABASE:
+    for food in foods:
         enhanced_food = filter_food_for_user(food, health_conditions, trimester)
         personalized_foods.append(enhanced_food)
     
@@ -620,11 +652,16 @@ async def get_foods_for_condition(condition: str):
     
     config = HEALTH_CONDITION_TAGS[condition]
     
+    # Get all foods from MongoDB
+    foods = await foods_collection.find({}, {"_id": 0}).to_list(length=None)
+    if not foods:
+        foods = FOOD_DATABASE
+    
     # Filter foods for this condition
     recommended_foods = []
     avoid_foods = []
     
-    for food in FOOD_DATABASE:
+    for food in foods:
         enhanced = filter_food_for_user(food, [condition])
         if enhanced["is_recommended"]:
             recommended_foods.append(enhanced)
@@ -651,11 +688,16 @@ async def get_trimester_recommendations(trimester: int):
     
     config = TRIMESTER_PRIORITIES[trimester]
     
+    # Get all foods from MongoDB
+    foods = await foods_collection.find({}, {"_id": 0}).to_list(length=None)
+    if not foods:
+        foods = FOOD_DATABASE
+    
     # Get recommended foods for this trimester
     recommended_tags = config.get("recommended_tags", [])
     recommended_foods = []
     
-    for food in FOOD_DATABASE:
+    for food in foods:
         enhanced = filter_food_for_user(food, [], trimester)
         if enhanced["is_recommended"] or any(tag in enhanced.get("health_tags", []) for tag in recommended_tags):
             enhanced["is_recommended"] = True
@@ -1032,6 +1074,40 @@ async def get_payment_status(session_id: str, http_request: Request):
     except Exception as e:
         logger.error(f"Error getting payment status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get payment status")
+
+
+@api_router.get("/payments/user/{user_id}/premium-status")
+async def check_premium_status(user_id: str):
+    """
+    Check if a user has premium status based on successful payments.
+    Returns premium status and purchase date.
+    """
+    try:
+        # Find any paid transaction for this user
+        paid_transaction = await payment_transactions_collection.find_one(
+            {
+                "user_id": user_id,
+                "payment_status": "paid"
+            },
+            {"_id": 0, "session_id": 1, "created_at": 1, "updated_at": 1}
+        )
+        
+        if paid_transaction:
+            return {
+                "is_premium": True,
+                "purchased_at": paid_transaction.get("updated_at") or paid_transaction.get("created_at"),
+                "session_id": paid_transaction.get("session_id")
+            }
+        
+        return {
+            "is_premium": False,
+            "purchased_at": None,
+            "session_id": None
+        }
+        
+    except Exception as e:
+        logger.error(f"Error checking premium status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check premium status")
 
 
 @api_router.post("/webhook/stripe")
