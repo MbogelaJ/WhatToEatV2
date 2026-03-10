@@ -39,7 +39,6 @@ export default function OnboardingPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    authMode: 'signup',
     age: '',
     pregnancyStage: '',
     dietaryRestrictions: [],
@@ -83,28 +82,9 @@ export default function OnboardingPage() {
       // Disclaimer -> Auth
       setStep(2);
     } else if (step === 2) {
-      // Auth step
+      // Auth step - just validate and proceed to profile
       if (validateStep2()) {
-        setIsLoading(true);
-        setErrors({});
-        try {
-          if (formData.authMode === 'signin') {
-            const result = await login(formData.email, formData.password);
-            if (result.success) {
-              navigate('/');
-              return;
-            } else {
-              setErrors({ auth: result.error });
-            }
-          } else {
-            // Sign up - go to profile step
-            setStep(3);
-          }
-        } catch (err) {
-          setErrors({ auth: 'An error occurred. Please try again.' });
-        } finally {
-          setIsLoading(false);
-        }
+        setStep(3);
       }
     } else if (step === 3) {
       // Profile (age + stage) -> Dietary
@@ -266,43 +246,15 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 2: Sign In / Sign Up */}
+        {/* Step 2: Create Account */}
         {step === 2 && (
           <div className="space-y-6" data-testid="step-auth">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
-              {/* Auth Mode Toggle */}
-              <div className="flex bg-stone-100 rounded-xl p-1 mb-6">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, authMode: 'signup' })}
-                  className={`flex-1 py-2 rounded-lg font-medium text-sm transition-colors ${
-                    formData.authMode === 'signup'
-                      ? 'bg-white text-emerald-600 shadow-sm'
-                      : 'text-stone-500'
-                  }`}
-                >
-                  Sign Up
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, authMode: 'signin' })}
-                  className={`flex-1 py-2 rounded-lg font-medium text-sm transition-colors ${
-                    formData.authMode === 'signin'
-                      ? 'bg-white text-emerald-600 shadow-sm'
-                      : 'text-stone-500'
-                  }`}
-                >
-                  Sign In
-                </button>
-              </div>
-
               <h2 className="text-xl font-semibold text-stone-800 mb-2 text-center">
-                {formData.authMode === 'signup' ? 'Create Your Account' : 'Welcome Back'}
+                Create Your Account
               </h2>
               <p className="text-sm text-stone-500 mb-6 text-center">
-                {formData.authMode === 'signup' 
-                  ? 'Sign up to save your preferences' 
-                  : 'Sign in to access your profile'}
+                Sign up to save your preferences
               </p>
 
               {/* Email Input */}
@@ -328,7 +280,7 @@ export default function OnboardingPage() {
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder={formData.authMode === 'signup' ? 'Create a password (min 6 chars)' : 'Enter your password'}
+                  placeholder="Create a password (min 6 chars)"
                   className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   data-testid="password-input"
                 />
@@ -532,7 +484,7 @@ export default function OnboardingPage() {
               </>
             ) : (
               <>
-                {step === 1 ? 'I Understand' : step === 2 ? (formData.authMode === 'signup' ? 'Continue' : 'Sign In') : 'Continue'}
+                {step === 1 ? 'I Understand' : 'Continue'}
                 <ChevronRight size={20} />
               </>
             )}

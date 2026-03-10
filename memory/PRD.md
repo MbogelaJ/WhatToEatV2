@@ -73,11 +73,13 @@ Build a pregnancy nutrition education app with:
 - 85 trimester-based nutrition tips
 - Invalid token auto-removal
 
-### Onboarding Flow (March 2026)
-- Step 1: Disclaimer acceptance
-- Step 2: Sign Up / Sign In with email and password
-- Step 3: Age (18-55), pregnancy stage, health conditions
-- Pregnancy stages format: "First Trimester (Weeks 1-12)"
+### Onboarding Flow (March 2026, Updated December 2026)
+- Step 1: Important Notice (Disclaimer acceptance)
+- Step 2: Create Your Account (Sign Up only - removed Sign Up/Sign In toggle)
+- Step 3: Your Profile - Age (18-55), Pregnancy Stage selection
+- Step 4: Dietary Considerations - Multiple selection for restrictions/conditions
+- After Step 4: Redirects to Premium page
+- User registration happens at Step 4 completion
 - User ID generated for payment tracking
 - User data persisted to localStorage
 
