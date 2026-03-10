@@ -74,14 +74,17 @@ Build a pregnancy nutrition education app with:
 - Invalid token auto-removal
 
 ### Onboarding Flow (March 2026, Updated December 2026)
+**New Users (Sign Up):**
 - Step 1: Important Notice (Disclaimer acceptance)
-- Step 2: Create Your Account (Sign Up only - removed Sign Up/Sign In toggle)
+- Step 2: Create Your Account (Email/Password + Social login buttons)
 - Step 3: Your Profile - Age (18-55), Pregnancy Stage selection
 - Step 4: Dietary Considerations - Multiple selection for restrictions/conditions
-- After Step 4: Redirects to Premium page
-- User registration happens at Step 4 completion
-- User ID generated for payment tracking
-- User data persisted to localStorage
+- After Step 4: Redirects to **Premium page**
+
+**Returning Users (Sign In):**
+- Step 1: Important Notice (Disclaimer)
+- Step 2: Click "Already have an account? Sign In" → Enter credentials → **Go directly to Home page**
+- Skips: Profile, Dietary, Premium pages
 
 ### Back Button Navigation (March 2026)
 - Back button added to header on all non-home pages
