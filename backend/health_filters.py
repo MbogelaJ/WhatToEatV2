@@ -159,6 +159,23 @@ FOOD_HEALTH_TAGS = {
     "83": {"tags": ["high-sodium"], "iron_level": "low", "sugar_level": "low", "sodium_level": "high"},  # Pre-made Salads - LIMIT
     "84": {"tags": ["high-sodium", "food-safety-risk"], "iron_level": "low", "sugar_level": "medium", "sodium_level": "high"},  # Street Vendor Food - LIMIT
     "85": {"tags": ["food-safety-risk", "high-sodium"], "iron_level": "low", "sugar_level": "medium", "sodium_level": "high"},  # Buffet Foods - LIMIT
+    
+    # ===== International Foods - North America, Australia, NZ, Europe (IDs 86-100) =====
+    "86": {"tags": ["low-sodium", "antioxidants"], "iron_level": "none", "sugar_level": "high", "sodium_level": "none"},  # Maple Syrup
+    "87": {"tags": ["plant-protein", "healthy-fats", "contains-nuts"], "iron_level": "medium", "sugar_level": "low", "sodium_level": "low"},  # Peanut Butter
+    "88": {"tags": ["vitamin-a", "high-fiber", "potassium-rich", "low-sodium", "low-glycemic"], "iron_level": "medium", "sugar_level": "low", "sodium_level": "none"},  # Sweet Potato
+    "89": {"tags": ["iron-rich", "lean-protein", "zinc-rich"], "iron_level": "high", "sugar_level": "none", "sodium_level": "low"},  # Lamb (Cooked)
+    "90": {"tags": ["folate", "b-vitamins", "high-sodium"], "iron_level": "low", "sugar_level": "none", "sodium_level": "high"},  # Vegemite/Marmite
+    "91": {"tags": ["omega-3", "lean-protein", "low-sodium"], "iron_level": "low", "sugar_level": "none", "sodium_level": "low"},  # Barramundi
+    "92": {"tags": ["vitamin-c", "high-fiber", "potassium-rich", "low-sodium"], "iron_level": "none", "sugar_level": "low", "sodium_level": "none"},  # Kiwi Fruit
+    "93": {"tags": ["healthy-fats", "antioxidants", "low-sodium", "vegan"], "iron_level": "none", "sugar_level": "none", "sodium_level": "none"},  # Olive Oil
+    "94": {"tags": ["probiotic", "vitamin-c", "high-fiber", "vegan", "low-sodium"], "iron_level": "medium", "sugar_level": "none", "sodium_level": "medium"},  # Sauerkraut (Pasteurized)
+    "95": {"tags": ["plant-protein", "high-fiber", "iron-rich", "folate", "vegan", "low-sodium"], "iron_level": "medium", "sugar_level": "low", "sodium_level": "low"},  # Hummus
+    "96": {"tags": ["high-sodium", "cured-meat"], "iron_level": "medium", "sugar_level": "none", "sodium_level": "high"},  # Prosciutto - LIMIT
+    "97": {"tags": ["folate", "high-fiber", "iron-rich", "potassium-rich", "low-sodium", "vegan"], "iron_level": "medium", "sugar_level": "low", "sodium_level": "none"},  # Beets/Beetroot
+    "98": {"tags": ["vitamin-a", "high-fiber", "potassium-rich", "low-sodium", "vegan"], "iron_level": "low", "sugar_level": "low", "sodium_level": "none"},  # Pumpkin/Squash
+    "99": {"tags": ["omega-3", "high-fiber", "calcium-alt", "plant-protein", "vegan", "low-sodium"], "iron_level": "medium", "sugar_level": "none", "sodium_level": "none"},  # Chia Seeds
+    "100": {"tags": ["calcium-rich", "high-protein", "high-sodium"], "iron_level": "none", "sugar_level": "none", "sodium_level": "high"},  # Halloumi Cheese
 }
 
 # Tags that should NEVER result in a recommendation (safety override)
