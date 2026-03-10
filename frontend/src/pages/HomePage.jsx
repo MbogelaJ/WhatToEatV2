@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { foodsApi, categoriesApi } from '../api';
 import { FoodGrid } from '../components/food/FoodCard';
 import { SearchBar, CategoryFilter, SafetyFilter, Disclaimer } from '../components/common/Filters';
+import DailyTip from '../components/common/DailyTip';
 import { useUser } from '../context/UserContext';
 import { Sparkles, AlertTriangle, Info } from 'lucide-react';
 
@@ -110,6 +111,9 @@ export default function HomePage() {
         </p>
         <Disclaimer />
       </div>
+
+      {/* Daily Tip */}
+      <DailyTip />
 
       {/* Personalization Banner */}
       {hasPersonalization && recommendations && (

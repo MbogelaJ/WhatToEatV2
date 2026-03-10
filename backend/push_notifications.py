@@ -1,8 +1,6 @@
 """
-Push Notification Service for NurtureNote
-Uses Firebase Cloud Messaging HTTP v1 API with APNs production environment
-Timezone: Africa/Dar_es_Salaam
-Daily notifications at 3:00 PM
+Daily Tips Service for WhatToEat
+Provides trimester-based nutrition education tips
 """
 
 import os

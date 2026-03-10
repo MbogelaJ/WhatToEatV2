@@ -17,6 +17,7 @@ from contextlib import asynccontextmanager
 import jwt
 
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
+from push_notifications import get_daily_tip, get_all_tips, get_tips_count, get_tip_by_index
 from health_filters import (
     get_food_health_tags, 
     get_personalized_recommendations, 
@@ -144,7 +145,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 async def lifespan(app: FastAPI):
     """Application lifespan handler for startup and shutdown"""
     # Startup
-    logger.info("Starting NurtureNote API...")
+    logger.info("Starting WhatToEat API...")
     
     # Seed foods collection if empty (migrate from in-memory to MongoDB)
     foods_count = await foods_collection.count_documents({})
@@ -161,7 +162,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down NurtureNote API...")
+    logger.info("Shutting down WhatToEat API...")
     client.close()
 
 
@@ -591,7 +592,7 @@ async def update_user_profile(
 
 @api_router.get("/")
 async def root():
-    return {"message": "NurtureNote - Pregnancy Nutrition Education API"}
+    return {"message": "WhatToEat - Pregnancy Nutrition Education API"}
 
 @api_router.get("/foods", response_model=List[dict])
 async def get_all_foods():
@@ -716,9 +717,9 @@ async def get_categories():
 async def get_about():
     """Get about page information"""
     return {
-        "app_name": "NurtureNote",
+        "app_name": "WhatToEat",
         "purpose": "Educational Pregnancy Nutrition Reference",
-        "description": "NurtureNote provides general educational reference information about nutrition during pregnancy. It is designed as an informational resource to help users learn about nutrition topics commonly discussed in public health literature.",
+        "description": "WhatToEat provides general educational reference information about nutrition during pregnancy. It is designed as an informational resource to help users learn about nutrition topics commonly discussed in public health literature.",
         "data_sources": [
             "World Health Organization (WHO)",
             "Centers for Disease Control and Prevention (CDC)",
@@ -726,7 +727,7 @@ async def get_about():
             "American College of Obstetricians and Gynecologists (ACOG)"
         ],
         "disclaimer": "This app provides general educational reference information about pregnancy nutrition. It does not provide medical advice, diagnosis, or treatment. This content is not a substitute for professional medical guidance. Consulting a qualified healthcare professional is suggested for personal health concerns.",
-        "non_medical_statement": "NurtureNote is not a medical app and does not provide medical advice. The information provided is general educational reference material compiled from public health sources. It is not intended for use in making health decisions. Individual circumstances vary; consulting healthcare professionals is suggested for personalized guidance. Do not disregard professional medical advice or delay seeking it because of information in this app.",
+        "non_medical_statement": "WhatToEat is not a medical app and does not provide medical advice. The information provided is general educational reference material compiled from public health sources. It is not intended for use in making health decisions. Individual circumstances vary; consulting healthcare professionals is suggested for personalized guidance. Do not disregard professional medical advice or delay seeking it because of information in this app.",
         "version": "1.0.0",
         "last_updated": "January 2026"
     }
@@ -917,6 +918,73 @@ async def get_health_conditions():
     return {
         "conditions": conditions,
         "total": len(conditions)
+    }
+
+
+# ===== DAILY TIPS ENDPOINTS =====
+
+@api_router.get("/tips/today")
+async def get_todays_tip(trimester: Optional[int] = None):
+    """
+    Get today's daily tip with full expanded content
+    
+    Args:
+        trimester: Optional filter (1, 2, or 3) to get trimester-specific tip
+    """
+    if trimester is not None and trimester not in [1, 2, 3]:
+        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
+    
+    tip = get_daily_tip(trimester)
+    return {
+        "tip": tip,
+        "trimester_filter": trimester,
+        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
+    }
+
+
+@api_router.get("/tips/all")
+async def get_all_nutrition_tips(trimester: Optional[int] = None):
+    """
+    Get all daily tips, optionally filtered by trimester
+    
+    Args:
+        trimester: Optional filter (1, 2, or 3)
+    """
+    if trimester is not None and trimester not in [1, 2, 3]:
+        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
+    
+    tips = get_all_tips(trimester)
+    counts = get_tips_count(trimester)
+    
+    return {
+        "tips": tips,
+        "counts": counts,
+        "trimester_filter": trimester,
+        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
+    }
+
+
+@api_router.get("/tips/{tip_index}")
+async def get_tip_by_number(tip_index: int, trimester: Optional[int] = None):
+    """
+    Get a specific tip by index (0-29 for all, 0-9 for trimester-specific)
+    
+    Args:
+        tip_index: Index of the tip to retrieve
+        trimester: Optional filter (1, 2, or 3)
+    """
+    if trimester is not None and trimester not in [1, 2, 3]:
+        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
+    
+    tip = get_tip_by_index(tip_index, trimester)
+    counts = get_tips_count(trimester)
+    
+    return {
+        "tip": tip,
+        "tip_index": tip_index % counts["selected_count"],
+        "total_tips": counts["selected_count"],
+        "trimester_filter": trimester,
+        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
     }
 
 
