@@ -137,6 +137,15 @@ export default function PremiumPage() {
         <p className="text-xs text-stone-500 mt-3">
           One-time payment • No subscription • Valid for entire pregnancy
         </p>
+        
+        {/* Skip Button */}
+        <button
+          onClick={() => navigate('/')}
+          className="mt-4 text-stone-500 hover:text-stone-700 text-sm underline"
+          data-testid="skip-premium-btn"
+        >
+          Maybe later, continue with free version
+        </button>
       </div>
     </div>
   );

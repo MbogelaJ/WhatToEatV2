@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, BookOpen, Info, Settings, ChevronLeft } from 'lucide-react';
+import { Home, Search, BookOpen, Info, Settings, ChevronLeft, User } from 'lucide-react';
+import { useUser } from '../../context/UserContext';
 
 export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated } = useUser();
   
   // Don't show back button on home page
   const showBackButton = location.pathname !== '/';
@@ -12,22 +14,33 @@ export function Header() {
   return (
     <header className="bg-white border-b border-stone-200 sticky top-0 z-40">
       <div className="max-w-4xl mx-auto px-4 py-3">
-        <div className="flex items-center gap-3">
-          {showBackButton && (
-            <button
-              onClick={() => navigate(-1)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors text-stone-600"
-              data-testid="back-button"
-            >
-              <ChevronLeft size={24} />
-            </button>
-          )}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">W</span>
-            </div>
-            <h1 className="text-lg font-semibold text-stone-800">WhatToEat</h1>
-          </Link>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {showBackButton && (
+              <button
+                onClick={() => navigate(-1)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors text-stone-600"
+                data-testid="back-button"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">W</span>
+              </div>
+              <h1 className="text-lg font-semibold text-stone-800">WhatToEat</h1>
+            </Link>
+          </div>
+          
+          {/* Account/Profile Button */}
+          <button
+            onClick={() => navigate(isAuthenticated() ? '/settings' : '/onboarding')}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-stone-100 hover:bg-stone-200 transition-colors"
+            data-testid="profile-button"
+          >
+            <User size={18} className="text-stone-600" />
+          </button>
         </div>
       </div>
     </header>

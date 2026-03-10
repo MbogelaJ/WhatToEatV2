@@ -129,7 +129,8 @@ export default function OnboardingPage() {
           });
           
           if (result.success) {
-            navigate('/');
+            // Navigate to Premium page after registration
+            navigate('/premium');
           } else {
             setErrors({ auth: result.error });
           }
