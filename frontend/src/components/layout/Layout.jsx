@@ -8,13 +8,23 @@ export function Header() {
   const location = useLocation();
   const { user, isAuthenticated } = useUser();
   
-  // Don't show back button on home page or onboarding
-  const showBackButton = location.pathname !== '/' && location.pathname !== '/onboarding';
+  // Show back button on all pages except the disclaimer (first step of onboarding)
+  const isDisclaimerStep = location.pathname === '/onboarding' && !sessionStorage.getItem('passed_disclaimer');
+  const showBackButton = !isDisclaimerStep;
   
   // Navigate to disclaimer/onboarding when clicking logo
   const handleLogoClick = (e) => {
     e.preventDefault();
     navigate('/onboarding');
+  };
+
+  const handleBack = () => {
+    // If on home page, go to onboarding
+    if (location.pathname === '/') {
+      navigate('/onboarding');
+    } else {
+      navigate(-1);
+    }
   };
   
   return (
@@ -24,7 +34,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             {showBackButton && (
               <button
-                onClick={() => navigate(-1)}
+                onClick={handleBack}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors text-stone-600"
                 data-testid="back-button"
               >

@@ -33,7 +33,7 @@ const pregnancyStages = [
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const { register, login } = useUser();
+  const { register, login, updateProfile } = useUser();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -133,7 +133,26 @@ export default function OnboardingPage() {
           navigate('/premium', { replace: true });
           setTimeout(() => sessionStorage.removeItem('navigateToPremium'), 100);
         } else {
-          setErrors({ auth: result.error });
+          // If email already registered, try to login instead
+          if (result.error && result.error.includes('already registered')) {
+            const loginResult = await login(formData.email, formData.password);
+            if (loginResult.success) {
+              // Update profile with new data after login
+              await updateProfile({
+                age: parseInt(formData.age),
+                trimester: selectedStage?.trimester || null,
+                pregnancyStageLabel: selectedStage?.label || '',
+                dietaryRestrictions: actualRestrictions
+              });
+              sessionStorage.setItem('navigateToPremium', 'true');
+              navigate('/premium', { replace: true });
+              setTimeout(() => sessionStorage.removeItem('navigateToPremium'), 100);
+            } else {
+              setErrors({ auth: 'This email is already registered. Please go back and sign in instead.' });
+            }
+          } else {
+            setErrors({ auth: result.error });
+          }
         }
       } catch (err) {
         setErrors({ auth: 'Registration failed. Please try again.' });
