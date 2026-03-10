@@ -7,13 +7,20 @@ import { paymentsApi } from '../api';
 export default function SubscribePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, updateUser, isPremium } = useUser();
+  const { user, updateUser, isPremium, hasCompletedOnboarding } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [polling, setPolling] = useState(false);
 
   const sessionId = searchParams.get('session_id');
+
+  // Redirect unauthenticated users (without session_id) to onboarding
+  useEffect(() => {
+    if (!sessionId && !hasCompletedOnboarding()) {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [sessionId, hasCompletedOnboarding, navigate]);
 
   // Poll for payment status when returning from Stripe
   useEffect(() => {

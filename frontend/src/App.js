@@ -53,14 +53,10 @@ function AppContent() {
         element={<OnboardingPage />}
       />
 
-      {/* Subscribe page - no layout for clean checkout experience */}
+      {/* Subscribe page - no layout, allow access with session_id for payment return */}
       <Route
         path="/subscribe"
-        element={
-          <ProtectedRoute>
-            <SubscribePage />
-          </ProtectedRoute>
-        }
+        element={<SubscribePage />}
       />
 
       {/* Main app routes - with layout */}
