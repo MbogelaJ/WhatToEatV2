@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { UserProvider, useUser } from './context/UserContext';
 import HomePage from './pages/HomePage';
@@ -176,9 +176,9 @@ function AppContent() {
 function App() {
   return (
     <UserProvider>
-      <BrowserRouter>
+      <HashRouter>
         <AppContent />
-      </BrowserRouter>
+      </HashRouter>
     </UserProvider>
   );
 }
