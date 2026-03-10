@@ -47,12 +47,10 @@ function AppContent() {
 
   return (
     <Routes>
-      {/* Onboarding - includes disclaimer as step 1 */}
+      {/* Onboarding - always accessible (Home button goes here) */}
       <Route
         path="/onboarding"
-        element={
-          hasCompletedOnboarding() && !isNavigatingToPremium ? <Navigate to="/" replace /> : <OnboardingPage />
-        }
+        element={<OnboardingPage />}
       />
 
       {/* Subscribe page - no layout for clean checkout experience */}

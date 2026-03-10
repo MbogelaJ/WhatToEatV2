@@ -8,8 +8,14 @@ export function Header() {
   const location = useLocation();
   const { user, isAuthenticated } = useUser();
   
-  // Don't show back button on home page
-  const showBackButton = location.pathname !== '/';
+  // Don't show back button on home page or onboarding
+  const showBackButton = location.pathname !== '/' && location.pathname !== '/onboarding';
+  
+  // Navigate to disclaimer/onboarding when clicking logo
+  const handleLogoClick = (e) => {
+    e.preventDefault();
+    navigate('/onboarding');
+  };
   
   return (
     <header className="bg-white border-b border-stone-200 sticky top-0 z-40">
@@ -25,12 +31,12 @@ export function Header() {
                 <ChevronLeft size={24} />
               </button>
             )}
-            <Link to="/" className="flex items-center gap-2">
+            <button onClick={handleLogoClick} className="flex items-center gap-2" data-testid="logo-btn">
               <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">W</span>
               </div>
               <h1 className="text-lg font-semibold text-stone-800">WhatToEat</h1>
-            </Link>
+            </button>
           </div>
           
           {/* Account/Profile Button */}
@@ -49,9 +55,10 @@ export function Header() {
 
 export function Footer() {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const navItems = [
-    { path: '/', icon: Home, label: 'Home' },
+    { path: '/onboarding', icon: Home, label: 'Home' },
     { path: '/topics', icon: BookOpen, label: 'Topics' },
     { path: '/about', icon: Info, label: 'About' },
     { path: '/settings', icon: Settings, label: 'Settings' },
@@ -62,7 +69,7 @@ export function Footer() {
       <nav className="max-w-4xl mx-auto px-4">
         <ul className="flex justify-around py-2">
           {navItems.map(({ path, icon: Icon, label }) => {
-            const isActive = location.pathname === path;
+            const isActive = location.pathname === path || (path === '/onboarding' && location.pathname === '/');
             return (
               <li key={path}>
                 <Link
@@ -72,6 +79,7 @@ export function Footer() {
                       ? 'text-emerald-600' 
                       : 'text-stone-500 hover:text-stone-700'
                   }`}
+                  data-testid={`nav-${label.toLowerCase()}`}
                 >
                   <Icon size={20} />
                   <span className="text-xs">{label}</span>
