@@ -92,48 +92,52 @@ export default function SubscribePage() {
     }
   };
 
-  // Already premium
-  if (isPremium()) {
+  // Payment success - show this BEFORE isPremium check to ensure user sees success message
+  if (paymentStatus === 'success') {
     return (
-      <div className="max-w-md mx-auto px-4 py-12" data-testid="already-premium">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="text-emerald-600" size={40} />
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 py-12" data-testid="payment-success">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="text-emerald-600" size={40} />
+            </div>
+            <h1 className="text-2xl font-bold text-stone-800 mb-2">Payment Successful!</h1>
+            <p className="text-stone-600 mb-6">
+              Thank you for upgrading to Premium. Enjoy all the features!
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-8 py-4 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-lg"
+              data-testid="get-started-btn"
+            >
+              Get Started
+            </button>
           </div>
-          <h1 className="text-2xl font-bold text-stone-800 mb-2">You're Already Premium!</h1>
-          <p className="text-stone-600 mb-6">
-            You have access to all premium features.
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
-          >
-            Go to Home
-          </button>
         </div>
       </div>
     );
   }
 
-  // Payment success
-  if (paymentStatus === 'success') {
+  // Already premium (and no active payment session)
+  if (isPremium() && !sessionId) {
     return (
-      <div className="max-w-md mx-auto px-4 py-12" data-testid="payment-success">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="text-emerald-600" size={40} />
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 py-12" data-testid="already-premium">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="text-emerald-600" size={40} />
+            </div>
+            <h1 className="text-2xl font-bold text-stone-800 mb-2">You're Already Premium!</h1>
+            <p className="text-stone-600 mb-6">
+              You have access to all premium features.
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+            >
+              Go to Home
+            </button>
           </div>
-          <h1 className="text-2xl font-bold text-stone-800 mb-2">Payment Successful!</h1>
-          <p className="text-stone-600 mb-6">
-            Thank you for upgrading to Premium. Enjoy all the features!
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-8 py-4 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-lg"
-            data-testid="get-started-btn"
-          >
-            Get Started
-          </button>
         </div>
       </div>
     );
@@ -142,26 +146,28 @@ export default function SubscribePage() {
   // Payment failed/expired
   if (paymentStatus === 'expired' || paymentStatus === 'error' || paymentStatus === 'timeout') {
     return (
-      <div className="max-w-md mx-auto px-4 py-12" data-testid="payment-failed">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <XCircle className="text-red-600" size={40} />
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 py-12" data-testid="payment-failed">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="text-red-600" size={40} />
+            </div>
+            <h1 className="text-2xl font-bold text-stone-800 mb-2">Payment Not Completed</h1>
+            <p className="text-stone-600 mb-6">
+              {paymentStatus === 'timeout' 
+                ? 'Payment verification timed out. Please check your email for confirmation.'
+                : 'Your payment was not completed. Please try again.'}
+            </p>
+            <button
+              onClick={() => {
+                setPaymentStatus(null);
+                navigate('/subscribe', { replace: true });
+              }}
+              className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+            >
+              Try Again
+            </button>
           </div>
-          <h1 className="text-2xl font-bold text-stone-800 mb-2">Payment Not Completed</h1>
-          <p className="text-stone-600 mb-6">
-            {paymentStatus === 'timeout' 
-              ? 'Payment verification timed out. Please check your email for confirmation.'
-              : 'Your payment was not completed. Please try again.'}
-          </p>
-          <button
-            onClick={() => {
-              setPaymentStatus(null);
-              navigate('/subscribe', { replace: true });
-            }}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
-          >
-            Try Again
-          </button>
         </div>
       </div>
     );
@@ -170,15 +176,17 @@ export default function SubscribePage() {
   // Polling state
   if (polling) {
     return (
-      <div className="max-w-md mx-auto px-4 py-12" data-testid="payment-processing">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Loader className="text-emerald-600 animate-spin" size={40} />
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 py-12" data-testid="payment-processing">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Loader className="text-emerald-600 animate-spin" size={40} />
+            </div>
+            <h1 className="text-2xl font-bold text-stone-800 mb-2">Processing Payment...</h1>
+            <p className="text-stone-600">
+              Please wait while we confirm your payment.
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-stone-800 mb-2">Processing Payment...</h1>
-          <p className="text-stone-600">
-            Please wait while we confirm your payment.
-          </p>
         </div>
       </div>
     );
@@ -186,7 +194,8 @@ export default function SubscribePage() {
 
   // Checkout page
   return (
-    <div className="max-w-md mx-auto px-4 py-6" data-testid="subscribe-page">
+    <div className="min-h-screen bg-stone-50">
+      <div className="max-w-md mx-auto px-4 py-6" data-testid="subscribe-page">
       <h1 className="text-2xl font-bold text-stone-800 mb-6 text-center">Complete Your Purchase</h1>
 
       {/* Order Summary */}
@@ -256,6 +265,7 @@ export default function SubscribePage() {
       <div className="mt-6 flex items-center justify-center gap-2 text-stone-400">
         <span className="text-xs">Powered by</span>
         <span className="font-semibold text-stone-500">Stripe</span>
+      </div>
       </div>
     </div>
   );
