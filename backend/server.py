@@ -9,18 +9,13 @@ import re
 import hashlib
 import secrets
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone, timedelta
 from contextlib import asynccontextmanager
-import asyncio
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
-import pytz
 import jwt
 
-from push_notifications import get_fcm_service, get_daily_tip, get_all_tips, get_tips_count, get_tip_by_index, FIRST_TRIMESTER_TIPS, SECOND_TRIMESTER_TIPS, THIRD_TRIMESTER_TIPS
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
 from health_filters import (
     get_food_health_tags, 
@@ -39,7 +34,6 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Collections
-device_tokens_collection = db["device_tokens"]
 payment_transactions_collection = db["payment_transactions"]
 foods_collection = db["foods"]
 users_collection = db["users"]
@@ -56,18 +50,12 @@ JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 # Security
 security = HTTPBearer(auto_error=False)
 
-# Timezone for scheduler
-SCHEDULER_TIMEZONE = pytz.timezone('Africa/Dar_es_Salaam')
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# APScheduler instance
-scheduler = AsyncIOScheduler(timezone=SCHEDULER_TIMEZONE)
 
 
 # ============== AUTH MODELS ==============
@@ -152,64 +140,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     return user
 
 
-async def send_daily_notifications():
-    """
-    Scheduled job to send daily pregnancy nutrition tips to all registered devices
-    Runs at 3:00 PM Africa/Dar_es_Salaam timezone
-    """
-    logger.info("Starting daily notification job...")
-    
-    try:
-        # Get today's tip
-        tip = get_daily_tip()
-        title = tip["title"]
-        body = tip["body"]
-        data = tip.get("data", {})
-        
-        # Get all registered device tokens
-        tokens = []
-        async for doc in device_tokens_collection.find({}, {"_id": 0, "token": 1}):
-            tokens.append(doc["token"])
-        
-        if not tokens:
-            logger.info("No registered device tokens found. Skipping notification.")
-            return
-        
-        logger.info(f"Sending daily tip to {len(tokens)} devices: {title}")
-        
-        # Send notifications
-        fcm = get_fcm_service()
-        results = fcm.send_multicast(tokens, title, body, data)
-        
-        logger.info(f"Notification results: {results['success_count']} success, {results['failure_count']} failures")
-        
-        # Remove invalid tokens from database
-        if results["invalid_tokens"]:
-            logger.info(f"Removing {len(results['invalid_tokens'])} invalid tokens")
-            for invalid_token in results["invalid_tokens"]:
-                await device_tokens_collection.delete_one({"token": invalid_token})
-            logger.info(f"Removed {len(results['invalid_tokens'])} invalid tokens from database")
-        
-    except Exception as e:
-        logger.error(f"Error in daily notification job: {e}")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler for startup and shutdown"""
     # Startup
     logger.info("Starting NurtureNote API...")
-    
-    # Initialize FCM service
-    fcm = get_fcm_service()
-    if fcm.project_id:
-        logger.info(f"FCM service initialized for project: {fcm.project_id}")
-    else:
-        logger.warning("FCM service not configured - push notifications disabled")
-    
-    # Create index on device_tokens collection
-    await device_tokens_collection.create_index("token", unique=True)
-    logger.info("Device tokens collection index created")
     
     # Seed foods collection if empty (migrate from in-memory to MongoDB)
     foods_count = await foods_collection.count_documents({})
@@ -223,22 +158,10 @@ async def lifespan(app: FastAPI):
     else:
         logger.info(f"Foods collection already has {foods_count} documents")
     
-    # Schedule daily notification job at 3:00 PM Africa/Dar_es_Salaam
-    scheduler.add_job(
-        send_daily_notifications,
-        trigger=CronTrigger(hour=15, minute=0, timezone=SCHEDULER_TIMEZONE),
-        id="daily_notification",
-        name="Daily Pregnancy Nutrition Tip",
-        replace_existing=True
-    )
-    scheduler.start()
-    logger.info("Daily notification scheduler started - scheduled for 3:00 PM Africa/Dar_es_Salaam")
-    
     yield
     
     # Shutdown
     logger.info("Shutting down NurtureNote API...")
-    scheduler.shutdown()
     client.close()
 
 
@@ -315,22 +238,6 @@ class QAResponse(BaseModel):
 
 class SearchQuery(BaseModel):
     query: str
-
-# Device token models for push notifications
-class DeviceTokenRequest(BaseModel):
-    token: str = Field(..., min_length=1, description="FCM device token")
-    platform: Optional[str] = Field(default="ios", description="Device platform (ios/android)")
-    trimester: Optional[int] = Field(default=None, ge=1, le=3, description="User's trimester (1, 2, or 3)")
-
-class DeviceTokenResponse(BaseModel):
-    success: bool
-    message: str
-    token_id: Optional[str] = None
-
-class NotificationTestRequest(BaseModel):
-    token: str = Field(..., min_length=1, description="FCM device token to test")
-    title: Optional[str] = Field(default="Test Notification", description="Notification title")
-    body: Optional[str] = Field(default="This is a test notification from NurtureNote", description="Notification body")
 
 # Payment models
 class CheckoutRequest(BaseModel):
@@ -1010,232 +917,6 @@ async def get_health_conditions():
     return {
         "conditions": conditions,
         "total": len(conditions)
-    }
-
-
-# ===== PUSH NOTIFICATION ENDPOINTS =====
-
-@api_router.post("/register_device", response_model=DeviceTokenResponse)
-async def register_device_token(request: DeviceTokenRequest):
-    """
-    Register a device token for push notifications
-    Stores token in MongoDB with optional platform and trimester info
-    """
-    try:
-        token = request.token.strip()
-        if not token:
-            raise HTTPException(status_code=400, detail="Token cannot be empty")
-        
-        # Check if token already exists
-        existing = await device_tokens_collection.find_one({"token": token})
-        
-        if existing:
-            # Update existing token with new info
-            await device_tokens_collection.update_one(
-                {"token": token},
-                {"$set": {
-                    "platform": request.platform,
-                    "trimester": request.trimester,
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }}
-            )
-            logger.info(f"Device token updated: {token[:20]}...")
-            return DeviceTokenResponse(
-                success=True,
-                message="Device token updated successfully",
-                token_id=token[:20] + "..."
-            )
-        else:
-            # Insert new token
-            doc = {
-                "token": token,
-                "platform": request.platform,
-                "trimester": request.trimester,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
-            await device_tokens_collection.insert_one(doc)
-            logger.info(f"Device token registered: {token[:20]}...")
-            return DeviceTokenResponse(
-                success=True,
-                message="Device token registered successfully",
-                token_id=token[:20] + "..."
-            )
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error registering device token: {e}")
-        raise HTTPException(status_code=500, detail="Failed to register device token")
-
-
-@api_router.delete("/unregister_device/{token}")
-async def unregister_device_token(token: str):
-    """
-    Unregister a device token from push notifications
-    """
-    try:
-        result = await device_tokens_collection.delete_one({"token": token})
-        
-        if result.deleted_count > 0:
-            logger.info(f"Device token unregistered: {token[:20]}...")
-            return {"success": True, "message": "Device token unregistered successfully"}
-        else:
-            raise HTTPException(status_code=404, detail="Device token not found")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error unregistering device token: {e}")
-        raise HTTPException(status_code=500, detail="Failed to unregister device token")
-
-
-@api_router.post("/test_notification")
-async def test_push_notification(request: NotificationTestRequest):
-    """
-    Send a test push notification to a specific device token
-    Useful for testing the push notification setup
-    """
-    try:
-        fcm = get_fcm_service()
-        
-        if not fcm.project_id:
-            raise HTTPException(
-                status_code=503,
-                detail="Push notification service not configured"
-            )
-        
-        result = fcm.send_notification(
-            token=request.token,
-            title=request.title,
-            body=request.body,
-            data={"screen": "home", "test": "true"}
-        )
-        
-        if result.get("success"):
-            return {
-                "success": True,
-                "message": "Test notification sent successfully",
-                "message_id": result.get("message_id")
-            }
-        else:
-            return {
-                "success": False,
-                "message": "Failed to send notification",
-                "error": result.get("error"),
-                "invalid_token": result.get("invalid_token", False)
-            }
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error sending test notification: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@api_router.get("/notification_status")
-async def get_notification_status():
-    """
-    Get the status of the push notification service and scheduler
-    """
-    fcm = get_fcm_service()
-    
-    # Get registered device count
-    device_count = await device_tokens_collection.count_documents({})
-    
-    # Get next scheduled job time
-    next_run = None
-    job = scheduler.get_job("daily_notification")
-    if job and job.next_run_time:
-        next_run = job.next_run_time.isoformat()
-    
-    return {
-        "fcm_configured": fcm.project_id is not None,
-        "fcm_project_id": fcm.project_id,
-        "scheduler_running": scheduler.running,
-        "next_notification_time": next_run,
-        "timezone": "Africa/Dar_es_Salaam",
-        "scheduled_time": "15:00 (3:00 PM)",
-        "registered_devices": device_count,
-        "daily_tip_preview": get_daily_tip()
-    }
-
-
-@api_router.post("/trigger_daily_notification")
-async def trigger_daily_notification_now():
-    """
-    Manually trigger the daily notification job (for testing)
-    """
-    try:
-        await send_daily_notifications()
-        return {"success": True, "message": "Daily notification job triggered"}
-    except Exception as e:
-        logger.error(f"Error triggering daily notification: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@api_router.get("/tips/today")
-async def get_todays_tip(trimester: Optional[int] = None):
-    """
-    Get today's daily tip with full expanded content
-    
-    Args:
-        trimester: Optional filter (1, 2, or 3) to get trimester-specific tip
-    """
-    if trimester is not None and trimester not in [1, 2, 3]:
-        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
-    
-    tip = get_daily_tip(trimester)
-    return {
-        "tip": tip,
-        "trimester_filter": trimester,
-        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
-    }
-
-
-@api_router.get("/tips/all")
-async def get_all_nutrition_tips(trimester: Optional[int] = None):
-    """
-    Get all daily tips, optionally filtered by trimester
-    
-    Args:
-        trimester: Optional filter (1, 2, or 3)
-    """
-    if trimester is not None and trimester not in [1, 2, 3]:
-        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
-    
-    tips = get_all_tips(trimester)
-    counts = get_tips_count(trimester)
-    
-    return {
-        "tips": tips,
-        "counts": counts,
-        "trimester_filter": trimester,
-        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
-    }
-
-
-@api_router.get("/tips/{tip_index}")
-async def get_tip_by_number(tip_index: int, trimester: Optional[int] = None):
-    """
-    Get a specific tip by index (0-29 for all, 0-9 for trimester-specific)
-    
-    Args:
-        tip_index: Index of the tip to retrieve
-        trimester: Optional filter (1, 2, or 3)
-    """
-    if trimester is not None and trimester not in [1, 2, 3]:
-        raise HTTPException(status_code=400, detail="Trimester must be 1, 2, or 3")
-    
-    tip = get_tip_by_index(tip_index, trimester)
-    counts = get_tips_count(trimester)
-    
-    return {
-        "tip": tip,
-        "tip_index": tip_index % counts["selected_count"],
-        "total_tips": counts["selected_count"],
-        "trimester_filter": trimester,
-        "disclaimer": "This is general educational reference information only and does not constitute medical advice."
     }
 
 

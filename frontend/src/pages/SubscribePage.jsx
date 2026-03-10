@@ -122,10 +122,10 @@ export default function SubscribePage() {
           </p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
-            data-testid="continue-btn"
+            className="px-8 py-4 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-lg"
+            data-testid="get-started-btn"
           >
-            Start Using Premium
+            Get Started
           </button>
         </div>
       </div>
