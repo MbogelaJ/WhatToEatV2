@@ -24,6 +24,21 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+// Premium Route wrapper - requires completed onboarding AND active premium subscription
+function PremiumRoute({ children }) {
+  const { hasCompletedOnboarding, isPremium } = useUser();
+  
+  if (!hasCompletedOnboarding()) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  
+  if (!isPremium()) {
+    return <Navigate to="/premium" replace />;
+  }
+  
+  return children;
+}
+
 // Layout wrapper for main app routes
 function MainLayout({ children }) {
   return <Layout>{children}</Layout>;
@@ -59,57 +74,58 @@ function AppContent() {
         element={<SubscribePage />}
       />
 
-      {/* Main app routes - with layout */}
+      {/* Main app routes - require premium subscription */}
       <Route
         path="/"
         element={
-          <ProtectedRoute>
+          <PremiumRoute>
             <MainLayout>
               <HomePage />
             </MainLayout>
-          </ProtectedRoute>
+          </PremiumRoute>
         }
       />
       <Route
         path="/food/:id"
         element={
-          <ProtectedRoute>
+          <PremiumRoute>
             <MainLayout>
               <FoodDetailPage />
             </MainLayout>
-          </ProtectedRoute>
+          </PremiumRoute>
         }
       />
       <Route
         path="/topics"
         element={
-          <ProtectedRoute>
+          <PremiumRoute>
             <MainLayout>
               <TopicsPage />
             </MainLayout>
-          </ProtectedRoute>
+          </PremiumRoute>
         }
       />
       <Route
         path="/about"
         element={
-          <ProtectedRoute>
+          <PremiumRoute>
             <MainLayout>
               <AboutPage />
             </MainLayout>
-          </ProtectedRoute>
+          </PremiumRoute>
         }
       />
       <Route
         path="/settings"
         element={
-          <ProtectedRoute>
+          <PremiumRoute>
             <MainLayout>
               <SettingsPage />
             </MainLayout>
-          </ProtectedRoute>
+          </PremiumRoute>
         }
       />
+      {/* Premium page - accessible without subscription (to allow purchase) */}
       <Route
         path="/premium"
         element={

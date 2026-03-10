@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, FileText, Shield, HelpCircle, Bell, Crown, User, LogOut, Database, Trash2 } from 'lucide-react';
+import { ChevronRight, FileText, Shield, HelpCircle, Bell, Crown, User, LogOut, Database, Trash2, Calendar } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { getCacheStats, clearAllCache } from '../utils/cache';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { user, isPremium, clearUser, getPregnancyStageLabel } = useUser();
+  const { user, isPremium, getPremiumExpirationDate, clearUser, getPregnancyStageLabel } = useUser();
   const [cacheStats, setCacheStats] = useState({ entryCount: 0, sizeKB: 0 });
 
   useEffect(() => {
@@ -27,11 +27,20 @@ export default function SettingsPage() {
     }
   };
 
+  // Format expiration date
+  const formatExpirationDate = () => {
+    const expDate = getPremiumExpirationDate();
+    if (!expDate) return null;
+    return expDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
   const settingsItems = [
     {
       icon: Crown,
       label: isPremium() ? 'Premium Active' : 'Upgrade to Premium',
-      description: isPremium() ? 'You have full access' : 'Unlock all features for $0.99',
+      description: isPremium() 
+        ? `Access until ${formatExpirationDate() || 'N/A'}`
+        : 'Unlock all features for $0.99',
       to: '/premium',
       highlight: !isPremium(),
     },

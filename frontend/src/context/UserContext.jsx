@@ -198,7 +198,31 @@ export function UserProvider({ children }) {
   };
 
   const isPremium = () => {
-    return user && user.isPremium;
+    if (!user || !user.isPremium) return false;
+    
+    // Check if premium has expired (12 months from purchase)
+    if (user.premiumPurchasedAt) {
+      const purchaseDate = new Date(user.premiumPurchasedAt);
+      const expirationDate = new Date(purchaseDate);
+      expirationDate.setMonth(expirationDate.getMonth() + 12);
+      
+      if (new Date() > expirationDate) {
+        return false; // Premium has expired
+      }
+    }
+    
+    return true;
+  };
+
+  // Get premium expiration date
+  const getPremiumExpirationDate = () => {
+    if (!user || !user.isPremium || !user.premiumPurchasedAt) return null;
+    
+    const purchaseDate = new Date(user.premiumPurchasedAt);
+    const expirationDate = new Date(purchaseDate);
+    expirationDate.setMonth(expirationDate.getMonth() + 12);
+    
+    return expirationDate;
   };
 
   const isAuthenticated = () => {
@@ -224,8 +248,12 @@ export function UserProvider({ children }) {
     if (user?.id) {
       try {
         const response = await paymentsApi.getPremiumStatus(user.id);
-        if (response.data.is_premium && !user.isPremium) {
-          const updatedUser = { ...user, isPremium: true };
+        if (response.data.is_premium) {
+          const updatedUser = { 
+            ...user, 
+            isPremium: true,
+            premiumPurchasedAt: response.data.purchased_at || user.premiumPurchasedAt
+          };
           setUser(updatedUser);
           localStorage.setItem('whattoeat_user', JSON.stringify(updatedUser));
         }
@@ -249,6 +277,7 @@ export function UserProvider({ children }) {
         clearUser,
         hasCompletedOnboarding,
         isPremium,
+        getPremiumExpirationDate,
         isAuthenticated,
         getTrimester,
         getPregnancyStageLabel,

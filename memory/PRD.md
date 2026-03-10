@@ -91,11 +91,15 @@ Build a pregnancy nutrition education app with:
 - Uses browser history navigation (navigate(-1))
 - ChevronLeft icon from lucide-react
 
-### Premium & Payment System (March 2026)
-- Premium Page: Feature comparison (Free vs Premium)
+### Premium & Payment System (March 2026, Updated December 2026)
+- **Paywall enforced**: Users MUST subscribe ($0.99) before accessing home page
+- Premium Page: Feature comparison (Free vs Premium) - no skip button
 - Subscription Page: Stripe checkout integration
 - Price: $0.99 one-time payment
-- Payment status polling on return from Stripe
+- **Access duration**: 12 months from purchase date
+- Premium status synced from backend including `purchased_at` timestamp
+- Expiration date displayed in Settings page
+- After 12 months, access is limited (user redirected to Premium page)
 
 ## Project Structure
 ```

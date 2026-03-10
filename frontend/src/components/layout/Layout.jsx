@@ -6,16 +6,16 @@ import { useUser } from '../../context/UserContext';
 export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated } = useUser();
+  const { user, isAuthenticated, isPremium } = useUser();
   
   // Show back button on all pages except the disclaimer (first step of onboarding)
   const isDisclaimerStep = location.pathname === '/onboarding' && !sessionStorage.getItem('passed_disclaimer');
   const showBackButton = !isDisclaimerStep;
   
-  // Navigate to disclaimer/onboarding when clicking logo
+  // Navigate to home (for premium) or onboarding (for non-premium) when clicking logo
   const handleLogoClick = (e) => {
     e.preventDefault();
-    navigate('/onboarding');
+    navigate(isPremium() ? '/' : '/onboarding');
   };
 
   const handleBack = () => {
@@ -66,9 +66,13 @@ export function Header() {
 export function Footer() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isPremium } = useUser();
+  
+  // Home path depends on premium status
+  const homePath = isPremium() ? '/' : '/onboarding';
   
   const navItems = [
-    { path: '/onboarding', icon: Home, label: 'Home' },
+    { path: homePath, icon: Home, label: 'Home' },
     { path: '/topics', icon: BookOpen, label: 'Topics' },
     { path: '/about', icon: Info, label: 'About' },
     { path: '/settings', icon: Settings, label: 'Settings' },
@@ -79,9 +83,10 @@ export function Footer() {
       <nav className="max-w-4xl mx-auto px-4">
         <ul className="flex justify-around py-2">
           {navItems.map(({ path, icon: Icon, label }) => {
-            const isActive = location.pathname === path || (path === '/onboarding' && location.pathname === '/');
+            const isActive = location.pathname === path || 
+              (label === 'Home' && (location.pathname === '/' || location.pathname === '/onboarding'));
             return (
-              <li key={path}>
+              <li key={label}>
                 <Link
                   to={path}
                   className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors ${

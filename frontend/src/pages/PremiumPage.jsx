@@ -80,7 +80,7 @@ export default function PremiumPage() {
             </div>
           </div>
           <p className="text-emerald-100 text-sm mb-4">
-            One-time payment for your entire pregnancy
+            One-time payment • 12 months access
           </p>
           <button
             onClick={() => navigate('/subscribe')}
@@ -135,17 +135,8 @@ export default function PremiumPage() {
           Unlock Premium for $0.99
         </button>
         <p className="text-xs text-stone-500 mt-3">
-          One-time payment • No subscription • Valid for entire pregnancy
+          One-time payment • 12 months access
         </p>
-        
-        {/* Skip Button */}
-        <button
-          onClick={() => navigate('/')}
-          className="mt-4 text-stone-500 hover:text-stone-700 text-sm underline"
-          data-testid="skip-premium-btn"
-        >
-          Maybe later, continue with free version
-        </button>
       </div>
     </div>
   );

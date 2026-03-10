@@ -196,7 +196,7 @@ export default function SubscribePage() {
         <div className="flex justify-between items-center py-3 border-b border-stone-100">
           <div>
             <p className="font-medium text-stone-800">WhatToEat Premium</p>
-            <p className="text-sm text-stone-500">Full pregnancy access</p>
+            <p className="text-sm text-stone-500">12 months access</p>
           </div>
           <p className="font-semibold text-stone-800">$0.99</p>
         </div>
