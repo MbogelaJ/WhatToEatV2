@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { UserProvider, useUser } from './context/UserContext';
 import HomePage from './pages/HomePage';
@@ -31,6 +31,7 @@ function MainLayout({ children }) {
 
 function AppContent() {
   const { loading, hasCompletedOnboarding } = useUser();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -40,13 +41,17 @@ function AppContent() {
     );
   }
 
+  // Check if we're trying to navigate to premium after signup
+  const isNavigatingToPremium = location.pathname === '/premium' || 
+                                 sessionStorage.getItem('navigateToPremium') === 'true';
+
   return (
     <Routes>
       {/* Onboarding - includes disclaimer as step 1 */}
       <Route
         path="/onboarding"
         element={
-          hasCompletedOnboarding() ? <Navigate to="/" replace /> : <OnboardingPage />
+          hasCompletedOnboarding() && !isNavigatingToPremium ? <Navigate to="/" replace /> : <OnboardingPage />
         }
       />
 

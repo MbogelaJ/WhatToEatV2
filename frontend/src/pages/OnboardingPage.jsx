@@ -129,8 +129,11 @@ export default function OnboardingPage() {
           });
           
           if (result.success) {
-            // Navigate to Premium page after registration
-            navigate('/premium');
+            // Set flag to prevent redirect and navigate to Premium page
+            sessionStorage.setItem('navigateToPremium', 'true');
+            navigate('/premium', { replace: true });
+            // Clear the flag after navigation
+            setTimeout(() => sessionStorage.removeItem('navigateToPremium'), 100);
           } else {
             setErrors({ auth: result.error });
           }
