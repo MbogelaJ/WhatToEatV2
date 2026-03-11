@@ -45,6 +45,8 @@ async function fetchWithCache(key, fetcher, duration = CACHE_DURATIONS.LONG) {
 export const authApi = {
   register: (userData) => api.post('/auth/register', userData),
   login: (email, password) => api.post('/auth/login', { email, password }),
+  googleAuth: (sessionId) => api.post('/auth/google/session', { session_id: sessionId }),
+  logout: () => api.post('/auth/logout'),
   getProfile: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
 };

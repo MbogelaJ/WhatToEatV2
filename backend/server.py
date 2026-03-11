@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -8,6 +9,7 @@ import logging
 import re
 import hashlib
 import secrets
+import httpx
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict
@@ -38,6 +40,7 @@ db = client[os.environ['DB_NAME']]
 payment_transactions_collection = db["payment_transactions"]
 foods_collection = db["foods"]
 users_collection = db["users"]
+user_sessions_collection = db["user_sessions"]  # For Google OAuth sessions
 
 # Stripe configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', '')
@@ -604,6 +607,154 @@ async def update_user_profile(
         is_premium=is_premium,
         created_at=updated_user.get("created_at", "")
     )
+
+# ============== Google OAuth Routes ==============
+
+class GoogleSessionRequest(BaseModel):
+    session_id: str
+
+@api_router.post("/auth/google/session")
+async def google_oauth_session(request: GoogleSessionRequest):
+    """
+    Exchange Emergent Auth session_id for user data and create local session.
+    Called by frontend after Google OAuth callback.
+    """
+    try:
+        # Call Emergent Auth to get user data
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers={"X-Session-ID": request.session_id}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid session")
+            
+            auth_data = response.json()
+        
+        email = auth_data.get("email")
+        name = auth_data.get("name", "")
+        picture = auth_data.get("picture", "")
+        emergent_session_token = auth_data.get("session_token")
+        
+        if not email:
+            raise HTTPException(status_code=400, detail="Email not provided")
+        
+        # Check if user exists
+        existing_user = await users_collection.find_one({"email": email}, {"_id": 0})
+        
+        if existing_user:
+            # Update existing user with Google data
+            user_id = existing_user["_id"] if "_id" in existing_user else existing_user.get("user_id")
+            if not user_id:
+                user_id = f"user_{int(datetime.now().timestamp())}_{uuid.uuid4().hex[:8]}"
+            
+            await users_collection.update_one(
+                {"email": email},
+                {"$set": {
+                    "name": name,
+                    "picture": picture,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        else:
+            # Create new user
+            user_id = f"user_{int(datetime.now().timestamp())}_{uuid.uuid4().hex[:8]}"
+            new_user = {
+                "_id": user_id,
+                "email": email,
+                "name": name,
+                "picture": picture,
+                "auth_provider": "google",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await users_collection.insert_one(new_user)
+        
+        # Store session
+        session_expires = datetime.now(timezone.utc) + timedelta(days=7)
+        await user_sessions_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "user_id": user_id,
+                "session_token": emergent_session_token,
+                "expires_at": session_expires,
+                "created_at": datetime.now(timezone.utc)
+            }},
+            upsert=True
+        )
+        
+        # Get user with premium status
+        user = await users_collection.find_one({"_id": user_id}, {"_id": 0})
+        if not user:
+            user = await users_collection.find_one({"email": email}, {"_id": 0})
+        
+        # Check premium status
+        paid_transaction = await payment_transactions_collection.find_one({
+            "user_id": user_id,
+            "payment_status": "paid"
+        })
+        is_premium = paid_transaction is not None
+        
+        # Generate JWT token for the app
+        token_payload = {
+            "user_id": user_id,
+            "email": email,
+            "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+        }
+        jwt_token = jwt.encode(token_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        
+        # Create response with cookie
+        response_data = {
+            "user": {
+                "id": user_id,
+                "email": email,
+                "name": name,
+                "picture": picture,
+                "age": user.get("age") if user else None,
+                "trimester": user.get("trimester") if user else None,
+                "pregnancy_stage_label": user.get("pregnancy_stage_label") if user else None,
+                "dietary_restrictions": user.get("dietary_restrictions", []) if user else [],
+                "is_premium": is_premium,
+                "onboarding_completed": user.get("age") is not None if user else False
+            },
+            "token": jwt_token,
+            "message": "Google auth successful"
+        }
+        
+        response = JSONResponse(content=response_data)
+        response.set_cookie(
+            key="session_token",
+            value=emergent_session_token,
+            httponly=True,
+            secure=True,
+            samesite="none",
+            max_age=7 * 24 * 60 * 60,  # 7 days
+            path="/"
+        )
+        
+        return response
+        
+    except httpx.HTTPError as e:
+        logger.error(f"Error calling Emergent Auth: {e}")
+        raise HTTPException(status_code=500, detail="Authentication service error")
+    except Exception as e:
+        logger.error(f"Google OAuth error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/auth/logout")
+async def logout(request: Request):
+    """Logout user and clear session"""
+    # Get session token from cookie or header
+    session_token = request.cookies.get("session_token")
+    
+    if session_token:
+        # Delete session from database
+        await user_sessions_collection.delete_one({"session_token": session_token})
+    
+    response = JSONResponse(content={"message": "Logged out successfully"})
+    response.delete_cookie(key="session_token", path="/")
+    
+    return response
 
 # ============== API Routes ==============
 

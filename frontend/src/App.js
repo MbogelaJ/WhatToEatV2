@@ -10,6 +10,7 @@ import SettingsPage from './pages/SettingsPage';
 import OnboardingPage from './pages/OnboardingPage';
 import PremiumPage from './pages/PremiumPage';
 import SubscribePage from './pages/SubscribePage';
+import AuthCallback from './pages/AuthCallback';
 import { TermsPage, PrivacyPage, SupportPage } from './pages/LegalPages';
 import './App.css';
 
@@ -53,6 +54,12 @@ function MainLayout({ children }) {
 function AppContent() {
   const { loading, hasCompletedOnboarding } = useUser();
   const location = useLocation();
+
+  // CRITICAL: Check URL hash for session_id synchronously during render
+  // This must happen BEFORE Routes to prevent race conditions with ProtectedRoute
+  if (location.hash?.includes('session_id=')) {
+    return <AuthCallback />;
+  }
 
   if (loading) {
     return (

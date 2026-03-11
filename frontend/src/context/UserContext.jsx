@@ -143,6 +143,41 @@ export function UserProvider({ children }) {
     }
   };
 
+  // Login with Google OAuth
+  const loginWithGoogle = async (sessionId) => {
+    try {
+      const response = await authApi.googleAuth(sessionId);
+      const { user: serverUser, token: authToken } = response.data;
+      
+      // Save token
+      setToken(authToken);
+      localStorage.setItem('whattoeat_token', authToken);
+      
+      // Save user
+      const userData = {
+        id: serverUser.id,
+        email: serverUser.email,
+        name: serverUser.name,
+        picture: serverUser.picture,
+        age: serverUser.age,
+        trimester: serverUser.trimester,
+        pregnancyStageLabel: serverUser.pregnancy_stage_label,
+        dietaryRestrictions: serverUser.dietary_restrictions || [],
+        isPremium: serverUser.is_premium,
+        onboardingCompleted: serverUser.onboarding_completed || serverUser.age != null,
+      };
+      
+      setUser(userData);
+      localStorage.setItem('whattoeat_user', JSON.stringify(userData));
+      sessionStorage.setItem('disclaimer_accepted', 'true');
+      
+      return { success: true, user: userData };
+    } catch (err) {
+      const message = err.response?.data?.detail || 'Google authentication failed';
+      return { success: false, error: message };
+    }
+  };
+
   // Update user profile on server
   const updateProfile = async (updates) => {
     try {
@@ -271,6 +306,7 @@ export function UserProvider({ children }) {
         loading,
         register,
         login,
+        loginWithGoogle,
         updateProfile,
         saveUser,
         updateUser,
