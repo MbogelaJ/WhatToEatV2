@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Star, Crown, Sparkles, ArrowRight } from 'lucide-react';
 import { useUser } from '../context/UserContext';
@@ -6,6 +6,11 @@ import { useUser } from '../context/UserContext';
 export default function PremiumPage() {
   const navigate = useNavigate();
   const { isPremium } = useUser();
+
+  // Clear navigation flag when Premium page loads
+  useEffect(() => {
+    sessionStorage.removeItem('navigateToPremium');
+  }, []);
 
   const features = [
     { title: 'Daily Personalized Tips', description: 'Nutrition tips tailored to your trimester', free: true, premium: true },

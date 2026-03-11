@@ -15,9 +15,12 @@ import './App.css';
 
 // Protected Route wrapper - requires completed onboarding
 function ProtectedRoute({ children }) {
-  const { hasCompletedOnboarding } = useUser();
+  const { hasCompletedOnboarding, user } = useUser();
   
-  if (!hasCompletedOnboarding()) {
+  // Check sessionStorage as backup (for immediate post-registration navigation)
+  const navigatingToPremium = sessionStorage.getItem('navigateToPremium') === 'true';
+  
+  if (!hasCompletedOnboarding() && !navigatingToPremium) {
     return <Navigate to="/onboarding" replace />;
   }
   
@@ -28,7 +31,10 @@ function ProtectedRoute({ children }) {
 function PremiumRoute({ children }) {
   const { hasCompletedOnboarding, isPremium } = useUser();
   
-  if (!hasCompletedOnboarding()) {
+  // Check sessionStorage as backup (for immediate post-registration navigation)
+  const navigatingToPremium = sessionStorage.getItem('navigateToPremium') === 'true';
+  
+  if (!hasCompletedOnboarding() && !navigatingToPremium) {
     return <Navigate to="/onboarding" replace />;
   }
   
