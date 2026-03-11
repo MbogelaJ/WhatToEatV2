@@ -196,6 +196,19 @@ export default function SubscribePage() {
   return (
     <div className="min-h-screen bg-stone-50">
       <div className="max-w-md mx-auto px-4 py-6" data-testid="subscribe-page">
+      
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 text-stone-600 hover:text-stone-800 mb-4 transition-colors"
+        data-testid="back-btn"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back
+      </button>
+      
       <h1 className="text-2xl font-bold text-stone-800 mb-6 text-center">Complete Your Purchase</h1>
 
       {/* Order Summary */}
