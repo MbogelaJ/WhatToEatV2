@@ -22,8 +22,20 @@ export function Header() {
     // If on home page, go to onboarding
     if (location.pathname === '/') {
       navigate('/onboarding');
+    } else if (location.pathname === '/premium') {
+      // On Premium page, go back to onboarding (since there may be no history)
+      navigate('/onboarding');
+    } else if (location.pathname === '/subscribe') {
+      // On Subscribe page, go back to premium
+      navigate('/premium');
     } else {
-      navigate(-1);
+      // For other pages, try going back in history
+      // If no history, go to home or onboarding
+      if (window.history.length <= 2) {
+        navigate(isPremium() ? '/' : '/onboarding');
+      } else {
+        navigate(-1);
+      }
     }
   };
   
