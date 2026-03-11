@@ -1,13 +1,14 @@
 {
-	"appId": "com.nurturenote.app",
-	"appName": "NurtureNote",
+	"appId": "com.whattoeat.app",
+	"appName": "WhatToEat",
 	"webDir": "build",
 	"server": {
 		"androidScheme": "https"
 	},
 	"ios": {
 		"contentInset": "automatic",
-		"backgroundColor": "#FDFCF8"
+		"backgroundColor": "#FDFCF8",
+		"minVersion": "15.0"
 	},
 	"plugins": {
 		"PushNotifications": {

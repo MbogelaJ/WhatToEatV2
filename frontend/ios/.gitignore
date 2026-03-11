@@ -1,14 +1,13 @@
-# Build output
 App/build
-App/output
-DerivedData
-
-# Xcode user data
-xcuserdata
-*.xcuserstate
-
-# CocoaPods - will be installed via `pod install`
 App/Pods
+App/output
+App/App/public
+DerivedData
+xcuserdata
 
-# macOS
-.DS_Store
+# Cordova plugins for Capacitor
+capacitor-cordova-ios-plugins
+
+# Generated Config files
+App/App/capacitor.config.json
+App/App/config.xml

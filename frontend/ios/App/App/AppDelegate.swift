@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,6 +8,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Set up push notification delegate
+        UNUserNotificationCenter.current().delegate = self
         return true
     }
 
@@ -41,5 +44,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    
+    // Called when a notification is received while app is in foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Show notification banner, badge, and sound even when app is in foreground
+        completionHandler([.banner, .badge, .sound])
+    }
+    
+    // Called when user taps on a notification
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        // Let the Capacitor plugin handle the notification tap via JavaScript
+        // The plugin will emit 'pushNotificationActionPerformed' event
+        let userInfo = response.notification.request.content.userInfo
+        NotificationCenter.default.post(name: Notification.Name("pushNotificationReceived"), object: nil, userInfo: userInfo)
+        completionHandler()
     }
 }
