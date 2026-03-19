@@ -2128,12 +2128,26 @@ function App() {
     const loadFoods = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${API}/foods/all?page_size=250`);
-        const loadedFoods = response.data.foods || [];
-        setFoods(loadedFoods);
+        // Fetch all foods (may need multiple pages)
+        let allFoods = [];
+        let page = 1;
+        let hasMore = true;
+        
+        while (hasMore) {
+          const response = await axios.get(`${API}/foods/all?page=${page}&page_size=250`);
+          const pageFoods = response.data.foods || [];
+          allFoods = [...allFoods, ...pageFoods];
+          
+          // Check if there are more pages
+          const total = response.data.total || 0;
+          hasMore = allFoods.length < total && pageFoods.length > 0;
+          page++;
+        }
+        
+        setFoods(allFoods);
         
         const uniqueCategories = [...new Set(
-          loadedFoods.map(food => food.category).filter(Boolean)
+          allFoods.map(food => food.category).filter(Boolean)
         )].sort();
         setCategories(uniqueCategories);
       } catch (e) {

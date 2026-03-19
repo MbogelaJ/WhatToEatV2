@@ -6,7 +6,7 @@ Build a pregnancy nutrition app called "WhatToEat" that helps pregnant users und
 ## Architecture
 - **Frontend**: React.js + Capacitor (for mobile builds)
 - **Backend**: FastAPI (Python) with MongoDB
-- **Data Storage**: In-memory food database (235 foods) + MongoDB for user auth
+- **Data Storage**: In-memory food database (288 foods) + MongoDB for user auth
 - **User Preferences**: localStorage for dietary restrictions, onboarding state, premium status
 
 ## App Flow (Updated March 2026)
@@ -59,8 +59,12 @@ Five-step onboarding with progress dots and Back/Continue navigation
 
 ### 5. Food Search & Filtering ✅
 - Client-side instant search
-- 235 foods in database
+- **288 foods in database** (updated March 20, 2026)
+  - 220 SAFE foods (Generally Safe)
+  - 44 LIMIT foods (Limit Intake)
+  - 24 AVOID foods (Best Avoided)
 - Category and Safety level filters
+- Pagination support (fetches all pages)
 
 ### 6. Premium Feature (MOCKED)
 - Price: US$1.99 one-time purchase
@@ -91,12 +95,12 @@ Five-step onboarding with progress dots and Back/Continue navigation
 2. Payment processing for Premium - localStorage only
 
 ## Next Action Items (Priority Order)
-1. **P1**: Implement real payment integration (Apple In-App Purchase for iOS)
-2. **P1**: Implement email/password authentication
-3. **P1**: Implement "Favorites" feature for bookmarking foods
+1. **P0 CRITICAL**: Refactor App.js monolith (2500+ lines) into proper component structure
+2. **P1**: Implement real payment integration (Apple In-App Purchase for iOS)
+3. **P1**: Implement email/password authentication
+4. **P1**: Implement "Favorites" feature for bookmarking foods
 
 ## Future Tasks
-- **P2**: Refactor App.js monolith (2400+ lines) into smaller components
 - **P2**: Add food images
 - **P2**: Add FAQ page search
 

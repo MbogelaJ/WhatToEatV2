@@ -226,14 +226,16 @@ PREMIUM_FOOD_IDS = {
     "salmon-1", "tuna-1", "sushi-raw-1", "shrimp-1", "crab-1", "lobster-1", 
     "mackerel-1", "sardines-1", "tilapia-1", "cod-1", "halibut-1", "catfish-1",
     "oysters-1", "scallops-1", "calamari-1", "swordfish-1", "shark-1", "king-mackerel-1",
+    "shellfish-1", "smoked-salmon-1",
     
     # Deli meats & processed meats - listeria concerns
     "deli-meat-1", "hot-dogs-1", "bacon-1", "sausage-1", "pepperoni-1", "salami-1",
-    "ham-1", "pate-1", "smoked-salmon-1",
+    "ham-1", "pate-1", "prosciutto-1", "game-meat-1",
     
     # Cheese & dairy questions
-    "soft-cheese-1", "brie-1", "feta-1", "blue-cheese-1", "goat-cheese-1",
+    "soft-cheese-1", "soft-cheese-limit-1", "brie-1", "feta-1", "blue-cheese-1", "goat-cheese-1",
     "cream-cheese-1", "ricotta-1", "cottage-cheese-1", "parmesan-1", "mozzarella-1",
+    "camembert-1", "soft-serve-ice-cream-1",
     
     # Eggs - cooking concerns
     "egg-1", "mayonnaise-1", "raw-eggs-1",
@@ -241,22 +243,23 @@ PREMIUM_FOOD_IDS = {
     # Beverages - caffeine, alcohol, herbal safety
     "coffee-1", "tea-green-1", "tea-black-1", "tea-herbal-1", "alcohol-1", "wine-1",
     "beer-1", "energy-drinks-1", "soda-1", "kombucha-1", "matcha-1",
+    "herbal-tea-general-1", "caffeine-general-1",
     
     # Controversial/questioned foods
-    "pineapple-1", "papaya-1", "grapefruit-1", "licorice-1", "artificial-sweeteners-1",
+    "pineapple-1", "papaya-1", "papaya-general-1", "grapefruit-1", "licorice-1", "artificial-sweeteners-1",
     
     # Meat safety questions
-    "liver-1", "beef-rare-1", "raw-meat-1", "jerky-1", "game-meat-1",
+    "liver-1", "beef-rare-1", "raw-meat-1", "jerky-1",
     
     # Herbs and supplements
     "ginger-1", "turmeric-1", "cinnamon-1", "basil-1", "oregano-1", "parsley-1",
     
     # Condiments and misc with questions
-    "soy-sauce-1", "fish-sauce-1", "vinegar-1", "wasabi-1", "mustard-1", "mayonnaise-1",
+    "soy-sauce-1", "fish-sauce-1", "vinegar-1", "wasabi-1", "mustard-1",
     "honey-1", "raw-honey-1", "maple-syrup-1",
     
     # Sprouts and raw items
-    "sprouts-1", "bean-sprouts-1", "alfalfa-sprouts-1", "raw-salad-1",
+    "sprouts-1", "bean-sprouts-1", "alfalfa-sprouts-1", "raw-salad-1", "raw-salads-1",
     
     # Nuts with allergy concerns
     "peanuts-1", "tree-nuts-1",
@@ -265,7 +268,11 @@ PREMIUM_FOOD_IDS = {
     "tofu-1", "tempeh-1", "edamame-1", "soy-milk-1",
     
     # Chocolate and sweets
-    "dark-chocolate-1", "chocolate-1",
+    "dark-chocolate-1", "chocolate-1", "tiramisu-1",
+    
+    # Street food and processed
+    "buffet-food-1", "cold-leftovers-1", "fast-food-1", "fried-foods-1",
+    "pre-made-salads-1", "street-food-1", "enoki-mushrooms-1",
 }
 
 def add_premium_field(food):
@@ -2427,6 +2434,183 @@ LOCAL_FOODS = [
      "preparation_tips": [],
      "precautions": ["Higher mercury than light tuna", "Choose chunk light tuna more often"],
      "allergy_warning": "Fish allergy."},
+
+    # ==================== ADDITIONAL LIMIT FOODS ====================
+    {"id": "blue-cheese-1", "name": "Blue Cheese", "category": "Dairy", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Calcium", "Protein"],
+     "benefits_summary": "Blue cheese is safe if pasteurized, but check labels carefully.",
+     "recommended_consumption": ["Only eat if pasteurized", "Check labels carefully"],
+     "preparation_tips": ["Verify pasteurization", "Heat thoroughly if unsure"],
+     "precautions": ["Listeria risk if unpasteurized", "Strong flavor may worsen nausea"],
+     "allergy_warning": "Milk/dairy allergy."},
+
+    {"id": "brie-1", "name": "Brie", "category": "Dairy", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Calcium", "Protein", "Vitamin B12"],
+     "benefits_summary": "Brie is safe if pasteurized - always check labels before eating.",
+     "recommended_consumption": ["Only if pasteurized", "Bake until hot if unsure"],
+     "preparation_tips": ["Check for 'pasteurized' on label", "Bake at high temp if uncertain"],
+     "precautions": ["Soft-ripened cheese may harbor listeria", "Must be pasteurized"],
+     "allergy_warning": "Milk/dairy allergy."},
+
+    {"id": "buffet-food-1", "name": "Buffet Food", "category": "Street & Processed Foods", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": [],
+     "benefits_summary": "Buffet foods may sit at unsafe temperatures, increasing bacterial risk.",
+     "recommended_consumption": ["Avoid during pregnancy if possible", "Choose hot items that are steaming"],
+     "preparation_tips": ["Select freshly prepared items", "Avoid foods sitting at room temperature"],
+     "precautions": ["Food temperature control issues", "Cross-contamination risk", "Unknown ingredients"],
+     "allergy_warning": None},
+
+    {"id": "camembert-1", "name": "Camembert", "category": "Dairy", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Calcium", "Protein"],
+     "benefits_summary": "Camembert is safe only if pasteurized - verify before eating.",
+     "recommended_consumption": ["Only if pasteurized", "Heat thoroughly if uncertain"],
+     "preparation_tips": ["Check label for pasteurization", "Bake until bubbling to kill bacteria"],
+     "precautions": ["Soft-ripened cheese with listeria risk", "Must verify pasteurization"],
+     "allergy_warning": "Milk/dairy allergy."},
+
+    {"id": "cold-leftovers-1", "name": "Cold Leftovers", "category": "Street & Processed Foods", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": [],
+     "benefits_summary": "Leftovers should be reheated until steaming hot to kill bacteria.",
+     "recommended_consumption": ["Reheat to 165°F/74°C", "Eat within 2-3 days"],
+     "preparation_tips": ["Store properly within 2 hours", "Reheat thoroughly", "Don't reheat more than once"],
+     "precautions": ["Bacterial growth risk", "Listeria can grow at fridge temperatures"],
+     "allergy_warning": None},
+
+    {"id": "enoki-mushrooms-1", "name": "Enoki Mushrooms", "category": "Vegetables", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Vitamin B", "Fiber", "Antioxidants"],
+     "benefits_summary": "Enoki mushrooms must be cooked thoroughly due to listeria concerns.",
+     "recommended_consumption": ["Always cook thoroughly", "Never eat raw"],
+     "preparation_tips": ["Cook until soft", "Add to soups or stir-fries"],
+     "precautions": ["Associated with listeria outbreaks", "Must be cooked - never raw"],
+     "allergy_warning": "Mushroom allergy."},
+
+    {"id": "fast-food-1", "name": "Fast Food", "category": "Street & Processed Foods", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": [],
+     "benefits_summary": "Fast food is typically high in sodium, fat, and calories - limit intake.",
+     "recommended_consumption": ["Occasional treat only", "Choose grilled over fried"],
+     "preparation_tips": ["Ask for modifications", "Skip high-risk items like soft cheese"],
+     "precautions": ["High sodium and fat", "May contain unpasteurized ingredients", "Large portions"],
+     "allergy_warning": "May contain common allergens."},
+
+    {"id": "fried-foods-1", "name": "Fried Foods", "category": "Street & Processed Foods", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": [],
+     "benefits_summary": "Fried foods can worsen heartburn and provide empty calories.",
+     "recommended_consumption": ["Limit to occasional treats", "Choose baked alternatives"],
+     "preparation_tips": ["Bake instead of fry when possible", "Air frying is healthier"],
+     "precautions": ["Worsens pregnancy heartburn", "High in trans fats", "Low nutritional value"],
+     "allergy_warning": None},
+
+    {"id": "game-meat-1", "name": "Game Meat", "category": "Meat & Protein", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Protein", "Iron", "B Vitamins"],
+     "benefits_summary": "Game meat may contain lead from ammunition and parasites.",
+     "recommended_consumption": ["Cook thoroughly to 165°F", "Limit consumption"],
+     "preparation_tips": ["Ensure proper cooking", "Source from trusted hunters"],
+     "precautions": ["May contain lead shot", "Parasite risk", "Cook thoroughly"],
+     "allergy_warning": None},
+
+    {"id": "herbal-tea-general-1", "name": "Herbal Tea", "category": "Beverages", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Antioxidants", "Hydration"],
+     "benefits_summary": "Some herbal teas are safe, but many have unknown effects on pregnancy.",
+     "recommended_consumption": ["Ginger and peppermint generally safe", "Limit to 1-2 cups daily"],
+     "preparation_tips": ["Choose pregnancy-safe varieties", "Avoid medicinal herbal teas"],
+     "precautions": ["Many herbs not studied in pregnancy", "Avoid raspberry leaf until third trimester"],
+     "allergy_warning": "Plant allergies possible."},
+
+    {"id": "papaya-general-1", "name": "Papaya", "category": "Fruits", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Vitamin C", "Folate", "Fiber"],
+     "benefits_summary": "Ripe papaya is generally safe, but unripe/green papaya should be avoided.",
+     "recommended_consumption": ["Only fully ripe papaya", "Avoid green/unripe completely"],
+     "preparation_tips": ["Ensure papaya is fully ripe (orange)", "Avoid green papaya dishes"],
+     "precautions": ["Unripe papaya contains latex that may cause contractions", "Only eat when fully ripe"],
+     "allergy_warning": "Latex cross-reactivity."},
+
+    {"id": "pre-made-salads-1", "name": "Pre-made Salads", "category": "Street & Processed Foods", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Vegetables", "Fiber"],
+     "benefits_summary": "Pre-made salads have higher contamination risk than homemade.",
+     "recommended_consumption": ["Make salads fresh at home", "Avoid deli counter salads"],
+     "preparation_tips": ["Wash all greens thoroughly", "Make your own when possible"],
+     "precautions": ["Higher listeria risk", "Unknown washing practices", "May sit at unsafe temps"],
+     "allergy_warning": "Check ingredients."},
+
+    {"id": "prosciutto-1", "name": "Prosciutto", "category": "Meat & Protein", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Protein", "Iron"],
+     "benefits_summary": "Prosciutto is cured but not cooked - heat until steaming before eating.",
+     "recommended_consumption": ["Heat until steaming hot", "Add to cooked dishes"],
+     "preparation_tips": ["Cook on pizza or bake until crispy", "Don't eat cold from package"],
+     "precautions": ["Listeria risk when eaten cold", "High sodium content"],
+     "allergy_warning": None},
+
+    {"id": "raw-salads-1", "name": "Raw Salads", "category": "Vegetables", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Vitamins", "Fiber", "Antioxidants"],
+     "benefits_summary": "Raw salads are nutritious but require thorough washing to reduce risk.",
+     "recommended_consumption": ["Wash all produce thoroughly", "Make at home when possible"],
+     "preparation_tips": ["Wash each leaf individually", "Avoid pre-washed unless trusted brand"],
+     "precautions": ["Bacterial contamination risk", "Wash thoroughly", "Avoid restaurant salad bars"],
+     "allergy_warning": None},
+
+    {"id": "salami-1", "name": "Salami", "category": "Meat & Protein", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Protein", "Iron"],
+     "benefits_summary": "Salami is cured but not cooked - heat thoroughly before eating.",
+     "recommended_consumption": ["Heat until steaming", "Use on cooked pizza"],
+     "preparation_tips": ["Cook before eating", "Add to baked dishes"],
+     "precautions": ["Listeria risk if eaten cold", "High sodium and fat", "Processed meat"],
+     "allergy_warning": None},
+
+    {"id": "shellfish-1", "name": "Shellfish", "category": "Fish & Seafood", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Protein", "Zinc", "Iron", "Omega-3"],
+     "benefits_summary": "Cooked shellfish is safe but must be thoroughly cooked.",
+     "recommended_consumption": ["Cook to 145°F/63°C", "Avoid raw shellfish completely"],
+     "preparation_tips": ["Shells should open during cooking", "Discard any that don't open"],
+     "precautions": ["Must be fully cooked", "Common allergen", "Avoid raw completely"],
+     "allergy_warning": "Shellfish allergy is common and can be severe."},
+
+    {"id": "smoked-salmon-1", "name": "Smoked Salmon", "category": "Fish & Seafood", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Omega-3", "Protein", "Vitamin D"],
+     "benefits_summary": "Refrigerated smoked salmon has listeria risk - cook before eating or choose canned.",
+     "recommended_consumption": ["Cook until steaming or choose canned", "Limit consumption"],
+     "preparation_tips": ["Heat in dishes like quiche", "Canned smoked salmon is safer"],
+     "precautions": ["Cold-smoked has listeria risk", "Heat to steaming before eating"],
+     "allergy_warning": "Fish allergy."},
+
+    {"id": "soda-1", "name": "Soda", "category": "Beverages", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": [],
+     "benefits_summary": "Soda provides empty calories and may contain caffeine.",
+     "recommended_consumption": ["Limit or avoid during pregnancy", "Choose water or natural drinks"],
+     "preparation_tips": ["Switch to sparkling water with fruit", "Check caffeine content"],
+     "precautions": ["High sugar content", "May contain caffeine", "No nutritional value"],
+     "allergy_warning": None},
+
+    {"id": "soft-cheese-limit-1", "name": "Soft Cheese", "category": "Dairy", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Calcium", "Protein"],
+     "benefits_summary": "Soft cheeses must be pasteurized and heated if mold-ripened.",
+     "recommended_consumption": ["Only pasteurized varieties", "Heat mold-ripened types"],
+     "preparation_tips": ["Always check labels", "When in doubt, heat it"],
+     "precautions": ["Listeria risk in unpasteurized", "Includes brie, camembert, blue cheese"],
+     "allergy_warning": "Milk/dairy allergy."},
+
+    {"id": "soft-serve-ice-cream-1", "name": "Soft-Serve Ice Cream", "category": "Dairy", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Calcium"],
+     "benefits_summary": "Soft-serve machines may harbor bacteria if not cleaned properly.",
+     "recommended_consumption": ["Choose from reputable establishments", "Pre-packaged is safer"],
+     "preparation_tips": ["Ask about cleaning schedules", "Packaged ice cream is safer"],
+     "precautions": ["Machine hygiene concerns", "Listeria risk from dispensers"],
+     "allergy_warning": "Milk/dairy allergy."},
+
+    {"id": "street-food-1", "name": "Street Food", "category": "Street & Processed Foods", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": [],
+     "benefits_summary": "Street food may have food safety concerns due to storage and preparation.",
+     "recommended_consumption": ["Choose hot, freshly cooked items", "Avoid raw or cold items"],
+     "preparation_tips": ["Watch food being prepared", "Ensure it's cooked thoroughly"],
+     "precautions": ["Hygiene concerns", "Temperature control issues", "Unknown ingredients"],
+     "allergy_warning": "May contain common allergens."},
+
+    {"id": "tiramisu-1", "name": "Tiramisu", "category": "Desserts & Sweets", "safety": "LIMIT", "safety_label": "Limit Intake",
+     "nutritional_benefits": ["Calcium"],
+     "benefits_summary": "Traditional tiramisu contains raw eggs and alcohol - choose pregnancy-safe versions.",
+     "recommended_consumption": ["Only egg-free versions", "Avoid traditional recipes"],
+     "preparation_tips": ["Make with pasteurized eggs", "Skip alcohol or use extract"],
+     "precautions": ["Traditional recipe has raw eggs", "May contain alcohol", "Caffeine from coffee"],
+     "allergy_warning": "Eggs, dairy."},
 ]
 
 # Models
