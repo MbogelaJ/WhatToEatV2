@@ -395,7 +395,7 @@ body {
 }
 
 .food-card-image {
-  height: 140px;
+  height: 80px;
   background: var(--bg-secondary);
   display: flex;
   align-items: center;
@@ -403,61 +403,23 @@ body {
   overflow: hidden;
 }
 
-.food-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .food-card-placeholder {
   color: var(--text-muted);
 }
 
 .food-card-content {
-  padding: 1rem;
+  padding: 0.875rem 1rem;
 }
 
 .food-card-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.food-card-brand {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 0.75rem;
-}
-
-.food-card-nutrients {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.nutrient-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.nutrient-badge.calories {
-  background: var(--accent-orange-dim);
-  color: var(--accent-orange);
-}
-
-.nutrient-badge.protein {
-  background: var(--accent-blue-dim);
-  color: var(--accent-blue);
 }
 
 /* Loading State */
@@ -661,6 +623,47 @@ body {
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   padding: 1.5rem;
+}
+
+/* Modal - Simple Version */
+.modal-simple {
+  max-width: 420px;
+}
+
+.modal-header-simple {
+  text-align: center;
+  padding: 1.5rem 1.5rem 1rem;
+}
+
+.modal-header-simple .modal-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: var(--accent-green);
+}
+
+.modal-header-simple h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  padding: 0 1rem;
+}
+
+.modal-header-simple .modal-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.modal-header-simple .modal-category {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 /* Benefits Section */

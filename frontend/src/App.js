@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Search, Utensils, Flame, Dumbbell, Wheat, Droplet, Leaf, X, AlertCircle, Filter, ShieldCheck, ShieldAlert, ShieldX, Heart, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Utensils, X, AlertCircle, Filter, ShieldCheck, ShieldAlert, ShieldX, Heart, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -43,31 +43,15 @@ const FoodCard = ({ food, onClick }) => {
       onClick={() => onClick(food)}
     >
       <div className="food-card-image">
-        {food.image_url ? (
-          <img src={food.image_url} alt={food.name} loading="lazy" />
-        ) : (
-          <div className="food-card-placeholder">
-            <Utensils size={32} />
-          </div>
-        )}
+        <div className="food-card-placeholder">
+          <Utensils size={28} />
+        </div>
       </div>
       <div className="food-card-content">
         <h3 className="food-card-name">{food.name}</h3>
         <div className="food-card-meta">
           {food.category && <span className="food-card-category">{food.category}</span>}
           {food.safety && <SafetyBadge safety={food.safety} />}
-        </div>
-        <div className="food-card-nutrients">
-          {food.calories !== null && food.calories !== undefined && (
-            <span className="nutrient-badge calories">
-              <Flame size={12} /> {Math.round(food.calories)} kcal
-            </span>
-          )}
-          {food.protein !== null && food.protein !== undefined && (
-            <span className="nutrient-badge protein">
-              <Dumbbell size={12} /> {food.protein.toFixed(1)}g
-            </span>
-          )}
         </div>
       </div>
     </div>
@@ -82,28 +66,19 @@ const FoodDetailModal = ({ food, onClose }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose} data-testid="food-detail-modal">
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-content modal-simple" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} data-testid="modal-close-btn">
           <X size={24} />
         </button>
         
-        <div className="modal-header">
-          {food.image_url ? (
-            <img src={food.image_url} alt={food.name} className="modal-image" />
-          ) : (
-            <div className="modal-image-placeholder">
-              <Utensils size={48} />
-            </div>
-          )}
-          <div className="modal-title">
-            <h2>{food.name}</h2>
-            <div className="modal-meta">
-              {food.category && <span className="modal-category">{food.category}</span>}
-              {food.safety && <SafetyBadge safety={food.safety} />}
-            </div>
-            {food.serving_size && (
-              <p className="modal-serving">Per {food.serving_size}</p>
-            )}
+        <div className="modal-header-simple">
+          <div className="modal-icon">
+            <Utensils size={32} />
+          </div>
+          <h2>{food.name}</h2>
+          <div className="modal-meta">
+            {food.category && <span className="modal-category">{food.category}</span>}
+            {food.safety && <SafetyBadge safety={food.safety} />}
           </div>
         </div>
 
@@ -124,37 +99,6 @@ const FoodDetailModal = ({ food, onClose }) => {
             <span>{food.allergy_warning}</span>
           </div>
         )}
-
-        {/* Nutrition Grid */}
-        <div className="nutrition-grid">
-          <div className="nutrition-item calories">
-            <Flame size={24} />
-            <div className="nutrition-value">{food.calories !== null ? Math.round(food.calories) : '-'}</div>
-            <div className="nutrition-label">Calories</div>
-          </div>
-          <div className="nutrition-item protein">
-            <Dumbbell size={24} />
-            <div className="nutrition-value">{food.protein !== null ? food.protein.toFixed(1) : '-'}g</div>
-            <div className="nutrition-label">Protein</div>
-          </div>
-          <div className="nutrition-item carbs">
-            <Wheat size={24} />
-            <div className="nutrition-value">{food.carbs !== null ? food.carbs.toFixed(1) : '-'}g</div>
-            <div className="nutrition-label">Carbs</div>
-          </div>
-          <div className="nutrition-item fat">
-            <Droplet size={24} />
-            <div className="nutrition-value">{food.fat !== null ? food.fat.toFixed(1) : '-'}g</div>
-            <div className="nutrition-label">Fat</div>
-          </div>
-          {food.fiber !== null && food.fiber !== undefined && (
-            <div className="nutrition-item fiber">
-              <Leaf size={24} />
-              <div className="nutrition-value">{food.fiber.toFixed(1)}g</div>
-              <div className="nutrition-label">Fiber</div>
-            </div>
-          )}
-        </div>
 
         {/* Precautions Section - Collapsible */}
         {food.precautions && food.precautions.length > 0 && (
