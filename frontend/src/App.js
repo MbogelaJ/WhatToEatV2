@@ -1217,7 +1217,7 @@ const DisclaimerPage = ({ onAccept }) => {
         <div className="disclaimer-icon">
           <Shield size={48} />
         </div>
-        <h1>Medical Disclaimer</h1>
+        <h1>Disclaimer</h1>
         <div className="disclaimer-text">
           <p>
             <strong>Important:</strong> WhatToEat is designed for educational and informational purposes only. 
