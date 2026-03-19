@@ -16,9 +16,10 @@ Apple App Store Review Feedback (Submission ID: ac697cb9-cc29-408a-945e-8a724103
 
 ### 1. Core Search & Filtering
 - Client-side instant search (no API calls for filtering)
-- Category filter (Beverages, Dairy, Fruits, Grains, Nuts & Seeds, Proteins, Vegetables)
+- Category filter (Beverages, Condiments, Dairy, Fruits, Grains, Nuts & Seeds, Proteins, Vegetables)
 - Safety level filter (Safe, Limit, Avoid)
 - All filtering is done locally for instant response
+- **235 foods in database**
 
 ### 2. Food Detail Modal
 Matching user's design requirements:
@@ -94,10 +95,9 @@ Matching user's design requirements:
 - **Test Report**: /app/test_reports/iteration_2.json
 
 ## Next Action Items
-1. **P1**: Add more foods to the database (currently 40 foods)
-2. **P1**: Implement Favorites/Bookmarking feature
-3. **P2**: Add food images
-4. **P2**: Implement FAQ, Topics, About pages (currently just navigation placeholders)
+1. **P1**: Implement Favorites/Bookmarking feature
+2. **P2**: Add food images
+3. **P2**: Implement FAQ, Topics, About pages (currently just navigation placeholders)
 
 ## Completed Tasks
 - [x] Fixed Apple review bug (instant client-side search)
@@ -108,6 +108,7 @@ Matching user's design requirements:
 - [x] Added dietary restrictions personalization
 - [x] Added bottom navigation
 - [x] Implemented light theme UI
+- [x] Expanded database from 40 to 235 foods (March 2026)
 
 ## Key Files
 - `/app/frontend/src/App.js` - Main React component

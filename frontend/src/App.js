@@ -507,7 +507,7 @@ function App() {
     const loadFoods = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${API}/foods/all?page_size=100`);
+        const response = await axios.get(`${API}/foods/all?page_size=250`);
         const loadedFoods = response.data.foods || [];
         setFoods(loadedFoods);
         
