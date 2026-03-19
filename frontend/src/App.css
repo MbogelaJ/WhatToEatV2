@@ -1638,3 +1638,457 @@ body {
   font-size: 0.8rem;
 }
 
+/* ==================== ONBOARDING & DISCLAIMER PAGES ==================== */
+
+.onboarding-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.onboarding-page.disclaimer-page {
+  background: linear-gradient(180deg, #ffffff 0%, #fef3c7 100%);
+}
+
+.onboarding-content {
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.disclaimer-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  background: var(--accent-yellow-dim);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-orange);
+}
+
+.onboarding-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1.5rem;
+  background: var(--accent-green-dim);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-green);
+}
+
+.onboarding-content h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-subtitle {
+  font-size: 1rem;
+  color: var(--accent-green);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.onboarding-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.disclaimer-text {
+  text-align: left;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+.disclaimer-text p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.disclaimer-text p:last-child {
+  margin-bottom: 0;
+}
+
+.disclaimer-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.disclaimer-checkbox:hover {
+  border-color: var(--accent-green);
+}
+
+.disclaimer-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-green);
+}
+
+.disclaimer-checkbox span {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.onboarding-features {
+  list-style: none;
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.onboarding-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.onboarding-features li svg {
+  color: var(--accent-green);
+  flex-shrink: 0;
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.onboarding-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.onboarding-dots .dot.active {
+  width: 24px;
+  border-radius: 4px;
+  background: var(--accent-green);
+}
+
+.onboarding-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.onboarding-btn {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.onboarding-btn.primary {
+  background: var(--accent-green);
+  color: white;
+  border: none;
+}
+
+.onboarding-btn.primary:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.onboarding-btn.primary.disabled {
+  background: #a7f3d0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.onboarding-btn.secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.onboarding-btn.secondary:hover {
+  background: var(--bg-primary);
+}
+
+/* ==================== PREMIUM PAGE ==================== */
+
+.premium-page .page-content {
+  padding: 1.5rem;
+}
+
+.premium-content {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.premium-hero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.premium-icon-large {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
+}
+
+.premium-hero h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.premium-tagline {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.premium-price-card {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.price-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(120, 53, 15, 0.2);
+  color: #78350f;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.price-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.price-amount .currency {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #78350f;
+}
+
+.price-amount .amount {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #78350f;
+  line-height: 1;
+}
+
+.price-note {
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+.premium-benefits {
+  margin-bottom: 2rem;
+}
+
+.premium-benefits h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.benefit-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+}
+
+.benefit-card svg {
+  color: var(--accent-green);
+  margin-bottom: 0.5rem;
+}
+
+.benefit-card h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.benefit-card p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.premium-purchase-btn {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #78350f;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.premium-purchase-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+}
+
+.premium-guarantee {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.premium-guarantee svg {
+  color: var(--accent-green);
+}
+
+/* Premium Active State */
+.premium-active {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.premium-badge-large {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1.5rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #78350f;
+}
+
+.premium-active h1 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent-green);
+}
+
+.premium-active > p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.premium-benefits-list {
+  text-align: left;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.benefit-item svg {
+  color: var(--accent-green);
+  flex-shrink: 0;
+}
+
+/* ==================== DAILY TIP ==================== */
+
+.daily-tip {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin: 0 1rem 1rem;
+}
+
+.daily-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent-green);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.daily-tip-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.tip-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.daily-tip-content p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+

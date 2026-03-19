@@ -1,10 +1,29 @@
 import { useState, useEffect } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock } from "lucide-react";
+import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock, Star, Sparkles, Shield, Heart, Lightbulb, Crown } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Daily tips for pregnancy nutrition
+const DAILY_TIPS = [
+  { tip: "Stay hydrated! Aim for 8-10 glasses of water daily during pregnancy.", icon: "💧" },
+  { tip: "Folate is crucial in the first trimester. Eat leafy greens like spinach and kale.", icon: "🥬" },
+  { tip: "Protein helps baby grow. Include eggs, lean meat, or legumes in every meal.", icon: "🥚" },
+  { tip: "Calcium builds strong bones. Greek yogurt is an excellent source!", icon: "🦴" },
+  { tip: "Omega-3s support brain development. Enjoy salmon 2-3 times per week.", icon: "🐟" },
+  { tip: "Iron prevents anemia. Pair iron-rich foods with vitamin C for better absorption.", icon: "💪" },
+  { tip: "Small, frequent meals can help with morning sickness and heartburn.", icon: "🍽️" },
+  { tip: "Ginger tea is a natural remedy for pregnancy nausea.", icon: "🫚" },
+  { tip: "Fiber prevents constipation. Include whole grains, fruits, and vegetables.", icon: "🌾" },
+  { tip: "Limit caffeine to 200mg daily - about one cup of coffee.", icon: "☕" },
+  { tip: "Wash all fruits and vegetables thoroughly before eating.", icon: "🍎" },
+  { tip: "Vitamin D helps calcium absorption. Get some safe sun exposure!", icon: "☀️" },
+  { tip: "Avoid raw fish and undercooked meat to prevent foodborne illness.", icon: "⚠️" },
+  { tip: "Nuts and seeds are great snacks - rich in healthy fats and protein.", icon: "🥜" },
+  { tip: "Listen to your body's hunger cues, but remember you're not eating for two adults!", icon: "🤰" }
+];
 
 // Safety badge config
 const SAFETY_CONFIG = {
@@ -798,7 +817,7 @@ const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack }) => 
 };
 
 // FAQ View Component with Premium Feature
-const FAQView = ({ onBack, onNavigateToFood, foods }) => {
+const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremium }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -894,7 +913,7 @@ const FAQView = ({ onBack, onNavigateToFood, foods }) => {
     : ALL_FAQS.filter(faq => faq.category === selectedCategory);
 
   const handleFAQClick = (index, faq) => {
-    if (faq.isPremium) {
+    if (faq.isPremium && !isPremium) {
       setShowPremiumModal(true);
     } else {
       setOpenIndex(openIndex === index ? null : index);
@@ -943,18 +962,18 @@ const FAQView = ({ onBack, onNavigateToFood, foods }) => {
         
         <div className="faq-list">
           {filteredFAQs.map((faq, index) => (
-            <div key={faq.id} className={`faq-item ${faq.isPremium ? 'premium' : ''}`} data-testid={`faq-item-${faq.id}`}>
+            <div key={faq.id} className={`faq-item ${faq.isPremium && !isPremium ? 'premium' : ''}`} data-testid={`faq-item-${faq.id}`}>
               <button 
                 className="faq-question"
                 onClick={() => handleFAQClick(index, faq)}
               >
                 <div className="faq-question-content">
                   <span className="faq-question-text">{faq.question}</span>
-                  {faq.isPremium && (
+                  {faq.isPremium && !isPremium && (
                     <span className="faq-premium-label">Tap to unlock with Premium</span>
                   )}
                 </div>
-                {faq.isPremium ? (
+                {faq.isPremium && !isPremium ? (
                   <div className="lock-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -965,7 +984,7 @@ const FAQView = ({ onBack, onNavigateToFood, foods }) => {
                   openIndex === index ? <ChevronUp size={20} /> : <ChevronRight size={20} />
                 )}
               </button>
-              {!faq.isPremium && openIndex === index && (
+              {((!faq.isPremium || isPremium) && openIndex === index) && (
                 <div className="faq-answer">
                   <p>{faq.answer}</p>
                   {faq.foodTags.length > 0 && (
@@ -1004,17 +1023,23 @@ const FAQView = ({ onBack, onNavigateToFood, foods }) => {
               </svg>
             </div>
             <h2>Unlock Premium Access</h2>
-            <p>Get detailed answers to all pregnancy food questions with a Premium subscription.</p>
+            <p>Get detailed answers to all pregnancy food questions with a one-time purchase.</p>
             <ul className="premium-features">
               <li><Check size={16} /> Full answers to 40+ expert-reviewed questions</li>
               <li><Check size={16} /> Detailed food safety guidelines</li>
               <li><Check size={16} /> Nutrition recommendations by trimester</li>
               <li><Check size={16} /> Ad-free experience</li>
             </ul>
-            <button className="premium-subscribe-btn">
-              Subscribe to Premium
+            <button 
+              className="premium-subscribe-btn"
+              onClick={() => {
+                setShowPremiumModal(false);
+                if (onNavigateToPremium) onNavigateToPremium();
+              }}
+            >
+              Unlock Premium - US$1.99
             </button>
-            <p className="premium-price">$4.99/month or $29.99/year</p>
+            <p className="premium-price">One-time purchase • Access forever</p>
           </div>
         </div>
       )}
@@ -1182,6 +1207,255 @@ const AboutView = ({ onBack }) => {
   );
 };
 
+// Disclaimer Page Component
+const DisclaimerPage = ({ onAccept }) => {
+  const [agreed, setAgreed] = useState(false);
+
+  return (
+    <div className="onboarding-page disclaimer-page" data-testid="disclaimer-page">
+      <div className="onboarding-content">
+        <div className="disclaimer-icon">
+          <Shield size={48} />
+        </div>
+        <h1>Medical Disclaimer</h1>
+        <div className="disclaimer-text">
+          <p>
+            <strong>Important:</strong> WhatToEat is designed for educational and informational purposes only. 
+            The content provided in this app does not constitute medical advice, diagnosis, or treatment.
+          </p>
+          <p>
+            Every pregnancy is unique. The information in this app is compiled from reputable sources including 
+            the World Health Organization (WHO), CDC, ACOG, and FDA guidelines, but should not replace 
+            professional medical advice.
+          </p>
+          <p>
+            <strong>Always consult with your healthcare provider</strong> about your specific dietary needs, 
+            restrictions, and any concerns during pregnancy. What is safe for one person may not be appropriate 
+            for another based on individual health conditions.
+          </p>
+          <p>
+            By using this app, you acknowledge that you understand these limitations and will use the information 
+            as a general guide only.
+          </p>
+        </div>
+        <label className="disclaimer-checkbox">
+          <input 
+            type="checkbox" 
+            checked={agreed} 
+            onChange={(e) => setAgreed(e.target.checked)}
+            data-testid="disclaimer-checkbox"
+          />
+          <span>I understand and agree to these terms</span>
+        </label>
+        <button 
+          className={`onboarding-btn primary ${!agreed ? 'disabled' : ''}`}
+          onClick={onAccept}
+          disabled={!agreed}
+          data-testid="disclaimer-accept-btn"
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Onboarding Page Component
+const OnboardingPage = ({ page, onNext, onSkip }) => {
+  const pages = [
+    {
+      icon: <Utensils size={64} />,
+      title: "Welcome to WhatToEat",
+      subtitle: "Your trusted pregnancy nutrition guide",
+      description: "Browse 235+ foods with pregnancy-specific safety information, nutritional benefits, and preparation tips.",
+      features: [
+        { icon: <Check size={18} />, text: "Instant food safety lookup" },
+        { icon: <Check size={18} />, text: "Personalized dietary alerts" },
+        { icon: <Check size={18} />, text: "Expert-reviewed information" }
+      ]
+    },
+    {
+      icon: <Heart size={64} />,
+      title: "Personalized for You",
+      subtitle: "Set your dietary preferences",
+      description: "Tell us about your dietary restrictions and we'll highlight foods that may not be suitable for you.",
+      features: [
+        { icon: <Check size={18} />, text: "Vegetarian, vegan, gluten-free options" },
+        { icon: <Check size={18} />, text: "Allergy warnings" },
+        { icon: <Check size={18} />, text: "Daily nutrition tips" }
+      ]
+    }
+  ];
+
+  const currentPage = pages[page];
+
+  return (
+    <div className="onboarding-page" data-testid={`onboarding-page-${page + 1}`}>
+      <div className="onboarding-content">
+        <div className="onboarding-icon">
+          {currentPage.icon}
+        </div>
+        <h1>{currentPage.title}</h1>
+        <p className="onboarding-subtitle">{currentPage.subtitle}</p>
+        <p className="onboarding-description">{currentPage.description}</p>
+        <ul className="onboarding-features">
+          {currentPage.features.map((feature, index) => (
+            <li key={index}>
+              {feature.icon}
+              <span>{feature.text}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="onboarding-dots">
+          {pages.map((_, index) => (
+            <span key={index} className={`dot ${index === page ? 'active' : ''}`} />
+          ))}
+        </div>
+        <div className="onboarding-buttons">
+          <button className="onboarding-btn secondary" onClick={onSkip} data-testid="onboarding-skip-btn">
+            Skip
+          </button>
+          <button className="onboarding-btn primary" onClick={onNext} data-testid="onboarding-next-btn">
+            {page === pages.length - 1 ? "Get Started" : "Next"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Premium Page Component
+const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
+  return (
+    <div className="page-view premium-page" data-testid="premium-page">
+      <div className="page-header">
+        <button className="back-button" onClick={onBack} data-testid="premium-back-btn">
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+        <h2>Premium</h2>
+        <div style={{width: '80px'}}></div>
+      </div>
+
+      <div className="page-content premium-content">
+        {isPremium ? (
+          <div className="premium-active">
+            <div className="premium-badge-large">
+              <Crown size={48} />
+            </div>
+            <h1>You're Premium!</h1>
+            <p>Thank you for supporting WhatToEat. You have full access to all features.</p>
+            <div className="premium-benefits-list">
+              <div className="benefit-item active">
+                <Check size={20} />
+                <span>All 40+ expert-reviewed FAQ answers</span>
+              </div>
+              <div className="benefit-item active">
+                <Check size={20} />
+                <span>Detailed food safety guidelines</span>
+              </div>
+              <div className="benefit-item active">
+                <Check size={20} />
+                <span>Nutrition tips by trimester</span>
+              </div>
+              <div className="benefit-item active">
+                <Check size={20} />
+                <span>Ad-free experience</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="premium-hero">
+              <div className="premium-icon-large">
+                <Sparkles size={48} />
+              </div>
+              <h1>Unlock Premium</h1>
+              <p className="premium-tagline">Get full access to all pregnancy nutrition answers</p>
+            </div>
+
+            <div className="premium-price-card">
+              <div className="price-badge">One-Time Purchase</div>
+              <div className="price-amount">
+                <span className="currency">US$</span>
+                <span className="amount">1.99</span>
+              </div>
+              <p className="price-note">Pay once, access forever</p>
+            </div>
+
+            <div className="premium-benefits">
+              <h3>What you'll get:</h3>
+              <div className="benefits-grid">
+                <div className="benefit-card">
+                  <HelpCircle size={24} />
+                  <h4>40+ Expert Answers</h4>
+                  <p>Full answers to all pregnancy food questions</p>
+                </div>
+                <div className="benefit-card">
+                  <Shield size={24} />
+                  <h4>Safety Guidelines</h4>
+                  <p>Detailed food safety information</p>
+                </div>
+                <div className="benefit-card">
+                  <Lightbulb size={24} />
+                  <h4>Trimester Tips</h4>
+                  <p>Nutrition recommendations by stage</p>
+                </div>
+                <div className="benefit-card">
+                  <Star size={24} />
+                  <h4>Ad-Free</h4>
+                  <p>Clean, distraction-free experience</p>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              className="premium-purchase-btn"
+              onClick={onPurchase}
+              data-testid="premium-purchase-btn"
+            >
+              <Lock size={18} />
+              <span>Unlock Premium - US$1.99</span>
+            </button>
+
+            <p className="premium-guarantee">
+              <Shield size={14} />
+              Secure payment • Instant access • No subscription
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Daily Tip Component
+const DailyTip = () => {
+  const [tip, setTip] = useState(null);
+
+  useEffect(() => {
+    // Get tip based on day of year for consistency
+    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+    const tipIndex = dayOfYear % DAILY_TIPS.length;
+    setTip(DAILY_TIPS[tipIndex]);
+  }, []);
+
+  if (!tip) return null;
+
+  return (
+    <div className="daily-tip" data-testid="daily-tip">
+      <div className="daily-tip-header">
+        <Lightbulb size={16} />
+        <span>Daily Tip</span>
+      </div>
+      <div className="daily-tip-content">
+        <span className="tip-icon">{tip.icon}</span>
+        <p>{tip.tip}</p>
+      </div>
+    </div>
+  );
+};
+
 // Bottom Navigation
 const BottomNav = ({ activeView, onChangeView }) => {
   return (
@@ -1240,10 +1514,52 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
   const [activeView, setActiveView] = useState('home');
+  
+  // Onboarding and Premium states
+  const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useState(() => {
+    return localStorage.getItem('disclaimerAccepted') === 'true';
+  });
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
+    return localStorage.getItem('onboardingCompleted') === 'true';
+  });
+  const [onboardingPage, setOnboardingPage] = useState(0);
+  const [isPremium, setIsPremium] = useState(() => {
+    return localStorage.getItem('isPremium') === 'true';
+  });
+  
   const [dietaryRestrictions, setDietaryRestrictions] = useState(() => {
     const saved = localStorage.getItem('dietaryRestrictions');
     return saved ? JSON.parse(saved) : [];
   });
+
+  // Handle disclaimer acceptance
+  const handleDisclaimerAccept = () => {
+    localStorage.setItem('disclaimerAccepted', 'true');
+    setHasAcceptedDisclaimer(true);
+  };
+
+  // Handle onboarding navigation
+  const handleOnboardingNext = () => {
+    if (onboardingPage < 1) {
+      setOnboardingPage(onboardingPage + 1);
+    } else {
+      localStorage.setItem('onboardingCompleted', 'true');
+      setHasCompletedOnboarding(true);
+    }
+  };
+
+  const handleOnboardingSkip = () => {
+    localStorage.setItem('onboardingCompleted', 'true');
+    setHasCompletedOnboarding(true);
+  };
+
+  // Handle premium purchase
+  const handlePremiumPurchase = () => {
+    // In a real app, this would integrate with payment provider
+    localStorage.setItem('isPremium', 'true');
+    setIsPremium(true);
+    alert('Thank you for purchasing Premium! You now have full access to all features.');
+  };
 
   // Save dietary restrictions to localStorage
   useEffect(() => {
@@ -1294,6 +1610,44 @@ function App() {
     }, 100);
   };
 
+  // Render Disclaimer Page (First time only)
+  if (!hasAcceptedDisclaimer) {
+    return <DisclaimerPage onAccept={handleDisclaimerAccept} />;
+  }
+
+  // Render Onboarding Pages (First time only)
+  if (!hasCompletedOnboarding) {
+    return (
+      <OnboardingPage 
+        page={onboardingPage} 
+        onNext={handleOnboardingNext} 
+        onSkip={handleOnboardingSkip} 
+      />
+    );
+  }
+
+  // Render Premium Page
+  if (activeView === 'premium') {
+    return (
+      <div className="app" data-testid="food-search-app">
+        <header className="app-header compact">
+          <div className="header-content">
+            <div className="logo">
+              <div className="logo-icon">W</div>
+              <h1>WhatToEat</h1>
+            </div>
+          </div>
+        </header>
+        <PremiumPage 
+          onBack={() => setActiveView('home')}
+          onPurchase={handlePremiumPurchase}
+          isPremium={isPremium}
+        />
+        <BottomNav activeView={activeView} onChangeView={setActiveView} />
+      </div>
+    );
+  }
+
   // Render Settings View
   if (activeView === 'settings') {
     return (
@@ -1332,6 +1686,8 @@ function App() {
           onBack={() => setActiveView('home')} 
           onNavigateToFood={handleNavigateToFood}
           foods={foods}
+          isPremium={isPremium}
+          onNavigateToPremium={() => setActiveView('premium')}
         />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
@@ -1392,6 +1748,9 @@ function App() {
 
       {/* Main */}
       <main className="app-main">
+        {/* Daily Tip */}
+        <DailyTip />
+        
         {/* Search */}
         <div className="search-section">
           <div className="search-container">
