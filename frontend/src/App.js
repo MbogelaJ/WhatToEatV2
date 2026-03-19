@@ -630,7 +630,7 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
         
         {showReferences && (
           <div className="references-content" data-testid="references-content">
-            <p>Sources: USDA FoodData Central, American College of Obstetricians and Gynecologists (ACOG), FDA Food Safety Guidelines for Pregnancy</p>
+            <p>Sources: World Health Organization (WHO), USDA FoodData Central, American College of Obstetricians and Gynecologists (ACOG), FDA Food Safety Guidelines for Pregnancy, CDC Pregnancy Nutrition Guidelines</p>
           </div>
         )}
 
@@ -1146,9 +1146,9 @@ const AboutView = ({ onBack }) => {
         <div className="about-section">
           <h3>Data Sources</h3>
           <p>
-            Our information is compiled from reputable sources including the USDA FoodData Central, 
-            American College of Obstetricians and Gynecologists (ACOG), FDA Food Safety Guidelines, 
-            and CDC pregnancy nutrition recommendations.
+            Our information is compiled from reputable sources including the World Health Organization (WHO), 
+            USDA FoodData Central, American College of Obstetricians and Gynecologists (ACOG), 
+            FDA Food Safety Guidelines, CDC pregnancy nutrition recommendations, and NHS guidelines.
           </p>
         </div>
 
