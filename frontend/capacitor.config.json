@@ -1,0 +1,17 @@
+{
+  "appId": "com.penx.whattoeat",
+  "appName": "WhatToEat",
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "buildOptions": {
+      "kotlinVersion": "1.7.20"
+    }
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
