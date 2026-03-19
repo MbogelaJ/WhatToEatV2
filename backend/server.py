@@ -128,7 +128,7 @@ async def health_check():
 
 @api_router.get("/foods/search", response_model=FoodSearchResponse)
 async def search_foods(
-    query: str = Query(..., min_length=1, max_length=200, description="Search query for food items"),
+    query: str = Query("", max_length=200, description="Search query for food items"),
     page: int = Query(1, ge=1, le=100, description="Page number"),
     page_size: int = Query(20, ge=1, le=50, description="Number of results per page")
 ):

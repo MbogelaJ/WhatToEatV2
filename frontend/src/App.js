@@ -217,6 +217,8 @@ function App() {
 
   const handleHistorySelect = (query) => {
     setSearchQuery(query);
+    // Trigger search immediately for history selection
+    searchFoods(query);
   };
 
   const handleClearSearch = () => {
@@ -329,7 +331,7 @@ function App() {
 
       {/* Footer */}
       <footer className="app-footer">
-        <p>Powered by OpenFoodFacts Database</p>
+        <p>Powered by USDA FoodData Central</p>
       </footer>
     </div>
   );
