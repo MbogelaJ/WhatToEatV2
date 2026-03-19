@@ -1131,6 +1131,149 @@ body {
   margin: 0;
 }
 
+/* FAQ Category Filter */
+.faq-category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.faq-category-btn {
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.faq-category-btn:hover {
+  border-color: var(--accent-green);
+}
+
+.faq-category-btn.active {
+  background: var(--accent-green-dim);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+  font-weight: 500;
+}
+
+.faq-count {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.faq-related-foods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.related-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-right: 0.25rem;
+}
+
+.food-tag {
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+/* Related FAQs in Modal */
+.info-card.faq-card {
+  background: var(--accent-blue-dim);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.info-card-header.clickable {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.info-card-header.clickable .header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-card-header.clickable h3 {
+  font-size: 0.95rem;
+}
+
+.related-faqs-list {
+  margin-top: 0.75rem;
+}
+
+.related-faq-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.related-faq-item:last-child {
+  margin-bottom: 0;
+}
+
+.related-faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  gap: 0.75rem;
+}
+
+.related-faq-question:hover {
+  background: var(--bg-card-hover);
+}
+
+.related-faq-question svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.related-faq-answer {
+  padding: 0 0.75rem 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.related-faq-answer p {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 0.75rem;
+}
+
 /* Topics Styles */
 .topics-grid {
   display: flex;
