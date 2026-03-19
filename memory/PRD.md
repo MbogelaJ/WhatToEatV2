@@ -116,6 +116,7 @@ Matching user's design requirements:
 - [x] Added disclaimer banner about educational content
 - [x] Implemented Topics page with 6 educational categories
 - [x] Implemented About page with features, data sources, medical disclaimer, and privacy info
+- [x] **FAQ → Food Navigation**: Clickable food tags in FAQ answers that navigate to Home and open food detail modal (March 2026)
 
 ## Key Files
 - `/app/frontend/src/App.js` - Main React component

@@ -798,10 +798,28 @@ const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack }) => 
 };
 
 // FAQ View Component with Premium Feature
-const FAQView = ({ onBack }) => {
+const FAQView = ({ onBack, onNavigateToFood, foods }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  
+  // Find food by tag name
+  const findFoodByTag = (tag) => {
+    if (!foods || foods.length === 0) return null;
+    const normalizedTag = tag.toLowerCase();
+    return foods.find(food => {
+      const foodName = (food.name || '').toLowerCase();
+      return foodName.includes(normalizedTag) || normalizedTag.includes(foodName.split(' ')[0].toLowerCase());
+    });
+  };
+  
+  // Handle food tag click
+  const handleFoodTagClick = (tag) => {
+    const food = findFoodByTag(tag);
+    if (food && onNavigateToFood) {
+      onNavigateToFood(food);
+    }
+  };
   
   const categories = [
     { id: 'all', label: 'All' },
@@ -899,7 +917,14 @@ const FAQView = ({ onBack }) => {
                     <div className="faq-related-foods">
                       <span className="related-label">Related foods:</span>
                       {faq.foodTags.slice(0, 5).map(tag => (
-                        <span key={tag} className="food-tag">{tag}</span>
+                        <button 
+                          key={tag} 
+                          className="food-tag clickable"
+                          onClick={() => handleFoodTagClick(tag)}
+                          data-testid={`food-tag-${tag}`}
+                        >
+                          {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                        </button>
                       ))}
                     </div>
                   )}
@@ -1205,6 +1230,15 @@ function App() {
     return matchesSearch && matchesCategory && matchesSafety;
   });
 
+  // Handle navigation from FAQ to Food
+  const handleNavigateToFood = (food) => {
+    setActiveView('home');
+    // Small delay to ensure view has changed before opening modal
+    setTimeout(() => {
+      setSelectedFood(food);
+    }, 100);
+  };
+
   // Render Settings View
   if (activeView === 'settings') {
     return (
@@ -1239,7 +1273,11 @@ function App() {
             </div>
           </div>
         </header>
-        <FAQView onBack={() => setActiveView('home')} />
+        <FAQView 
+          onBack={() => setActiveView('home')} 
+          onNavigateToFood={handleNavigateToFood}
+          foods={foods}
+        />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
     );

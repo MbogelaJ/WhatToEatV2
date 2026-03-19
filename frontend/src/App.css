@@ -1268,6 +1268,21 @@ body {
   text-transform: capitalize;
 }
 
+.food-tag.clickable {
+  cursor: pointer;
+  background: var(--accent-blue-dim);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.food-tag.clickable:hover {
+  background: var(--accent-blue);
+  color: white;
+  transform: translateY(-1px);
+}
+
 /* Related FAQs in Modal */
 .info-card.faq-card {
   background: var(--accent-blue-dim);
