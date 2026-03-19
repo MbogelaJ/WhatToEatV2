@@ -435,6 +435,242 @@ const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack }) => 
   );
 };
 
+// FAQ View Component
+const FAQView = ({ onBack }) => {
+  const [openIndex, setOpenIndex] = useState(null);
+  
+  const faqs = [
+    {
+      question: "Is this app a replacement for medical advice?",
+      answer: "No. WhatToEat provides general educational information about food safety during pregnancy. Always consult your healthcare provider, OB-GYN, or registered dietitian for personalized medical advice."
+    },
+    {
+      question: "How are foods categorized as Safe, Limit, or Avoid?",
+      answer: "Our classifications are based on guidelines from major health organizations including ACOG (American College of Obstetricians and Gynecologists), FDA, and CDC. Foods marked 'Safe' are generally considered low-risk when properly prepared. 'Limit' foods should be consumed in moderation. 'Avoid' foods carry higher risks during pregnancy."
+    },
+    {
+      question: "Can I eat sushi during pregnancy?",
+      answer: "Raw fish sushi should be avoided during pregnancy due to risk of parasites and bacteria. However, cooked sushi rolls (like shrimp tempura or fully cooked fish) and vegetable rolls are generally safe options."
+    },
+    {
+      question: "How much caffeine is safe during pregnancy?",
+      answer: "Most health organizations recommend limiting caffeine to 200mg per day during pregnancy. This is roughly equivalent to one 12oz cup of coffee. Remember that caffeine is also found in tea, chocolate, and some sodas."
+    },
+    {
+      question: "Why should I avoid certain cheeses?",
+      answer: "Soft cheeses made from unpasteurized milk may contain Listeria bacteria, which can cause serious complications during pregnancy. Always choose pasteurized cheeses. Hard cheeses like cheddar and parmesan are generally safe."
+    },
+    {
+      question: "Are artificial sweeteners safe during pregnancy?",
+      answer: "Most artificial sweeteners (aspartame, sucralose, stevia) are considered safe in moderation during pregnancy. However, saccharin should be avoided. When in doubt, natural sweeteners in moderation are preferable."
+    },
+    {
+      question: "How do I know if fish is low in mercury?",
+      answer: "Low-mercury fish include salmon, tilapia, cod, shrimp, and sardines. High-mercury fish to avoid include shark, swordfish, king mackerel, and tilefish. The FDA recommends 2-3 servings of low-mercury fish per week during pregnancy."
+    },
+    {
+      question: "What does the dietary restrictions feature do?",
+      answer: "When you set dietary restrictions in Settings, the app will show you personalized alerts on foods that may not be suitable for your dietary needs, in addition to the standard pregnancy safety information."
+    }
+  ];
+
+  return (
+    <div className="page-view" data-testid="faq-view">
+      <div className="page-header">
+        <button className="back-button" onClick={onBack} data-testid="faq-back-btn">
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+        <h2>FAQ</h2>
+        <div style={{width: '80px'}}></div>
+      </div>
+
+      <div className="page-content">
+        <p className="page-intro">Common questions about food safety during pregnancy.</p>
+        
+        <div className="faq-list">
+          {faqs.map((faq, index) => (
+            <div key={index} className="faq-item" data-testid={`faq-item-${index}`}>
+              <button 
+                className="faq-question"
+                onClick={() => setOpenIndex(openIndex === index ? null : index)}
+              >
+                <span>{faq.question}</span>
+                {openIndex === index ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </button>
+              {openIndex === index && (
+                <div className="faq-answer">
+                  <p>{faq.answer}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Topics View Component
+const TopicsView = ({ onBack, onNavigateHome }) => {
+  const topics = [
+    {
+      title: "First Trimester Nutrition",
+      icon: "🌱",
+      description: "Essential nutrients for early pregnancy development",
+      tips: ["Focus on folate-rich foods like leafy greens", "Stay hydrated to combat morning sickness", "Eat small, frequent meals", "Prioritize protein for baby's cell growth"]
+    },
+    {
+      title: "Foods to Avoid",
+      icon: "⚠️",
+      description: "Important restrictions during pregnancy",
+      tips: ["Raw or undercooked meats and eggs", "High-mercury fish (shark, swordfish)", "Unpasteurized dairy products", "Alcohol - no safe amount established", "Excessive caffeine (limit to 200mg/day)"]
+    },
+    {
+      title: "Managing Morning Sickness",
+      icon: "🍋",
+      description: "Foods that may help ease nausea",
+      tips: ["Ginger tea or ginger candies", "Plain crackers before getting up", "Cold foods may be more tolerable", "Avoid strong-smelling foods", "Eat small portions frequently"]
+    },
+    {
+      title: "Iron & Preventing Anemia",
+      icon: "💪",
+      description: "Building healthy blood for you and baby",
+      tips: ["Red meat is the best iron source", "Pair plant iron with vitamin C", "Cook in cast iron when possible", "Avoid calcium with iron-rich meals", "Consider iron-fortified cereals"]
+    },
+    {
+      title: "Calcium & Bone Health",
+      icon: "🦴",
+      description: "Supporting baby's skeletal development",
+      tips: ["Dairy products are excellent sources", "Fortified plant milks work too", "Sardines with bones are calcium-rich", "Leafy greens provide some calcium", "Vitamin D helps calcium absorption"]
+    },
+    {
+      title: "Third Trimester Focus",
+      icon: "👶",
+      description: "Preparing for delivery and breastfeeding",
+      tips: ["Omega-3s for brain development", "Dates may help with labor prep", "Keep protein intake high", "Stay hydrated for amniotic fluid", "Prepare freezer meals for postpartum"]
+    }
+  ];
+
+  return (
+    <div className="page-view" data-testid="topics-view">
+      <div className="page-header">
+        <button className="back-button" onClick={onBack} data-testid="topics-back-btn">
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+        <h2>Topics</h2>
+        <div style={{width: '80px'}}></div>
+      </div>
+
+      <div className="page-content">
+        <p className="page-intro">Learn about pregnancy nutrition topics.</p>
+        
+        <div className="topics-grid">
+          {topics.map((topic, index) => (
+            <div key={index} className="topic-card" data-testid={`topic-card-${index}`}>
+              <div className="topic-header">
+                <span className="topic-icon">{topic.icon}</span>
+                <h3>{topic.title}</h3>
+              </div>
+              <p className="topic-description">{topic.description}</p>
+              <ul className="topic-tips">
+                {topic.tips.map((tip, tipIndex) => (
+                  <li key={tipIndex}>
+                    <Check size={14} className="tip-check" />
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// About View Component
+const AboutView = ({ onBack }) => {
+  return (
+    <div className="page-view" data-testid="about-view">
+      <div className="page-header">
+        <button className="back-button" onClick={onBack} data-testid="about-back-btn">
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+        <h2>About</h2>
+        <div style={{width: '80px'}}></div>
+      </div>
+
+      <div className="page-content">
+        <div className="about-hero">
+          <div className="about-logo">
+            <div className="logo-icon large">W</div>
+          </div>
+          <h1>WhatToEat</h1>
+          <p className="version">Version 1.0.0</p>
+        </div>
+
+        <div className="about-section">
+          <h3>About This App</h3>
+          <p>
+            WhatToEat is a pregnancy nutrition guide designed to help expectant mothers make informed food choices. 
+            Browse our database of 235+ foods with pregnancy-specific safety information, nutritional benefits, 
+            and preparation tips.
+          </p>
+        </div>
+
+        <div className="about-section">
+          <h3>Features</h3>
+          <ul className="feature-list">
+            <li><Check size={16} /> 235+ foods with pregnancy safety ratings</li>
+            <li><Check size={16} /> Instant search and filtering</li>
+            <li><Check size={16} /> Personalized dietary restriction alerts</li>
+            <li><Check size={16} /> Nutritional benefits and precautions</li>
+            <li><Check size={16} /> Preparation tips for safe consumption</li>
+          </ul>
+        </div>
+
+        <div className="about-section">
+          <h3>Data Sources</h3>
+          <p>
+            Our information is compiled from reputable sources including the USDA FoodData Central, 
+            American College of Obstetricians and Gynecologists (ACOG), FDA Food Safety Guidelines, 
+            and CDC pregnancy nutrition recommendations.
+          </p>
+        </div>
+
+        <div className="about-section disclaimer-section">
+          <h3>Medical Disclaimer</h3>
+          <p>
+            <strong>Important:</strong> This app is for educational purposes only and does not constitute medical advice. 
+            The information provided should not be used for diagnosing or treating health problems. 
+            Always consult with a qualified healthcare provider about your specific situation.
+          </p>
+          <p>
+            Every pregnancy is unique. What is safe for one person may not be appropriate for another 
+            based on individual health conditions, allergies, or medical history.
+          </p>
+        </div>
+
+        <div className="about-section">
+          <h3>Privacy</h3>
+          <p>
+            Your dietary preferences are stored locally on your device and are not transmitted to any server. 
+            We respect your privacy and do not collect personal health information.
+          </p>
+        </div>
+
+        <div className="about-footer">
+          <p>Made with ❤️ for expectant mothers</p>
+          <p className="copyright">© 2026 WhatToEat. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Bottom Navigation
 const BottomNav = ({ activeView, onChangeView }) => {
   return (
@@ -555,6 +791,63 @@ function App() {
           onUpdateRestrictions={setDietaryRestrictions}
           onBack={() => setActiveView('home')}
         />
+        <BottomNav activeView={activeView} onChangeView={setActiveView} />
+      </div>
+    );
+  }
+
+  // Render FAQ View
+  if (activeView === 'faq') {
+    return (
+      <div className="app" data-testid="food-search-app">
+        <header className="app-header compact">
+          <div className="header-content">
+            <div className="logo">
+              <div className="logo-icon">W</div>
+              <h1>WhatToEat</h1>
+            </div>
+          </div>
+        </header>
+        <FAQView onBack={() => setActiveView('home')} />
+        <BottomNav activeView={activeView} onChangeView={setActiveView} />
+      </div>
+    );
+  }
+
+  // Render Topics View
+  if (activeView === 'topics') {
+    return (
+      <div className="app" data-testid="food-search-app">
+        <header className="app-header compact">
+          <div className="header-content">
+            <div className="logo">
+              <div className="logo-icon">W</div>
+              <h1>WhatToEat</h1>
+            </div>
+          </div>
+        </header>
+        <TopicsView 
+          onBack={() => setActiveView('home')}
+          onNavigateHome={() => setActiveView('home')}
+        />
+        <BottomNav activeView={activeView} onChangeView={setActiveView} />
+      </div>
+    );
+  }
+
+  // Render About View
+  if (activeView === 'about') {
+    return (
+      <div className="app" data-testid="food-search-app">
+        <header className="app-header compact">
+          <div className="header-content">
+            <div className="logo">
+              <div className="logo-icon">W</div>
+              <h1>WhatToEat</h1>
+            </div>
+          </div>
+        </header>
+        <AboutView onBack={() => setActiveView('home')} />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
     );

@@ -97,7 +97,6 @@ Matching user's design requirements:
 ## Next Action Items
 1. **P1**: Implement Favorites/Bookmarking feature
 2. **P2**: Add food images
-3. **P2**: Implement FAQ, Topics, About pages (currently just navigation placeholders)
 
 ## Completed Tasks
 - [x] Fixed Apple review bug (instant client-side search)
@@ -109,6 +108,9 @@ Matching user's design requirements:
 - [x] Added bottom navigation
 - [x] Implemented light theme UI
 - [x] Expanded database from 40 to 235 foods (March 2026)
+- [x] Implemented FAQ page with 8 common pregnancy nutrition questions
+- [x] Implemented Topics page with 6 educational categories
+- [x] Implemented About page with features, data sources, medical disclaimer, and privacy info
 
 ## Key Files
 - `/app/frontend/src/App.js` - Main React component
