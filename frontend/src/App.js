@@ -927,8 +927,10 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <h2>FAQ</h2>
-        <div style={{width: '80px'}}></div>
+        <h2>WhatToEat</h2>
+        <button className="profile-btn" data-testid="profile-btn">
+          <User size={22} />
+        </button>
       </div>
 
       <div className="page-content">
@@ -1647,22 +1649,15 @@ function App() {
     loadFoods();
   }, []);
 
-  // Client-side filtering - 100% local, no API calls, instant response
-  // Safe array handling to prevent crashes on any device (iPad, iPhone, etc.)
-  const safeFoods = Array.isArray(foods) ? foods : [];
-  
-  const filteredFoods = safeFoods.filter((food) => {
-    // Safely handle potentially undefined values
-    if (!food) return false;
-    
+  // Client-side filtering
+  const filteredFoods = (foods || []).filter((food) => {
     const name = (food.name || '').toLowerCase();
     const category = (food.category || '').toLowerCase();
     const query = (searchQuery || '').toLowerCase().trim();
     
-    // Case-insensitive search matching
     const matchesSearch = query === '' || name.includes(query) || category.includes(query);
-    const matchesCategory = !selectedCategory || selectedCategory === '' || food.category === selectedCategory;
-    const matchesSafety = !selectedSafety || selectedSafety === '' || food.safety === selectedSafety;
+    const matchesCategory = selectedCategory === '' || food.category === selectedCategory;
+    const matchesSafety = selectedSafety === '' || food.safety === selectedSafety;
     
     return matchesSearch && matchesCategory && matchesSafety;
   });
@@ -1676,12 +1671,12 @@ function App() {
     }, 100);
   };
 
-  // Render Disclaimer Page (First time only - NEVER show again once accepted)
+  // Render Disclaimer Page (First time only)
   if (!hasAcceptedDisclaimer) {
     return <DisclaimerPage onAccept={handleDisclaimerAccept} />;
   }
 
-  // Render Onboarding Pages (First time only - NEVER show again once completed)
+  // Render Onboarding Pages (First time only)
   if (!hasCompletedOnboarding) {
     return (
       <OnboardingPage 
@@ -1721,6 +1716,14 @@ function App() {
   if (activeView === 'settings') {
     return (
       <div className="app" data-testid="food-search-app">
+        <header className="app-header compact">
+          <div className="header-content">
+            <div className="logo">
+              <div className="logo-icon">W</div>
+              <h1>WhatToEat</h1>
+            </div>
+          </div>
+        </header>
         <SettingsView 
           dietaryRestrictions={dietaryRestrictions}
           onUpdateRestrictions={setDietaryRestrictions}
@@ -1735,6 +1738,14 @@ function App() {
   if (activeView === 'faq') {
     return (
       <div className="app" data-testid="food-search-app">
+        <header className="app-header compact">
+          <div className="header-content">
+            <div className="logo">
+              <div className="logo-icon">W</div>
+              <h1>WhatToEat</h1>
+            </div>
+          </div>
+        </header>
         <FAQView 
           onBack={() => setActiveView('home')} 
           onNavigateToFood={handleNavigateToFood}
@@ -1751,6 +1762,14 @@ function App() {
   if (activeView === 'topics') {
     return (
       <div className="app" data-testid="food-search-app">
+        <header className="app-header compact">
+          <div className="header-content">
+            <div className="logo">
+              <div className="logo-icon">W</div>
+              <h1>WhatToEat</h1>
+            </div>
+          </div>
+        </header>
         <TopicsView 
           onBack={() => setActiveView('home')}
           onNavigateHome={() => setActiveView('home')}
@@ -1764,6 +1783,14 @@ function App() {
   if (activeView === 'about') {
     return (
       <div className="app" data-testid="food-search-app">
+        <header className="app-header compact">
+          <div className="header-content">
+            <div className="logo">
+              <div className="logo-icon">W</div>
+              <h1>WhatToEat</h1>
+            </div>
+          </div>
+        </header>
         <AboutView onBack={() => setActiveView('home')} />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>

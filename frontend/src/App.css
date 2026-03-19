@@ -97,33 +97,6 @@ body {
   color: var(--text-primary);
 }
 
-/* Header Logo (for inner pages) */
-.header-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.header-logo h2 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.logo-icon-sm {
-  width: 28px;
-  height: 28px;
-  background: var(--accent-green);
-  color: white;
-  font-weight: 700;
-  font-size: 0.85rem;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .tagline {
   color: var(--text-muted);
   font-size: 0.875rem;
@@ -981,10 +954,10 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
+  padding: 0.5rem 0;
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
-  z-index: 9999;
+  z-index: 900;
 }
 
 .nav-item {
