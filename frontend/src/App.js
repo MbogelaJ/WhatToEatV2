@@ -233,7 +233,7 @@ function App() {
     const loadFoods = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${API}/foods/all`);
+        const response = await axios.get(`${API}/foods/all?page_size=300`);
         const loadedFoods = response.data.foods || [];
         setFoods(loadedFoods);
         
