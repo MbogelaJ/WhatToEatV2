@@ -120,7 +120,7 @@ def parse_usda_food(food: dict) -> FoodItem:
 
 @api_router.get("/")
 async def root():
-    return {"message": "NutriSearch Food API - Powered by USDA FoodData Central"}
+    return {"message": "WhatToEatSearch Food API - Powered by USDA FoodData Central"}
 
 @api_router.get("/health")
 async def health_check():

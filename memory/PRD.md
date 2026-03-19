@@ -1,4 +1,4 @@
-# NutriSearch - Food Search App PRD
+# WhatToEatSearch - Food Search App PRD
 
 ## Original Problem Statement
 Apple App Store Review Feedback (Submission ID: ac697cb9-cc29-408a-945e-8a724103acf7):

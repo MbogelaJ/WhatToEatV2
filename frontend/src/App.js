@@ -235,7 +235,7 @@ function App() {
         <div className="header-content">
           <div className="logo">
             <Utensils size={28} />
-            <h1>NutriSearch</h1>
+            <h1>WhatToEatSearch</h1>
           </div>
           <p className="tagline">Find nutritional info for any food</p>
         </div>
@@ -308,7 +308,7 @@ function App() {
           ) : (
             <div className="welcome-state" data-testid="welcome-state">
               <Utensils size={64} />
-              <h2>Welcome to NutriSearch</h2>
+              <h2>Welcome to WhatToEatSearch</h2>
               <p>Search for any food to see its nutritional information</p>
               <div className="suggestion-chips">
                 <button onClick={() => setSearchQuery("apple")} data-testid="suggestion-apple">Apple</button>
