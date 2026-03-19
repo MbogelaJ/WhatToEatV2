@@ -1,10 +1,93 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "@/App.css";
 import axios from "axios";
 import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock, Star, Sparkles, Shield, Heart, Lightbulb, Crown } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Auth Callback Component - handles OAuth redirect
+const AuthCallback = ({ onAuthSuccess, onAuthError }) => {
+  const hasProcessed = useRef(false);
+  const [status, setStatus] = useState('processing');
+
+  useEffect(() => {
+    // Prevent double processing in StrictMode
+    if (hasProcessed.current) return;
+    hasProcessed.current = true;
+
+    const processAuth = async () => {
+      try {
+        // Extract session_id from URL hash
+        const hash = window.location.hash;
+        const sessionIdMatch = hash.match(/session_id=([^&]+)/);
+        
+        if (!sessionIdMatch) {
+          throw new Error('No session_id found in URL');
+        }
+        
+        const sessionId = sessionIdMatch[1];
+        
+        // Exchange session_id for session token
+        const response = await axios.post(`${API}/auth/session`, {
+          session_id: sessionId
+        }, {
+          withCredentials: true
+        });
+        
+        if (response.data.success) {
+          // Store user data
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          localStorage.setItem('isAuthenticated', 'true');
+          
+          // Clear the hash from URL
+          window.history.replaceState(null, '', window.location.pathname);
+          
+          // Call success callback
+          onAuthSuccess(response.data.user);
+        } else {
+          throw new Error('Authentication failed');
+        }
+      } catch (error) {
+        console.error('Auth callback error:', error);
+        setStatus('error');
+        if (onAuthError) {
+          onAuthError(error);
+        }
+      }
+    };
+
+    processAuth();
+  }, [onAuthSuccess, onAuthError]);
+
+  if (status === 'error') {
+    return (
+      <div className="auth-callback-page">
+        <div className="auth-callback-content">
+          <div className="auth-error-icon">❌</div>
+          <h2>Authentication Failed</h2>
+          <p>Something went wrong. Please try again.</p>
+          <button 
+            className="auth-retry-btn"
+            onClick={() => window.location.href = '/'}
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="auth-callback-page">
+      <div className="auth-callback-content">
+        <div className="auth-spinner"></div>
+        <h2>Signing you in...</h2>
+        <p>Please wait while we complete your sign-in.</p>
+      </div>
+    </div>
+  );
+};
 
 // Daily tips for pregnancy nutrition
 const DAILY_TIPS = [
@@ -730,7 +813,7 @@ const SafetyFilter = ({ selectedSafety, onSelect }) => {
 };
 
 // Settings View Component
-const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack }) => {
+const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack, currentUser, onLogout }) => {
   const [localRestrictions, setLocalRestrictions] = useState(dietaryRestrictions);
 
   const toggleRestriction = (id) => {
@@ -758,9 +841,37 @@ const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack }) => 
       </div>
 
       <div className="settings-content">
+        {/* User Profile Section */}
+        {currentUser && (
+          <div className="settings-section user-profile-section">
+            <div className="settings-section-header">
+              <User size={20} />
+              <h3>Your Account</h3>
+            </div>
+            <div className="user-profile-card">
+              {currentUser.picture && (
+                <img src={currentUser.picture} alt={currentUser.name} className="user-avatar" />
+              )}
+              <div className="user-info">
+                <span className="user-name">{currentUser.name}</span>
+                <span className="user-email">{currentUser.email}</span>
+                <span className="user-provider">Signed in with {currentUser.auth_provider === 'google' ? 'Google' : currentUser.auth_provider}</span>
+              </div>
+            </div>
+            <button className="logout-btn" onClick={onLogout} data-testid="logout-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Sign Out
+            </button>
+          </div>
+        )}
+
         <div className="settings-section">
           <div className="settings-section-header">
-            <User size={20} />
+            <Utensils size={20} />
             <h3>Dietary Restrictions</h3>
           </div>
           <p className="settings-description">
@@ -1280,10 +1391,11 @@ const DisclaimerPage = ({ onAccept }) => {
 };
 
 // Create Account Page Component
-const CreateAccountPage = ({ onNext, onBack }) => {
+const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignIn, setIsSignIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleContinue = () => {
     if (email) {
@@ -1292,10 +1404,15 @@ const CreateAccountPage = ({ onNext, onBack }) => {
     onNext();
   };
 
-  const handleSocialSignIn = (provider) => {
-    console.log(`Sign in with ${provider}`);
-    localStorage.setItem('authProvider', provider);
-    onNext();
+  const handleGoogleSignIn = () => {
+    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+    const redirectUrl = window.location.origin + '/auth/callback';
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  };
+
+  const handleAppleSignIn = () => {
+    // Apple Sign-In requires Apple Developer credentials (not yet configured)
+    alert('Apple Sign-In requires Apple Developer credentials. Please use Google Sign-In or continue with email.');
   };
 
   return (
@@ -1354,21 +1471,21 @@ const CreateAccountPage = ({ onNext, onBack }) => {
           <span>Or continue with</span>
         </div>
 
-        <button className="social-btn apple" onClick={() => handleSocialSignIn('apple')}>
+        <button className="social-btn apple" onClick={handleAppleSignIn} disabled={isLoading}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
           </svg>
           <span>Sign in with Apple</span>
         </button>
 
-        <button className="social-btn google" onClick={() => handleSocialSignIn('google')}>
+        <button className="social-btn google" onClick={handleGoogleSignIn} disabled={isLoading} data-testid="google-signin-btn">
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
-          <span>Sign in with Google</span>
+          <span>{isLoading ? 'Signing in...' : 'Sign in with Google'}</span>
         </button>
 
         <p className="security-note">Your data is stored securely</p>
@@ -1783,6 +1900,17 @@ function App() {
   const [selectedFood, setSelectedFood] = useState(null);
   const [activeView, setActiveView] = useState('home');
   
+  // Auth state
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isAuthCallback, setIsAuthCallback] = useState(() => {
+    // Check if we're returning from OAuth callback
+    return window.location.hash?.includes('session_id=') || 
+           window.location.pathname === '/auth/callback';
+  });
+  
   // Onboarding flow: Disclaimer -> CreateAccount -> AgePregnancy -> DietaryConsiderations -> Premium -> Home
   // Step tracking: 0=Disclaimer, 1=CreateAccount, 2=AgePregnancy, 3=DietaryConsiderations, 4=Premium, 5=Home
   const [onboardingStep, setOnboardingStep] = useState(() => {
@@ -1809,6 +1937,41 @@ function App() {
   
   // Personalized view state
   const [personalizedView, setPersonalizedView] = useState(false);
+
+  // Handle successful auth
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    setIsAuthCallback(false);
+    // Skip to Age/Pregnancy step after successful auth
+    const nextStep = 2;
+    localStorage.setItem('onboardingStep', nextStep.toString());
+    setOnboardingStep(nextStep);
+  };
+
+  // Handle auth error
+  const handleAuthError = (error) => {
+    console.error('Auth error:', error);
+    setIsAuthCallback(false);
+    // Go back to create account page
+    localStorage.setItem('onboardingStep', '1');
+    setOnboardingStep(1);
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+    // Clear local state regardless of API result
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    setCurrentUser(null);
+    // Reset to onboarding
+    localStorage.setItem('onboardingStep', '0');
+    setOnboardingStep(0);
+  };
 
   // Persist user profile to localStorage
   useEffect(() => {
@@ -1912,6 +2075,16 @@ function App() {
     }, 100);
   };
 
+  // Auth Callback - handle OAuth redirect FIRST before any other routing
+  if (isAuthCallback) {
+    return (
+      <AuthCallback 
+        onAuthSuccess={handleAuthSuccess}
+        onAuthError={handleAuthError}
+      />
+    );
+  }
+
   // Onboarding Flow: Step 0 = Disclaimer
   if (onboardingStep === 0) {
     return <DisclaimerPage onAccept={goToNextStep} />;
@@ -1995,6 +2168,8 @@ function App() {
           dietaryRestrictions={dietaryRestrictions}
           onUpdateRestrictions={setDietaryRestrictions}
           onBack={() => setActiveView('home')}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
