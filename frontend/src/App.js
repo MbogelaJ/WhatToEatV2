@@ -1635,15 +1635,22 @@ function App() {
     loadFoods();
   }, []);
 
-  // Client-side filtering
-  const filteredFoods = (foods || []).filter((food) => {
+  // Client-side filtering - 100% local, no API calls, instant response
+  // Safe array handling to prevent crashes on any device (iPad, iPhone, etc.)
+  const safeFoods = Array.isArray(foods) ? foods : [];
+  
+  const filteredFoods = safeFoods.filter((food) => {
+    // Safely handle potentially undefined values
+    if (!food) return false;
+    
     const name = (food.name || '').toLowerCase();
     const category = (food.category || '').toLowerCase();
     const query = (searchQuery || '').toLowerCase().trim();
     
+    // Case-insensitive search matching
     const matchesSearch = query === '' || name.includes(query) || category.includes(query);
-    const matchesCategory = selectedCategory === '' || food.category === selectedCategory;
-    const matchesSafety = selectedSafety === '' || food.safety === selectedSafety;
+    const matchesCategory = !selectedCategory || selectedCategory === '' || food.category === selectedCategory;
+    const matchesSafety = !selectedSafety || selectedSafety === '' || food.safety === selectedSafety;
     
     return matchesSearch && matchesCategory && matchesSafety;
   });
