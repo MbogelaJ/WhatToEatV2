@@ -1555,10 +1555,16 @@ function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
     return localStorage.getItem('onboardingCompleted') === 'true';
   });
+  const [hasSeenPremiumOffer, setHasSeenPremiumOffer] = useState(() => {
+    return localStorage.getItem('hasSeenPremiumOffer') === 'true';
+  });
   const [onboardingPage, setOnboardingPage] = useState(0);
   const [isPremium, setIsPremium] = useState(() => {
     return localStorage.getItem('isPremium') === 'true';
   });
+  
+  // Show premium page after onboarding if not seen yet
+  const [showPremiumAfterOnboarding, setShowPremiumAfterOnboarding] = useState(false);
   
   const [dietaryRestrictions, setDietaryRestrictions] = useState(() => {
     const saved = localStorage.getItem('dietaryRestrictions');
@@ -1576,14 +1582,34 @@ function App() {
     if (onboardingPage < 1) {
       setOnboardingPage(onboardingPage + 1);
     } else {
+      // Complete onboarding and persist
       localStorage.setItem('onboardingCompleted', 'true');
       setHasCompletedOnboarding(true);
+      
+      // Show premium offer if not seen and not already premium
+      if (!localStorage.getItem('hasSeenPremiumOffer') && !isPremium) {
+        setShowPremiumAfterOnboarding(true);
+      }
     }
   };
 
   const handleOnboardingSkip = () => {
+    // Complete onboarding and persist
     localStorage.setItem('onboardingCompleted', 'true');
     setHasCompletedOnboarding(true);
+    
+    // Show premium offer if not seen and not already premium
+    if (!localStorage.getItem('hasSeenPremiumOffer') && !isPremium) {
+      setShowPremiumAfterOnboarding(true);
+    }
+  };
+
+  // Handle premium page close (after onboarding flow)
+  const handlePremiumClose = () => {
+    localStorage.setItem('hasSeenPremiumOffer', 'true');
+    setHasSeenPremiumOffer(true);
+    setShowPremiumAfterOnboarding(false);
+    setActiveView('home');
   };
 
   // Handle premium purchase
@@ -1650,12 +1676,12 @@ function App() {
     }, 100);
   };
 
-  // Render Disclaimer Page (First time only)
+  // Render Disclaimer Page (First time only - NEVER show again once accepted)
   if (!hasAcceptedDisclaimer) {
     return <DisclaimerPage onAccept={handleDisclaimerAccept} />;
   }
 
-  // Render Onboarding Pages (First time only)
+  // Render Onboarding Pages (First time only - NEVER show again once completed)
   if (!hasCompletedOnboarding) {
     return (
       <OnboardingPage 
@@ -1666,7 +1692,21 @@ function App() {
     );
   }
 
-  // Render Premium Page
+  // Show Premium offer after completing onboarding (first time only)
+  if (showPremiumAfterOnboarding && !isPremium) {
+    return (
+      <PremiumPage 
+        onBack={handlePremiumClose}
+        onPurchase={() => {
+          handlePremiumPurchase();
+          handlePremiumClose();
+        }}
+        isPremium={isPremium}
+      />
+    );
+  }
+
+  // Render Premium Page (from nav)
   if (activeView === 'premium') {
     return (
       <PremiumPage 
