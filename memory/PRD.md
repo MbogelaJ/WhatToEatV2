@@ -5,108 +5,110 @@ Build a pregnancy nutrition app called "WhatToEat" that helps pregnant users und
 
 ## Architecture
 - **Frontend**: React.js + Capacitor (for mobile builds)
-- **Backend**: FastAPI (Python)
-- **Data Storage**: In-memory food database (235 foods with pregnancy-specific content)
+- **Backend**: FastAPI (Python) with MongoDB
+- **Data Storage**: In-memory food database (235 foods) + MongoDB for user auth
 - **User Preferences**: localStorage for dietary restrictions, onboarding state, premium status
 
 ## App Flow (Updated March 2026)
-1. **Disclaimer Page** - Medical disclaimer with WHO, CDC, ACOG, FDA sources (first time only)
-2. **Create Account Page** - Email/password + Apple/Google social login options (MOCKED)
-3. **Age and Pregnancy Stage Page** - Age range selection + Trimester/Pregnancy stage
-4. **Dietary Considerations Page** - Select dietary restrictions (vegetarian, vegan, etc.)
+1. **Disclaimer Page** - Medical disclaimer with WHO, CDC, ACOG, FDA sources
+2. **Create Account Page** - Email/password + Apple/Google social login
+3. **Age and Pregnancy Stage Page** - Age range + Trimester selection
+4. **Dietary Considerations Page** - 2-column grid of dietary restrictions
 5. **Premium Page** - One-time purchase US$1.99 offer
-6. **Home Page** - Educational banner, Daily tip, Trimester info, Food search with filters
+6. **Home Page** - Educational banner, Daily tip, Trimester info, Food search
 
-## Features Implemented (March 19, 2026)
+## Features Implemented
 
-### 1. Complete Onboarding Flow (COMPLETED)
-Five-step onboarding with progress dots:
-- **Step 0 - Disclaimer**: Medical disclaimer with "Important Notice" and "I Understand" button
-- **Step 1 - Create Account**: Email/password form + Apple/Google sign-in (MOCKED)
-- **Step 2 - Age & Pregnancy Stage**: Age range selection + Trimester selection (First/Second/Third/Postpartum/Planning)
-- **Step 3 - Dietary Considerations**: 15 dietary options (Vegetarian, Vegan, Pescatarian, Gluten-Free, etc.)
-- **Step 4 - Premium Offer**: US$1.99 one-time purchase with "Continue with Free Version" option
-- State saved in localStorage with `onboardingStep` key (0-5)
+### 1. Complete Onboarding Flow ✅
+Five-step onboarding with progress dots and Back/Continue navigation
 
-### 2. Home Page (UPDATED)
-- **Header**: "W" logo + "WhatToEat" title + logout/profile icons
-- **Educational Banner**: Blue info banner about educational content
-- **Daily Tip**: Yellow card with daily pregnancy nutrition tip, source citation, dismiss button, "Read more" link
-- **Trimester Banner**: Green card showing user's trimester and focus nutrients (e.g., "Third Trimester - Focus on: Iron, Calcium, DHA, Protein")
-- **Search Bar**: Client-side instant search
-- **Category Filters**: All, Beverages, Condiments, Dairy, Fruits, Grains, Nuts & Seeds, Proteins, Vegetables
-- **Safety Filters**: All, Safe, Limit, Avoid
-- **Personalized View Toggle**: Green button to activate dietary restriction filtering
-- **Food Count**: Shows "X free foods · Y premium foods"
-- **Food Grid**: Cards with food name, category, and safety badge
+### 2. Authentication System ✅ (March 19, 2026)
 
-### 3. Premium Feature (MOCKED)
-- **Price**: US$1.99 one-time purchase (12 months access)
-- **Premium Page**: Features list with "Get Premium" and "Continue with Free Version" buttons
-- **Premium Benefits**: Curated trimester foods, smart filters, expanded database, weekly tips, priority support
-- State saved in localStorage (`isPremium` key)
+#### Google Sign-In (FUNCTIONAL)
+- Uses Emergent Auth for OAuth flow
+- Redirects to Google, returns with session
+- Backend exchanges session for user data
+- User info stored in MongoDB and localStorage
+- Session cookies for persistent auth
 
-### 4. Core Search & Filtering
-- Client-side instant search (no API calls for filtering)
+#### Apple Sign-In (FUNCTIONAL on iOS)
+- Uses native iOS Sign in with Apple via Capacitor plugin
+- Bundle ID: `com.whattoeat.penx.app`
+- Team ID: `92W4Z3C38H`
+- On web: Shows message to use Google Sign-In instead
+- Setup instructions in `/app/APPLE_SIGNIN_SETUP.md`
+
+#### Backend Auth Endpoints
+- `POST /api/auth/session` - Exchange Emergent Auth session for app session
+- `GET /api/auth/me` - Get current authenticated user
+- `POST /api/auth/logout` - Logout and clear session
+
+### 3. User Profile in Settings ✅
+- Shows user avatar, name, email
+- "Signed in with Google/Apple" indicator
+- Sign Out button
+
+### 4. Home Page ✅
+- Header with back/close/profile buttons
+- Educational Information banner (blue)
+- Daily Tip (yellow) with source citation
+- Trimester banner based on user selection
+- Search bar, category filters, safety filters
+- Personalized View toggle
+- Food count display
+
+### 5. Food Search & Filtering ✅
+- Client-side instant search
 - 235 foods in database
 - Category and Safety level filters
-- Personalized dietary restriction filtering
 
-### 5. Food Detail Modal
-- Safety badge (color-coded: green/yellow/red)
-- Related FAQs section
-- Nutritional benefits, recommended consumption, preparation tips
-- Precautions with warning icons
-- Allergy warnings
-- View References (WHO, USDA, ACOG, FDA, CDC)
-
-### 6. FAQ Page
-- **Free Questions**: 3 sample questions (Salmon, Yogurt, Shrimp)
-- **Premium Questions**: 40+ locked questions with lock icons
-- Category filters
-- Clickable food tags navigate to food detail modal
-
-### 7. Settings Page
-- 10+ dietary restriction options
-- Preferences saved to localStorage
-
-### 8. Bottom Navigation
-- Home, FAQ, Topics, About, Settings
+### 6. Premium Feature (MOCKED)
+- Price: US$1.99 one-time purchase
+- UI shows premium modal and features
+- State saved in localStorage (no real payment)
 
 ## API Endpoints
-- `GET /api/foods/all?page_size=250` - Get all foods
+- `GET /api/foods/all` - Get all foods
 - `GET /api/foods/search?query=` - Search foods
-- `GET /api/foods/{food_id}` - Get single food
-- `GET /api/categories` - Get category list
+- `POST /api/auth/session` - Exchange OAuth session
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/logout` - Logout
 
-## Testing Status
-- **Onboarding Flow**: Tested ✅ - Complete 5-step flow working
-- **Home Page**: Tested ✅ - All new components (Educational banner, Daily Tip, Trimester banner) working
-- **Premium Feature**: Working (payment MOCKED)
-- **FAQ**: Working
+## Database Collections (MongoDB)
+- `users` - User profiles (user_id, email, name, picture, auth_provider)
+- `user_sessions` - Active sessions (session_token, user_id, expires_at)
 
-## What's MOCKED (Not Implemented)
-1. User authentication (Email/Password, Apple Sign-In, Google Sign-In) - uses localStorage only
-2. Payment processing for Premium - sets localStorage flag directly
-3. Backend user accounts - no user database
+## What's FUNCTIONAL
+1. ✅ Google Sign-In (via Emergent Auth)
+2. ✅ Apple Sign-In (on iOS native app)
+3. ✅ User logout
+4. ✅ Session management
+5. ✅ Complete onboarding flow
+6. ✅ Food search and filtering
+
+## What's MOCKED
+1. Email/Password authentication - UI only
+2. Payment processing for Premium - localStorage only
 
 ## Next Action Items (Priority Order)
-1. **P1**: Implement real payment integration (Apple In-App Purchase / Stripe) for premium
-2. **P1**: Implement functional Apple & Google social logins
-3. **P1**: Implement a "Favorites" feature for bookmarking foods
+1. **P1**: Implement real payment integration (Apple In-App Purchase for iOS)
+2. **P1**: Implement email/password authentication
+3. **P1**: Implement "Favorites" feature for bookmarking foods
 
 ## Future Tasks
-- **P2**: CRITICAL Refactor - Break down the monolithic App.js (2000+ lines) into smaller components
+- **P2**: Refactor App.js monolith (2400+ lines) into smaller components
 - **P2**: Add food images
-- **P2**: Add search within FAQ page
+- **P2**: Add FAQ page search
 
 ## Key Files
-- `/app/frontend/src/App.js` - Main React component (~2200 lines)
-- `/app/frontend/src/App.css` - All styles (~2400 lines)
-- `/app/backend/server.py` - FastAPI backend with food data
+- `/app/frontend/src/App.js` - Main React component
+- `/app/frontend/src/App.css` - All styles
+- `/app/backend/server.py` - FastAPI backend with auth endpoints
+- `/app/APPLE_SIGNIN_SETUP.md` - Apple Sign-In setup instructions
 
-## Notes
-- Premium payment is MOCKED (localStorage only)
-- User authentication is MOCKED (localStorage only)
-- Onboarding shown only on first launch (based on localStorage `onboardingStep`)
-- All user data persisted in localStorage
+## iOS App Setup Required
+To enable Apple Sign-In on the iOS app:
+1. Install plugin: `npm install @capacitor-community/apple-sign-in`
+2. Run: `npx cap sync ios`
+3. Open Xcode and add "Sign in with Apple" capability
+4. See `/app/APPLE_SIGNIN_SETUP.md` for detailed instructions
