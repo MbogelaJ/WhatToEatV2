@@ -564,21 +564,25 @@ const SafetyBadge = ({ safety, label }) => {
 };
 
 // Food Card Component (for grid)
-const FoodCard = ({ food, onClick, dietaryRestrictions = [] }) => {
+const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = false }) => {
   const safetyConfig = SAFETY_CONFIG[food.safety] || SAFETY_CONFIG.SAFE;
   const dietaryConcerns = checkDietaryConcerns(food, dietaryRestrictions);
+  const showLock = food.is_premium && !isPremiumUser;
   
   return (
     <div 
       data-testid={`food-card-${food.id}`}
-      className={`food-card ${dietaryConcerns.length > 0 ? 'has-dietary-concern' : ''}`}
+      className={`food-card ${dietaryConcerns.length > 0 ? 'has-dietary-concern' : ''} ${showLock ? 'premium-locked' : ''}`}
       onClick={() => onClick(food)}
     >
       <div className="food-card-icon">
         <Utensils size={24} />
       </div>
       <div className="food-card-content">
-        <h3 className="food-card-name">{food.name}</h3>
+        <h3 className="food-card-name">
+          {food.name}
+          {showLock && <Lock size={14} className="premium-lock-icon" />}
+        </h3>
         <span className="food-card-category">{food.category}</span>
         <span 
           className="food-card-safety"
@@ -594,6 +598,11 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [] }) => {
           </div>
         )}
       </div>
+      {showLock && (
+        <div className="premium-badge-corner">
+          <Lock size={12} />
+        </div>
+      )}
     </div>
   );
 };
@@ -2332,9 +2341,9 @@ function App() {
     'planning': { label: 'Planning/Trying', focus: 'Folate, Iron, Zinc' }
   };
 
-  // Calculate free vs premium food counts
-  const freeCount = Math.floor(filteredFoods.length * 0.35);
-  const premiumCount = filteredFoods.length - freeCount;
+  // Calculate free vs premium food counts from actual data
+  const freeCount = filteredFoods.filter(f => !f.is_premium).length;
+  const premiumCount = filteredFoods.filter(f => f.is_premium).length;
 
   return (
     <div className="app" data-testid="food-search-app">
@@ -2465,6 +2474,7 @@ function App() {
                     food={food} 
                     onClick={setSelectedFood}
                     dietaryRestrictions={dietaryRestrictions}
+                    isPremiumUser={isPremium}
                   />
                 ))}
               </div>

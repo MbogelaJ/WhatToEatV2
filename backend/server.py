@@ -219,6 +219,61 @@ async def logout(
     
     return {"success": True, "message": "Logged out successfully"}
 
+# Premium food IDs - foods people commonly search about during pregnancy
+# These are foods with safety concerns, confusion, or high search interest
+PREMIUM_FOOD_IDS = {
+    # Seafood - high search interest about mercury, safety
+    "salmon-1", "tuna-1", "sushi-raw-1", "shrimp-1", "crab-1", "lobster-1", 
+    "mackerel-1", "sardines-1", "tilapia-1", "cod-1", "halibut-1", "catfish-1",
+    "oysters-1", "scallops-1", "calamari-1", "swordfish-1", "shark-1", "king-mackerel-1",
+    
+    # Deli meats & processed meats - listeria concerns
+    "deli-meat-1", "hot-dogs-1", "bacon-1", "sausage-1", "pepperoni-1", "salami-1",
+    "ham-1", "pate-1", "smoked-salmon-1",
+    
+    # Cheese & dairy questions
+    "soft-cheese-1", "brie-1", "feta-1", "blue-cheese-1", "goat-cheese-1",
+    "cream-cheese-1", "ricotta-1", "cottage-cheese-1", "parmesan-1", "mozzarella-1",
+    
+    # Eggs - cooking concerns
+    "egg-1", "mayonnaise-1", "raw-eggs-1",
+    
+    # Beverages - caffeine, alcohol, herbal safety
+    "coffee-1", "tea-green-1", "tea-black-1", "tea-herbal-1", "alcohol-1", "wine-1",
+    "beer-1", "energy-drinks-1", "soda-1", "kombucha-1", "matcha-1",
+    
+    # Controversial/questioned foods
+    "pineapple-1", "papaya-1", "grapefruit-1", "licorice-1", "artificial-sweeteners-1",
+    
+    # Meat safety questions
+    "liver-1", "beef-rare-1", "raw-meat-1", "jerky-1", "game-meat-1",
+    
+    # Herbs and supplements
+    "ginger-1", "turmeric-1", "cinnamon-1", "basil-1", "oregano-1", "parsley-1",
+    
+    # Condiments and misc with questions
+    "soy-sauce-1", "fish-sauce-1", "vinegar-1", "wasabi-1", "mustard-1", "mayonnaise-1",
+    "honey-1", "raw-honey-1", "maple-syrup-1",
+    
+    # Sprouts and raw items
+    "sprouts-1", "bean-sprouts-1", "alfalfa-sprouts-1", "raw-salad-1",
+    
+    # Nuts with allergy concerns
+    "peanuts-1", "tree-nuts-1",
+    
+    # Soy products
+    "tofu-1", "tempeh-1", "edamame-1", "soy-milk-1",
+    
+    # Chocolate and sweets
+    "dark-chocolate-1", "chocolate-1",
+}
+
+def add_premium_field(food):
+    """Add is_premium field to food based on ID"""
+    food_copy = food.copy()
+    food_copy["is_premium"] = food["id"] in PREMIUM_FOOD_IDS
+    return food_copy
+
 # Enhanced Food Database with structured pregnancy content
 LOCAL_FOODS = [
     # ==================== FRUITS ====================
@@ -2139,6 +2194,7 @@ class FoodItem(BaseModel):
     preparation_tips: Optional[List[str]] = []
     precautions: Optional[List[str]] = []
     allergy_warning: Optional[str] = None
+    is_premium: Optional[bool] = False
 
 class FoodSearchResponse(BaseModel):
     foods: List[FoodItem]
@@ -2151,14 +2207,14 @@ def search_local_foods(query: str, page: int = 1, page_size: int = 250) -> FoodS
     query_lower = query.lower().strip() if query else ""
     
     if not query_lower:
-        foods = [FoodItem(**food) for food in LOCAL_FOODS]
+        foods = [FoodItem(**add_premium_field(food)) for food in LOCAL_FOODS]
     else:
         foods = []
         for food in LOCAL_FOODS:
             name = (food.get("name") or "").lower()
             category = (food.get("category") or "").lower()
             if query_lower in name or query_lower in category:
-                foods.append(FoodItem(**food))
+                foods.append(FoodItem(**add_premium_field(food)))
     
     total = len(foods)
     start = (page - 1) * page_size
@@ -2187,7 +2243,7 @@ async def get_all_foods(page: int = Query(1, ge=1), page_size: int = Query(250, 
 async def get_food_by_id(food_id: str):
     for food in LOCAL_FOODS:
         if food["id"] == food_id:
-            return FoodItem(**food)
+            return FoodItem(**add_premium_field(food))
     raise HTTPException(status_code=404, detail="Food item not found")
 
 @api_router.get("/categories")
