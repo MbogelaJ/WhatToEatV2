@@ -2289,3 +2289,251 @@ body {
   margin: 0;
 }
 
+/* ==================== PREMIUM PAGE V2 ==================== */
+
+.premium-page-v2 {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+}
+
+.premium-content-v2 {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.premium-header-v2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.premium-header-v2 h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+  line-height: 1.3;
+}
+
+.premium-tagline-v2 {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.premium-card-v2 {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+.premium-card-v2 h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+  text-align: center;
+}
+
+.premium-card-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0 0 1rem;
+}
+
+.premium-features-v2 {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.premium-features-v2 h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+}
+
+.premium-features-v2 ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.premium-features-v2 li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.premium-features-v2 li:last-child {
+  margin-bottom: 0;
+}
+
+.premium-features-v2 .check-icon {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.premium-price-card-v2 {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.25rem;
+}
+
+.price-amount-v2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.price-duration {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.25rem;
+}
+
+.price-terms {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.price-icon {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.premium-buy-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.premium-buy-btn:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.premium-free-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.premium-free-btn:hover {
+  color: var(--text-primary);
+}
+
+.premium-restore-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem;
+  background: transparent;
+  color: #10b981;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.premium-restore-btn:hover {
+  color: #059669;
+}
+
+/* Premium Active V2 */
+.premium-active-v2 {
+  text-align: center;
+  padding: 2rem 1rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.premium-active-v2 .premium-badge-large {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1rem;
+  background: linear-gradient(135deg, #d1fae5 0%, #10b981 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.premium-active-v2 h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #16a34a;
+  margin-bottom: 0.5rem;
+}
+
+.premium-active-v2 > p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.premium-active-v2 .premium-benefits-list {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.premium-active-v2 .benefit-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+.premium-back-btn {
+  padding: 0.875rem 1.5rem;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+

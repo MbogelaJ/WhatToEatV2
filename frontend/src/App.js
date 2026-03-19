@@ -1344,104 +1344,120 @@ const OnboardingPage = ({ page, onNext, onSkip }) => {
 // Premium Page Component
 const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
   return (
-    <div className="page-view premium-page" data-testid="premium-page">
-      <div className="page-header">
-        <button className="back-button" onClick={onBack} data-testid="premium-back-btn">
-          <ArrowLeft size={20} />
-          <span>Back</span>
-        </button>
-        <h2>Premium</h2>
-        <div style={{width: '80px'}}></div>
-      </div>
-
-      <div className="page-content premium-content">
-        {isPremium ? (
-          <div className="premium-active">
-            <div className="premium-badge-large">
-              <Crown size={48} />
+    <div className="premium-page-v2" data-testid="premium-page">
+      {isPremium ? (
+        <div className="premium-active-v2">
+          <div className="premium-badge-large">
+            <Crown size={48} />
+          </div>
+          <h1>You're Premium!</h1>
+          <p>Thank you for supporting WhatToEat. You have full access to all features.</p>
+          <div className="premium-benefits-list">
+            <div className="benefit-item active">
+              <Check size={20} />
+              <span>Curated food ideas for each trimester</span>
             </div>
-            <h1>You're Premium!</h1>
-            <p>Thank you for supporting WhatToEat. You have full access to all features.</p>
-            <div className="premium-benefits-list">
-              <div className="benefit-item active">
-                <Check size={20} />
-                <span>All 40+ expert-reviewed FAQ answers</span>
-              </div>
-              <div className="benefit-item active">
-                <Check size={20} />
-                <span>Detailed food safety guidelines</span>
-              </div>
-              <div className="benefit-item active">
-                <Check size={20} />
-                <span>Nutrition tips by trimester</span>
-              </div>
-              <div className="benefit-item active">
-                <Check size={20} />
-                <span>Ad-free experience</span>
-              </div>
+            <div className="benefit-item active">
+              <Check size={20} />
+              <span>Smart filter to browse foods by trimester stage</span>
+            </div>
+            <div className="benefit-item active">
+              <Check size={20} />
+              <span>Expanded food database with detailed nutritional notes</span>
+            </div>
+            <div className="benefit-item active">
+              <Check size={20} />
+              <span>Weekly pregnancy nutrition tip library</span>
+            </div>
+            <div className="benefit-item active">
+              <Check size={20} />
+              <span>Priority support</span>
             </div>
           </div>
-        ) : (
-          <>
-            <div className="premium-hero">
-              <div className="premium-icon-large">
-                <Sparkles size={48} />
-              </div>
-              <h1>Unlock Premium</h1>
-              <p className="premium-tagline">Get full access to all pregnancy nutrition answers</p>
+          <button className="premium-back-btn" onClick={onBack}>
+            Back to Home
+          </button>
+        </div>
+      ) : (
+        <div className="premium-content-v2">
+          {/* Header */}
+          <div className="premium-header-v2">
+            <h1>Expand Your Pregnancy Food Library</h1>
+            <p className="premium-tagline-v2">Access more educational food information from public health sources</p>
+          </div>
+
+          {/* Main Card */}
+          <div className="premium-card-v2">
+            <h2>Unlock Premium Pregnancy Nutrition</h2>
+            <p className="premium-card-subtitle">Expand your pregnancy nutrition reference library</p>
+
+            <div className="premium-features-v2">
+              <h3>Premium Features</h3>
+              <ul>
+                <li>
+                  <Check size={18} className="check-icon" />
+                  <span>Curated food ideas for each trimester (based on general public health guidelines)</span>
+                </li>
+                <li>
+                  <Check size={18} className="check-icon" />
+                  <span>Smart filter to browse foods by trimester stage</span>
+                </li>
+                <li>
+                  <Check size={18} className="check-icon" />
+                  <span>Expanded food database with detailed nutritional notes</span>
+                </li>
+                <li>
+                  <Check size={18} className="check-icon" />
+                  <span>Weekly pregnancy nutrition tip library</span>
+                </li>
+                <li>
+                  <Check size={18} className="check-icon" />
+                  <span>Priority support</span>
+                </li>
+              </ul>
             </div>
+          </div>
 
-            <div className="premium-price-card">
-              <div className="price-badge">One-Time Purchase</div>
-              <div className="price-amount">
-                <span className="currency">US$</span>
-                <span className="amount">1.99</span>
-              </div>
-              <p className="price-note">Pay once, access forever</p>
+          {/* Price Card */}
+          <div className="premium-price-card-v2">
+            <div className="price-info">
+              <span className="price-label">Premium Access</span>
+              <span className="price-amount-v2">$1.99</span>
+              <span className="price-duration">for your entire pregnancy</span>
+              <span className="price-terms">One-time purchase • 12 months access • No subscription</span>
             </div>
-
-            <div className="premium-benefits">
-              <h3>What you'll get:</h3>
-              <div className="benefits-grid">
-                <div className="benefit-card">
-                  <HelpCircle size={24} />
-                  <h4>40+ Expert Answers</h4>
-                  <p>Full answers to all pregnancy food questions</p>
-                </div>
-                <div className="benefit-card">
-                  <Shield size={24} />
-                  <h4>Safety Guidelines</h4>
-                  <p>Detailed food safety information</p>
-                </div>
-                <div className="benefit-card">
-                  <Lightbulb size={24} />
-                  <h4>Trimester Tips</h4>
-                  <p>Nutrition recommendations by stage</p>
-                </div>
-                <div className="benefit-card">
-                  <Star size={24} />
-                  <h4>Ad-Free</h4>
-                  <p>Clean, distraction-free experience</p>
-                </div>
-              </div>
+            <div className="price-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 2C9.5 2 7.5 4 7.5 6.5C7.5 9 9.5 11 12 11C14.5 11 16.5 9 16.5 6.5C16.5 4 14.5 2 12 2Z"/>
+                <path d="M12 11V22"/>
+                <path d="M8 15C6.5 15.5 5 17 5 19"/>
+                <path d="M16 15C17.5 15.5 19 17 19 19"/>
+              </svg>
             </div>
+          </div>
 
-            <button 
-              className="premium-purchase-btn"
-              onClick={onPurchase}
-              data-testid="premium-purchase-btn"
-            >
-              <Lock size={18} />
-              <span>Unlock Premium - US$1.99</span>
-            </button>
+          {/* Buttons */}
+          <button 
+            className="premium-buy-btn"
+            onClick={onPurchase}
+            data-testid="premium-purchase-btn"
+          >
+            Get Premium for $1.99
+          </button>
 
-            <p className="premium-guarantee">
-              <Shield size={14} />
-              Secure payment • Instant access • No subscription
-            </p>
-          </>
-        )}
-      </div>
+          <button className="premium-free-btn" onClick={onBack}>
+            Continue with Free Version
+          </button>
+
+          <button className="premium-restore-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M1 4v6h6"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+            <span>Restore Purchases</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -1646,22 +1662,11 @@ function App() {
   // Render Premium Page
   if (activeView === 'premium') {
     return (
-      <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
-            <div className="logo">
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-            </div>
-          </div>
-        </header>
-        <PremiumPage 
-          onBack={() => setActiveView('home')}
-          onPurchase={handlePremiumPurchase}
-          isPremium={isPremium}
-        />
-        <BottomNav activeView={activeView} onChangeView={setActiveView} />
-      </div>
+      <PremiumPage 
+        onBack={() => setActiveView('home')}
+        onPurchase={handlePremiumPurchase}
+        isPremium={isPremium}
+      />
     );
   }
 
