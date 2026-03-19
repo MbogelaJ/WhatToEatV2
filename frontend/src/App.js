@@ -1209,53 +1209,70 @@ const AboutView = ({ onBack }) => {
 
 // Disclaimer Page Component
 const DisclaimerPage = ({ onAccept }) => {
-  const [agreed, setAgreed] = useState(false);
-
   return (
-    <div className="onboarding-page disclaimer-page" data-testid="disclaimer-page">
-      <div className="onboarding-content">
-        <div className="disclaimer-icon">
-          <Shield size={48} />
+    <div className="onboarding-page disclaimer-page-v2" data-testid="disclaimer-page">
+      {/* Header */}
+      <div className="disclaimer-header">
+        <div className="disclaimer-logo">
+          <span>W</span>
         </div>
-        <h1>Disclaimer</h1>
-        <div className="disclaimer-text">
-          <p>
-            <strong>Important:</strong> WhatToEat is designed for educational and informational purposes only. 
-            The content provided in this app does not constitute medical advice, diagnosis, or treatment.
-          </p>
-          <p>
-            Every pregnancy is unique. The information in this app is compiled from reputable sources including 
-            the World Health Organization (WHO), CDC, ACOG, and FDA guidelines, but should not replace 
-            professional medical advice.
-          </p>
-          <p>
-            <strong>Always consult with your healthcare provider</strong> about your specific dietary needs, 
-            restrictions, and any concerns during pregnancy. What is safe for one person may not be appropriate 
-            for another based on individual health conditions.
-          </p>
-          <p>
-            By using this app, you acknowledge that you understand these limitations and will use the information 
-            as a general guide only.
-          </p>
+        <h1>WhatToEat</h1>
+        <p className="disclaimer-subtitle">Pregnancy Nutrition Guide</p>
+        <div className="progress-dots">
+          <span className="dot active"></span>
+          <span className="dot"></span>
+          <span className="dot"></span>
+          <span className="dot"></span>
         </div>
-        <label className="disclaimer-checkbox">
-          <input 
-            type="checkbox" 
-            checked={agreed} 
-            onChange={(e) => setAgreed(e.target.checked)}
-            data-testid="disclaimer-checkbox"
-          />
-          <span>I understand and agree to these terms</span>
-        </label>
-        <button 
-          className={`onboarding-btn primary ${!agreed ? 'disabled' : ''}`}
-          onClick={onAccept}
-          disabled={!agreed}
-          data-testid="disclaimer-accept-btn"
-        >
-          Continue
-        </button>
       </div>
+
+      {/* Content Card */}
+      <div className="disclaimer-card">
+        <div className="disclaimer-card-header">
+          <div className="notice-icon">
+            <Shield size={24} />
+          </div>
+          <div>
+            <h2>Important Notice</h2>
+            <p>Please read before continuing</p>
+          </div>
+        </div>
+
+        <div className="disclaimer-points">
+          <div className="disclaimer-point">
+            <AlertTriangle size={20} className="point-icon" />
+            <p>This app provides <strong>general educational information</strong> about nutrition during pregnancy compiled from public health sources.</p>
+          </div>
+          <div className="disclaimer-point">
+            <AlertTriangle size={20} className="point-icon" />
+            <p>This is <strong>not medical advice</strong>. It does not replace consultation with qualified healthcare professionals.</p>
+          </div>
+          <div className="disclaimer-point">
+            <AlertTriangle size={20} className="point-icon" />
+            <p>Individual circumstances vary. Please consult your healthcare provider for personalized guidance about your diet and nutrition.</p>
+          </div>
+          <div className="disclaimer-point">
+            <AlertTriangle size={20} className="point-icon" />
+            <p>If you experience any concerning symptoms, <strong>seek medical attention immediately</strong>. Do not rely on this app for medical decisions.</p>
+          </div>
+        </div>
+
+        <div className="disclaimer-agreement">
+          <p>By continuing, you acknowledge that you have read and understood this disclaimer, and agree that this app is for educational purposes only.</p>
+        </div>
+
+        <p className="disclaimer-copyright">© PenX Technologies</p>
+      </div>
+
+      {/* Button */}
+      <button 
+        className="disclaimer-btn"
+        onClick={onAccept}
+        data-testid="disclaimer-accept-btn"
+      >
+        <span>I Understand</span>
+        <ChevronRight size={20} />
+      </button>
     </div>
   );
 };
