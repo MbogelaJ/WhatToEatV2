@@ -58,3 +58,16 @@ dependencies {
 }
 
 apply from: 'capacitor.build.gradle'
+
+// CRITICAL FIX: Enforce Java 17 at compiler task level
+tasks.withType(JavaCompile).configureEach {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+}
+
+// Ensure Kotlin uses Java 17
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
