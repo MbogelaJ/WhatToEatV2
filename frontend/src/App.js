@@ -161,7 +161,7 @@ const DAILY_TIPS = [
 const SAFETY_CONFIG = {
   SAFE: { color: '#16a34a', bgColor: 'rgba(34, 197, 94, 0.1)', label: 'Generally Safe' },
   LIMIT: { color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.1)', label: 'Limit Intake' },
-  AVOID: { color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.1)', label: 'Avoid' },
+  AVOID: { color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.1)', label: 'Best Avoided' },
 };
 
 // Dietary restrictions options
@@ -2379,6 +2379,9 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* Daily Tip */}
+        <DailyTip />
 
         {/* Search Bar - Hidden per screenshot, but keeping functionality */}
         {searchQuery && (
