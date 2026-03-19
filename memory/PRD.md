@@ -109,8 +109,11 @@ Matching user's design requirements:
 - [x] Implemented light theme UI
 - [x] Expanded database from 40 to 235 foods (March 2026)
 - [x] Implemented FAQ page with 8 common pregnancy nutrition questions
-- [x] Expanded FAQ to 39 questions with category filters and food-specific tags
+- [x] Expanded FAQ to 40+ questions with category filters and food-specific tags
+- [x] Added premium FAQ feature with lock icons (3 free sample questions, rest require subscription)
+- [x] Added premium modal with subscription options ($4.99/month or $29.99/year)
 - [x] Added related FAQs to food detail modals (e.g., Salmon shows sushi, mercury, omega-3 FAQs)
+- [x] Added disclaimer banner about educational content
 - [x] Implemented Topics page with 6 educational categories
 - [x] Implemented About page with features, data sources, medical disclaimer, and privacy info
 

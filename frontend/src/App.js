@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User } from "lucide-react";
+import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -27,305 +27,316 @@ const DIETARY_RESTRICTIONS = [
   { id: 'diabetic-friendly', label: 'Diabetic Friendly', description: 'Low sugar options' },
 ];
 
-// Comprehensive FAQ data with food tags
+// Comprehensive FAQ data with food tags and premium status
 const ALL_FAQS = [
-  // General FAQs
+  // ==================== FREE QUESTIONS (Sample answers available) ====================
   {
-    id: 'medical-advice',
-    question: "Is this app a replacement for medical advice?",
-    answer: "No. WhatToEat provides general educational information about food safety during pregnancy. Always consult your healthcare provider, OB-GYN, or registered dietitian for personalized medical advice.",
-    category: 'general',
-    foodTags: []
-  },
-  {
-    id: 'safety-categories',
-    question: "How are foods categorized as Safe, Limit, or Avoid?",
-    answer: "Our classifications are based on guidelines from major health organizations including ACOG (American College of Obstetricians and Gynecologists), FDA, and CDC. Foods marked 'Safe' are generally considered low-risk when properly prepared. 'Limit' foods should be consumed in moderation. 'Avoid' foods carry higher risks during pregnancy.",
-    category: 'general',
-    foodTags: []
-  },
-  {
-    id: 'dietary-restrictions',
-    question: "What does the dietary restrictions feature do?",
-    answer: "When you set dietary restrictions in Settings, the app will show you personalized alerts on foods that may not be suitable for your dietary needs, in addition to the standard pregnancy safety information.",
-    category: 'general',
-    foodTags: []
-  },
-
-  // Seafood & Fish FAQs
-  {
-    id: 'sushi-safety',
-    question: "Can I eat sushi during pregnancy?",
-    answer: "Raw fish sushi should be avoided during pregnancy due to risk of parasites and bacteria. However, cooked sushi rolls (like shrimp tempura, eel, or fully cooked fish) and vegetable rolls are generally safe options. Many sushi restaurants offer pregnancy-safe options - just ask!",
+    id: 'salmon-safe',
+    question: "Is salmon safe during pregnancy?",
+    answer: "Yes! Salmon is one of the best fish choices during pregnancy. It's low in mercury and high in omega-3 fatty acids (DHA and EPA) which are crucial for baby's brain and eye development. Aim for 2-3 servings per week. Always cook to 145°F/63°C - no raw salmon or sushi during pregnancy.",
     category: 'seafood',
-    foodTags: ['salmon', 'tuna', 'shrimp', 'sushi']
+    foodTags: ['salmon'],
+    isPremium: false
   },
   {
-    id: 'mercury-fish',
-    question: "How do I know if fish is low in mercury?",
-    answer: "Low-mercury fish include salmon, tilapia, cod, shrimp, sardines, anchovies, and trout. High-mercury fish to AVOID include shark, swordfish, king mackerel, tilefish, and bigeye tuna. The FDA recommends 2-3 servings of low-mercury fish per week during pregnancy for omega-3 benefits.",
-    category: 'seafood',
-    foodTags: ['salmon', 'tuna', 'cod', 'tilapia', 'shrimp', 'sardines', 'trout', 'swordfish', 'shark', 'mackerel']
-  },
-  {
-    id: 'smoked-salmon',
-    question: "Is smoked salmon safe during pregnancy?",
-    answer: "Cold-smoked salmon (lox) carries a risk of Listeria and should be avoided unless heated to steaming hot. Hot-smoked salmon that's been cooked to 145°F is safe. Canned salmon is also a safe option as it's been heat-processed.",
-    category: 'seafood',
-    foodTags: ['salmon']
-  },
-  {
-    id: 'shellfish-pregnancy',
-    question: "Can I eat shellfish during pregnancy?",
-    answer: "Yes, shellfish like shrimp, crab, lobster, and scallops are safe and nutritious during pregnancy when thoroughly cooked. They're low in mercury and high in protein. Avoid raw shellfish like raw oysters. Cook shellfish until the flesh is opaque and shells open.",
-    category: 'seafood',
-    foodTags: ['shrimp', 'crab', 'lobster', 'scallops', 'oysters', 'mussels', 'clams']
-  },
-  {
-    id: 'canned-tuna',
-    question: "How much canned tuna can I eat during pregnancy?",
-    answer: "Light canned tuna (skipjack) is lower in mercury - you can have 2-3 servings per week. Albacore (white) tuna has more mercury - limit to 1 serving per week. Avoid bigeye tuna entirely. One serving is about 4 ounces (113g).",
-    category: 'seafood',
-    foodTags: ['tuna']
-  },
-
-  // Dairy FAQs
-  {
-    id: 'cheese-safety',
-    question: "Why should I avoid certain cheeses?",
-    answer: "Soft cheeses made from unpasteurized milk may contain Listeria bacteria, which can cause serious complications during pregnancy. SAFE cheeses include: hard cheeses (cheddar, parmesan, swiss), pasteurized soft cheeses, and any cheese cooked until steaming. AVOID: unpasteurized feta, brie, camembert, blue cheese, and queso fresco unless labeled pasteurized.",
-    category: 'dairy',
-    foodTags: ['cheese', 'feta', 'mozzarella', 'parmesan', 'ricotta', 'cream-cheese', 'goat-cheese']
-  },
-  {
-    id: 'pasteurized-dairy',
-    question: "What does pasteurized mean and why does it matter?",
-    answer: "Pasteurization is a heat treatment that kills harmful bacteria like Listeria, Salmonella, and E. coli. During pregnancy, your immune system is suppressed, making you more susceptible to foodborne illness. Always check labels for 'pasteurized' on milk, cheese, and juice products.",
-    category: 'dairy',
-    foodTags: ['milk', 'yogurt', 'cheese', 'butter', 'cream-cheese', 'ricotta']
-  },
-  {
-    id: 'yogurt-pregnancy',
+    id: 'yogurt-safe',
     question: "Is yogurt safe during pregnancy?",
-    answer: "Yes! Pasteurized yogurt is excellent during pregnancy. It provides calcium, protein, and probiotics for gut health. Greek yogurt has even more protein. Choose plain varieties and add your own fruit to avoid excess sugar. Avoid unpasteurized or raw milk yogurts.",
+    answer: "Yes! Pasteurized yogurt is excellent during pregnancy. It provides calcium, protein, and probiotics for gut health. Greek yogurt has even more protein. Choose plain varieties and add your own fruit to avoid excess sugar. Always check that it's made from pasteurized milk.",
     category: 'dairy',
-    foodTags: ['yogurt']
+    foodTags: ['yogurt'],
+    isPremium: false
+  },
+  {
+    id: 'shrimp-safe',
+    question: "Is shrimp safe during pregnancy?",
+    answer: "Yes! Shrimp is safe and nutritious during pregnancy when thoroughly cooked. It's low in mercury, high in protein, and provides iodine for thyroid health. Cook until pink and opaque. Avoid raw shrimp, shrimp cocktail with raw shrimp, or ceviche.",
+    category: 'seafood',
+    foodTags: ['shrimp'],
+    isPremium: false
   },
 
-  // Caffeine FAQs
+  // ==================== PREMIUM QUESTIONS (Locked) ====================
+  // Top Questions
+  {
+    id: 'foods-avoid-completely',
+    question: "What foods should I avoid completely during pregnancy?",
+    answer: "AVOID COMPLETELY: 1) Raw/undercooked meat, poultry, eggs, and seafood. 2) High-mercury fish: shark, swordfish, king mackerel, tilefish, bigeye tuna. 3) Unpasteurized dairy products and juices. 4) Raw sprouts (alfalfa, clover, mung bean). 5) Deli meats and hot dogs unless heated to steaming. 6) Refrigerated smoked seafood (lox) unless cooked. 7) Alcohol - no safe amount. 8) Raw cookie dough/batter. 9) Soft cheeses from unpasteurized milk. These foods carry risks of Listeria, Salmonella, Toxoplasma, or mercury exposure which can harm your baby.",
+    category: 'safety',
+    foodTags: [],
+    isPremium: true
+  },
+  {
+    id: 'deli-meat-safety',
+    question: "Can I eat deli meats, hot dogs, or cold cuts?",
+    answer: "Deli meats, hot dogs, and cold cuts can harbor Listeria bacteria which is dangerous during pregnancy. TO EAT SAFELY: Heat deli meats and hot dogs until steaming hot (165°F/74°C) before eating. This kills any potential Listeria. AVOID: Cold deli sandwiches, unheated hot dogs, bologna, salami eaten cold. SAFER OPTIONS: Freshly cooked meat sliced at home, or heated deli meat in hot sandwiches. Listeria can grow even at refrigerator temperatures, making these foods higher risk.",
+    category: 'proteins',
+    foodTags: ['deli', 'hot-dogs'],
+    isPremium: true
+  },
+  {
+    id: 'soft-cheese-brie',
+    question: "Can I eat soft cheeses like brie, feta, or blue cheese?",
+    answer: "SAFE: Soft cheeses made from PASTEURIZED milk (check the label). In the US, most commercial brie, feta, and blue cheese are pasteurized. AVOID: Unpasteurized or raw milk soft cheeses, often found at farmers markets or imported. Mold-ripened cheeses (brie, camembert) and blue-veined cheeses from unpasteurized milk carry Listeria risk. ALWAYS SAFE: Hard cheeses (cheddar, parmesan, swiss) regardless of pasteurization, as their low moisture prevents bacterial growth. When in doubt, heat cheese until bubbling hot.",
+    category: 'dairy',
+    foodTags: ['cheese', 'brie', 'feta', 'blue-cheese'],
+    isPremium: true
+  },
+  {
+    id: 'fish-seafood-guide',
+    question: "What fish and seafood can I eat, and how much?",
+    answer: "EAT 8-12 oz (2-3 servings) per week of LOW-MERCURY fish: salmon, shrimp, pollock, tilapia, cod, catfish, sardines, anchovies, trout. LIMIT: Albacore tuna to 6 oz/week (higher mercury than light tuna). AVOID COMPLETELY: Shark, swordfish, king mackerel, tilefish, bigeye tuna - these have dangerous mercury levels. All fish must be cooked to 145°F. No raw fish, sushi, sashimi, or ceviche. Mercury accumulates and can harm baby's developing brain and nervous system. Omega-3s from safe fish are crucial for baby's development.",
+    category: 'seafood',
+    foodTags: ['fish', 'salmon', 'tuna', 'shrimp'],
+    isPremium: true
+  },
+  {
+    id: 'raw-eggs-safety',
+    question: "Are raw eggs or foods with raw eggs safe?",
+    answer: "NO - avoid raw or undercooked eggs due to Salmonella risk. AVOID: Runny yolks, sunny-side up, soft-boiled eggs, raw cookie dough/cake batter, homemade mayonnaise, homemade Caesar dressing, homemade eggnog, mousse, tiramisu. SAFE: Fully cooked eggs (firm whites AND yolks), commercial mayonnaise (made with pasteurized eggs), store-bought Caesar dressing, pasteurized egg products. EXCEPTION: Pasteurized eggs (sold in cartons) are safe for recipes requiring less cooking. Cook eggs to 160°F/71°C to be safe.",
+    category: 'proteins',
+    foodTags: ['eggs'],
+    isPremium: true
+  },
   {
     id: 'caffeine-limit',
     question: "How much caffeine is safe during pregnancy?",
-    answer: "Most health organizations recommend limiting caffeine to 200mg per day during pregnancy. This equals about: one 12oz coffee (95-200mg), two 8oz cups of black tea (47mg each), or four 12oz colas (34mg each). Remember caffeine is also in chocolate, energy drinks, and some medications.",
+    answer: "Limit caffeine to 200mg per day maximum. APPROXIMATE AMOUNTS: 12 oz brewed coffee = 95-200mg, 12 oz black tea = 47mg, 12 oz green tea = 30-50mg, 12 oz cola = 34mg, 1 oz dark chocolate = 20mg. High caffeine intake is linked to increased miscarriage risk and low birth weight. Remember caffeine is also in energy drinks, some medications, and chocolate. Decaf coffee still has 2-15mg. SAFEST: Limit to 1 cup of coffee daily and count other caffeine sources. If you're having difficulty conceiving or have history of miscarriage, consider avoiding caffeine entirely.",
     category: 'beverages',
-    foodTags: ['coffee', 'tea', 'green-tea', 'chocolate', 'dark-chocolate']
+    foodTags: ['coffee', 'tea', 'chocolate'],
+    isPremium: true
   },
   {
-    id: 'decaf-coffee',
-    question: "Is decaf coffee completely caffeine-free?",
-    answer: "No, decaf coffee still contains 2-15mg of caffeine per cup. It's a good option to reduce intake but shouldn't be considered caffeine-free. Herbal teas (like rooibos or peppermint) are truly caffeine-free alternatives.",
+    id: 'alcohol-pregnancy',
+    question: "Can I drink any alcohol during pregnancy?",
+    answer: "NO SAFE AMOUNT of alcohol has been established during pregnancy. Complete avoidance is recommended by all major health organizations (CDC, ACOG, WHO). Alcohol crosses the placenta directly to baby and can cause Fetal Alcohol Spectrum Disorders (FASD), leading to physical abnormalities, learning disabilities, and behavioral problems. This includes beer, wine, and spirits - no type is safer. If you drank before knowing you were pregnant, stop now and talk to your healthcare provider. Cooking with wine: most alcohol cooks off if simmered 2+ hours, but avoid wine sauces with less cooking time.",
     category: 'beverages',
-    foodTags: ['coffee']
+    foodTags: ['alcohol', 'wine', 'beer'],
+    isPremium: true
+  },
+  {
+    id: 'unpasteurized-juice-milk',
+    question: "Is unpasteurized juice, cider, or raw milk safe?",
+    answer: "NO - avoid all unpasteurized/raw products. This includes: raw milk, raw milk cheese, fresh-squeezed unpasteurized juice, fresh cider from farm stands. These can contain dangerous bacteria including Listeria, Salmonella, and E. coli. ALWAYS CHOOSE: Pasteurized milk and dairy, pasteurized 100% juice (check labels), commercially bottled juice. If you're unsure about cider or juice freshness, boil it first. Farmers market products are higher risk unless specifically labeled pasteurized. Pasteurization kills harmful bacteria without significantly affecting nutrition.",
+    category: 'dairy',
+    foodTags: ['milk', 'juice', 'cider'],
+    isPremium: true
+  },
+  {
+    id: 'washing-produce-sprouts',
+    question: "How should I wash produce, and are raw sprouts safe?",
+    answer: "WASHING PRODUCE: Rinse all fruits and vegetables under running water, even if you'll peel them (bacteria transfers when cutting). Use a brush for firm produce like melons and potatoes. Don't use soap or commercial produce washes - they're not more effective. Cut away damaged areas. Wash prepackaged salads again. RAW SPROUTS: AVOID COMPLETELY during pregnancy. All raw sprouts (alfalfa, clover, radish, mung bean) are grown in warm, humid conditions where bacteria thrive. Even 'clean' looking sprouts can harbor Salmonella or E. coli. Only eat sprouts if thoroughly cooked until steaming.",
+    category: 'produce',
+    foodTags: ['sprouts', 'vegetables'],
+    isPremium: true
+  },
+  {
+    id: 'eating-for-two-myth',
+    question: "How many extra calories do I need? Am I 'eating for two'?",
+    answer: "MYTH BUSTED: You're not eating for two adults! ACTUAL NEEDS: First trimester - no extra calories needed. Second trimester - about 340 extra calories/day. Third trimester - about 450 extra calories/day. That's roughly equivalent to a yogurt parfait with fruit and granola - not double portions! FOCUS ON: Quality over quantity. Nutrient-dense foods, adequate protein (75-100g daily), iron, folate, calcium, omega-3s. WEIGHT GAIN GUIDELINES (varies by pre-pregnancy BMI): Underweight 28-40 lbs, Normal weight 25-35 lbs, Overweight 15-25 lbs, Obese 11-20 lbs. Consult your provider for personalized guidance.",
+    category: 'nutrition',
+    foodTags: [],
+    isPremium: true
+  },
+  {
+    id: 'liver-vitamin-a',
+    question: "Is liver or high-vitamin-A foods safe?",
+    answer: "LIMIT liver during pregnancy. Liver is extremely high in retinol (preformed vitamin A). Too much retinol can cause birth defects, especially in the first trimester. RECOMMENDATIONS: Avoid liver pâté entirely. If eating liver, limit to very small portions (1-2 oz) no more than once a month. Avoid vitamin A supplements (retinol form). SAFE: Beta-carotene from plants (carrots, sweet potatoes) - your body converts only what it needs. Prenatal vitamins with vitamin A as beta-carotene, not retinol. Check supplement labels carefully.",
+    category: 'proteins',
+    foodTags: ['liver'],
+    isPremium: true
+  },
+  {
+    id: 'food-handling-safety',
+    question: "What about eating out, buffets, and food handling safety?",
+    answer: "EATING OUT: Choose restaurants with good hygiene ratings. Avoid rare/medium meat - request well-done. Skip raw bars, sushi restaurants (unless cooked options), and soft-serve ice cream machines. BUFFETS: Higher risk - food may sit at unsafe temperatures. If eating buffet, choose freshly replenished hot items. LEFTOVERS: Refrigerate within 2 hours. Eat within 2-3 days (not 4-5). Reheat to 165°F/74°C until steaming. FOOD HANDLING: Follow 'Clean, Separate, Cook, Chill.' Wash hands often, separate raw meat from other foods, cook to safe temps, refrigerate promptly. Avoid pre-cut melons left out, food from dented cans.",
+    category: 'safety',
+    foodTags: [],
+    isPremium: true
+  },
+  {
+    id: 'sushi-sashimi-ceviche',
+    question: "Can I eat sushi, sashimi, ceviche, or raw shellfish?",
+    answer: "AVOID all raw and undercooked seafood during pregnancy. This includes: sushi with raw fish, sashimi, raw oysters, raw clams, ceviche (acid doesn't kill parasites), poke bowls with raw fish, tartare. RISKS: Parasites, Vibrio, Listeria, and other bacteria that can cause serious illness in pregnancy. SAFE ALTERNATIVES: Cooked sushi rolls (shrimp tempura, eel, cooked crab), vegetable rolls, fully cooked poke bowls. Many sushi restaurants offer 'pregnancy-safe' options - just ask! All fish should be cooked to 145°F/63°C internal temperature.",
+    category: 'seafood',
+    foodTags: ['sushi', 'fish'],
+    isPremium: true
+  },
+  {
+    id: 'smoked-salmon-lox',
+    question: "Can I eat smoked salmon, lox, or smoked seafood?",
+    answer: "REFRIGERATED smoked seafood (lox, nova-style salmon, kippered fish, smoked trout) should be AVOIDED unless cooked into a dish to 165°F. It can contain Listeria which grows even at refrigerator temperatures. SAFE OPTIONS: Canned or shelf-stable smoked fish (heat-processed). Smoked salmon cooked in a hot dish (casserole, quiche, hot bagel with melted cream cheese and heated lox). Hot-smoked fish that reached 145°F during smoking process. When in doubt, heat smoked fish until steaming before eating.",
+    category: 'seafood',
+    foodTags: ['salmon', 'smoked-fish'],
+    isPremium: true
+  },
+  {
+    id: 'nuts-seeds-safety',
+    question: "Are nuts and seeds safe during pregnancy?",
+    answer: "YES! Nuts and seeds are excellent during pregnancy - rich in healthy fats, protein, fiber, and minerals. SAFE OPTIONS: Almonds, walnuts, cashews, peanuts, sunflower seeds, pumpkin seeds, chia seeds, flax seeds (ground). EXCEPTION: Brazil nuts - limit to 1-2 per day due to very high selenium content. ALLERGY NOTE: Current research suggests eating nuts during pregnancy does NOT increase baby's allergy risk and may actually help prevent allergies. Avoid if YOU have a nut allergy. Choose unsalted when possible to limit sodium.",
+    category: 'nuts',
+    foodTags: ['nuts', 'seeds', 'almonds', 'peanuts'],
+    isPremium: true
+  },
+  {
+    id: 'premade-deli-salads',
+    question: "Are premade deli salads safe (tuna, egg, chicken salad)?",
+    answer: "HIGHER RISK - best to avoid or make fresh at home. Store-made deli salads (tuna salad, egg salad, chicken salad, potato salad) have higher Listeria risk due to: handling by multiple people, time sitting at deli counter, mayo-based mixture at variable temperatures. SAFER OPTIONS: Make your own at home with fresh ingredients. If buying premade, choose sealed packages with clear dates, eat immediately, and ensure it's been properly refrigerated. Avoid deli salads from salad bars or that have been sitting out.",
+    category: 'safety',
+    foodTags: ['tuna', 'chicken', 'eggs'],
+    isPremium: true
+  },
+  {
+    id: 'important-nutrients',
+    question: "What nutrients are most important during pregnancy?",
+    answer: "KEY NUTRIENTS: 1) FOLIC ACID (400-800mcg) - prevents neural tube defects; leafy greens, fortified cereals, prenatal vitamin. 2) IRON (27mg) - prevents anemia, supports blood volume; red meat, spinach, beans, fortified cereals. 3) CALCIUM (1000mg) - builds baby's bones; dairy, fortified plant milk, leafy greens. 4) DHA/OMEGA-3 (200-300mg) - brain development; fatty fish, fish oil, algae supplements. 5) PROTEIN (75-100g) - tissue growth; meat, eggs, dairy, legumes. 6) VITAMIN D (600IU) - calcium absorption; sunlight, fortified foods, supplements. 7) CHOLINE (450mg) - brain development; eggs, liver, soybeans. Take prenatal vitamins to cover gaps.",
+    category: 'nutrition',
+    foodTags: [],
+    isPremium: true
+  },
+  {
+    id: 'pregnancy-cravings',
+    question: "What do pregnancy cravings mean?",
+    answer: "Cravings are extremely common - up to 90% of pregnant women experience them. COMMON CRAVINGS: Sweet foods, salty/savory foods, sour/citrus, spicy foods, specific textures. WHAT THEY MAY MEAN: Often hormone-driven rather than nutrient deficiency. Some theories: craving dairy = calcium need, craving red meat = iron need. But there's limited scientific evidence for this. ICE CRAVINGS (pica): May indicate iron deficiency - tell your provider. MANAGING CRAVINGS: Indulge in moderation when cravings are for safe foods. Find healthier alternatives when possible. If craving non-food items (dirt, clay), talk to your doctor immediately.",
+    category: 'general',
+    foodTags: [],
+    isPremium: true
+  },
+  {
+    id: 'seafood-benefits',
+    question: "Should I avoid all seafood, or is some beneficial?",
+    answer: "DON'T avoid all seafood - low-mercury fish is HIGHLY BENEFICIAL! Omega-3 fatty acids (DHA, EPA) from fish are crucial for baby's brain and eye development. Studies show babies of mothers who ate fish have better developmental outcomes. EAT 8-12 oz weekly of: salmon, sardines, anchovies, herring, trout, shrimp, tilapia, cod, pollock. AVOID: High-mercury fish (shark, swordfish, king mackerel, tilefish, bigeye tuna) and all raw fish. If you don't eat fish, consider a DHA supplement from fish oil or algae. The benefits of low-mercury fish far outweigh the risks.",
+    category: 'seafood',
+    foodTags: ['fish', 'salmon'],
+    isPremium: true
+  },
+  {
+    id: 'spicy-food-pregnancy',
+    question: "Can I eat spicy food during pregnancy?",
+    answer: "YES - spicy food is safe during pregnancy and won't harm your baby. However, it may worsen common pregnancy symptoms: HEARTBURN: Spicy foods can trigger or worsen acid reflux, which is already common in pregnancy. DIGESTIVE DISCOMFORT: May cause stomach upset or diarrhea in some. If you tolerated spicy food before pregnancy and still enjoy it, continue eating it. TIPS: Have smaller portions of spicy food. Avoid lying down right after eating spicy meals. Keep antacids handy. Spicy food does NOT induce labor (despite the old wives' tale) and does NOT affect baby's temperament.",
+    category: 'general',
+    foodTags: ['spicy'],
+    isPremium: true
+  },
+  {
+    id: 'herbal-tea-supplements',
+    question: "Are herbal teas and supplements safe during pregnancy?",
+    answer: "SOME are safe, others should be avoided. GENERALLY SAFE: Ginger tea (great for nausea - limit to 1g dried ginger daily), peppermint, rooibos, lemon balm in moderation. USE WITH CAUTION: Chamomile (limit 1-2 cups daily), raspberry leaf (usually only in third trimester). AVOID: Licorice root, dong quai, pennyroyal, blue/black cohosh, St. John's wort, ginseng, comfrey, ephedra, kava. SUPPLEMENTS: Only take supplements approved by your provider. Avoid herbal weight loss or cleansing products. Prenatal vitamins are safe and recommended. 'Natural' doesn't mean safe during pregnancy.",
+    category: 'beverages',
+    foodTags: ['tea', 'ginger'],
+    isPremium: true
+  },
+  {
+    id: 'fast-food-processed',
+    question: "Is fast food or processed food safe during pregnancy?",
+    answer: "OCCASIONAL fast food and processed food is okay, but limit it. CONCERNS: High sodium can worsen pregnancy swelling and blood pressure. High saturated fat doesn't support optimal health. Empty calories without nutrients baby needs. Hidden ingredients (MSG, excess sugar). BETTER CHOICES: Grilled options over fried. Skip raw salads at fast food (contamination risk). Choose restaurants with visible kitchen/hygiene. Avoid soft-serve ice cream machines (bacterial growth risk). BALANCE: If eating fast food, balance with nutrient-dense foods rest of day. Meal prep when possible for healthier convenient options.",
+    category: 'general',
+    foodTags: [],
+    isPremium: true
+  },
+  {
+    id: 'prenatal-vitamins',
+    question: "Do I need prenatal vitamins, and when should I start?",
+    answer: "YES - prenatal vitamins are strongly recommended. START: Ideally 1-3 months before conception, but start as soon as you know you're pregnant. KEY NUTRIENTS IN PRENATALS: Folic acid (400-800mcg) - critical for preventing neural tube defects in first 28 days. Iron - prevents anemia. Calcium - bones. DHA - brain development. Vitamin D, B vitamins, iodine. FOOD ISN'T ENOUGH: Even with perfect diet, it's hard to get adequate folic acid and iron. Prenatal vitamins are an insurance policy. TIPS: Take with food if nauseous. If you can't tolerate pills, try gummies (check they contain iron). Continue through breastfeeding.",
+    category: 'nutrition',
+    foodTags: [],
+    isPremium: true
+  },
+  {
+    id: 'foods-for-symptoms',
+    question: "What foods help with nausea, constipation, or anemia?",
+    answer: "FOR NAUSEA: Ginger (tea, candies, ale), plain crackers before rising, cold foods (less smell), small frequent meals, lemon/citrus, bland foods (BRAT: bananas, rice, applesauce, toast), protein snacks. FOR CONSTIPATION: High-fiber foods (fruits, vegetables, whole grains, beans), prunes/prune juice (natural laxative), plenty of water, physical activity. FOR ANEMIA: Iron-rich foods - red meat (best absorbed), spinach, lentils, fortified cereals, beans. Pair plant iron with vitamin C for absorption. Avoid calcium/coffee/tea with iron-rich meals. Your provider may recommend iron supplements.",
+    category: 'nutrition',
+    foodTags: ['ginger', 'fiber'],
+    isPremium: true
+  },
+  {
+    id: 'miscarriage-foods',
+    question: "Can certain foods cause miscarriage or preterm birth?",
+    answer: "HIGH-RISK FOODS TO AVOID: 1) Alcohol - linked to miscarriage, stillbirth, FASD. 2) High-mercury fish - can affect fetal brain development. 3) Listeria sources (deli meat, unpasteurized products) - can cause miscarriage, stillbirth, severe illness. 4) Raw/undercooked foods - infection risk. LESS CLEAR EVIDENCE: Very high caffeine (>300mg) may increase miscarriage risk. Pineapple, papaya, spicy food - myths with no solid evidence when eaten in normal amounts. IMPORTANT: Most miscarriages are due to chromosomal abnormalities, not food. Focus on avoiding clearly risky foods and eating a balanced diet. Talk to your provider about specific concerns.",
+    category: 'safety',
+    foodTags: [],
+    isPremium: true
+  },
+  // Additional specific food questions
+  {
+    id: 'sushi-pregnancy',
+    question: "Can I eat sushi while pregnant?",
+    answer: "Raw fish sushi should be avoided during pregnancy due to risk of parasites and bacteria. However, cooked sushi rolls (like shrimp tempura, eel, or fully cooked fish) and vegetable rolls are generally safe options. Many sushi restaurants offer pregnancy-safe options - just ask!",
+    category: 'seafood',
+    foodTags: ['sushi', 'salmon', 'tuna', 'shrimp'],
+    isPremium: true
+  },
+  {
+    id: 'tuna-pregnancy',
+    question: "Can I eat tuna while pregnant?",
+    answer: "Light canned tuna (skipjack) is lower in mercury - you can have 2-3 servings per week. Albacore (white) tuna has more mercury - limit to 1 serving per week. Avoid bigeye tuna entirely. One serving is about 4 ounces (113g). Always choose cooked tuna, never raw.",
+    category: 'seafood',
+    foodTags: ['tuna'],
+    isPremium: true
+  },
+  {
+    id: 'rare-steak',
+    question: "Can I eat rare steak while pregnant?",
+    answer: "NO - all beef should be cooked to at least 145°F (63°C) with a 3-minute rest time during pregnancy. Medium-rare and rare steaks may contain harmful bacteria like Toxoplasma and E. coli. Order steaks medium-well or well-done. Use a meat thermometer to check. Ground beef should reach 160°F.",
+    category: 'proteins',
+    foodTags: ['beef', 'steak'],
+    isPremium: true
+  },
+  {
+    id: 'coffee-pregnancy',
+    question: "Can I drink coffee while pregnant?",
+    answer: "Yes, in moderation. Limit caffeine to 200mg per day - about one 12oz cup of brewed coffee. High caffeine intake is linked to increased miscarriage risk. Count caffeine from all sources including tea, cola, and chocolate. Consider switching to half-caff or decaf. Some women are more sensitive to caffeine during pregnancy.",
+    category: 'beverages',
+    foodTags: ['coffee'],
+    isPremium: true
   },
   {
     id: 'herbal-tea-safety',
-    question: "Which herbal teas are safe during pregnancy?",
-    answer: "SAFE: Ginger tea (great for nausea), peppermint, rooibos, and lemon balm in moderation. LIMIT: Chamomile (1-2 cups daily). AVOID: Licorice root, dong quai, pennyroyal, blue/black cohosh, and excessive amounts of any single herb. Always check with your provider about specific herbal teas.",
+    question: "Can I drink herbal tea while pregnant?",
+    answer: "SAFE in moderation: Ginger (great for nausea), peppermint, rooibos, lemon balm. LIMIT: Chamomile to 1-2 cups daily. AVOID: Licorice root, dong quai, pennyroyal, blue/black cohosh, excessive amounts of any single herb. Herbal teas are unregulated - choose reputable brands. Always check with your provider about specific herbal teas.",
     category: 'beverages',
-    foodTags: ['tea', 'ginger-tea', 'peppermint-tea', 'chamomile-tea', 'rooibos-tea']
-  },
-
-  // Meat & Eggs FAQs
-  {
-    id: 'meat-cooking',
-    question: "How should I cook meat during pregnancy?",
-    answer: "All meat should be cooked to safe internal temperatures: Beef/Pork/Lamb: 145°F (63°C) with 3-minute rest, or 160°F for ground meat. Poultry: 165°F (74°C). Use a meat thermometer - color alone isn't reliable. Avoid rare or medium-rare meat during pregnancy.",
-    category: 'proteins',
-    foodTags: ['beef', 'pork', 'chicken', 'turkey', 'lamb']
+    foodTags: ['tea'],
+    isPremium: true
   },
   {
-    id: 'deli-meat',
-    question: "Can I eat deli meat/cold cuts during pregnancy?",
-    answer: "Deli meats can harbor Listeria bacteria. To be safe: heat deli meats until steaming hot (165°F) before eating, or avoid them entirely. This includes turkey, ham, salami, bologna, and hot dogs. Freshly cooked meat sliced at home is safer.",
-    category: 'proteins',
-    foodTags: ['deli', 'turkey', 'ham']
-  },
-  {
-    id: 'egg-safety',
-    question: "How should eggs be prepared during pregnancy?",
-    answer: "Eggs should be cooked until both the white and yolk are firm to avoid Salmonella. Avoid: runny yolks, sunny-side up, soft-boiled, raw cookie dough, homemade mayo, and Caesar dressing with raw egg. Pasteurized eggs are safe for recipes requiring less cooking.",
-    category: 'proteins',
-    foodTags: ['eggs']
-  },
-  {
-    id: 'liver-pregnancy',
-    question: "Should I avoid liver during pregnancy?",
-    answer: "Liver should be limited during pregnancy due to very high vitamin A content. Too much vitamin A (retinol form) can cause birth defects. If you eat liver, limit to very small portions (1-2 oz) once a month. Avoid liver supplements entirely.",
-    category: 'proteins',
-    foodTags: ['liver']
-  },
-
-  // Fruits & Vegetables FAQs
-  {
-    id: 'washing-produce',
-    question: "How should I wash fruits and vegetables?",
-    answer: "Wash ALL produce under running water, even if you plan to peel it (bacteria can transfer when cutting). Use a brush for firm produce like melons and potatoes. Don't use soap or produce washes. Cut away any damaged or bruised areas. Pre-washed salads should still be rinsed.",
+    id: 'pineapple-myth',
+    question: "Is pineapple safe during pregnancy?",
+    answer: "YES - this is a myth. Pineapple is safe during pregnancy in normal food amounts. It contains bromelain, which in VERY large concentrated amounts could theoretically affect the cervix, but you would need to eat 7-10 whole pineapples at once. Enjoy pineapple as part of a balanced diet - it's a good source of vitamin C and manganese.",
     category: 'produce',
-    foodTags: ['apple', 'lettuce', 'cantaloupe', 'watermelon', 'strawberries', 'spinach']
+    foodTags: ['pineapple'],
+    isPremium: true
+  },
+  {
+    id: 'papaya-safety',
+    question: "Can I eat papaya while pregnant?",
+    answer: "RIPE papaya is SAFE and nutritious during pregnancy, providing vitamin C and folate. However, UNRIPE (green) papaya contains papain and latex which may cause uterine contractions and should be avoided. Ensure papaya is fully ripe (yellow/orange skin, soft flesh) before eating. Avoid papaya enzyme supplements.",
+    category: 'produce',
+    foodTags: ['papaya'],
+    isPremium: true
+  },
+  {
+    id: 'grapes-pregnancy',
+    question: "Are grapes safe during pregnancy?",
+    answer: "YES - grapes are safe during pregnancy! They provide vitamins, antioxidants (especially red/purple grapes), and hydration. Wash thoroughly before eating. The myth about grapes causing miscarriage has no scientific basis. Some women avoid grapes in late pregnancy due to natural compounds, but normal consumption is fine. Don't eat excessive amounts due to sugar content.",
+    category: 'produce',
+    foodTags: ['grapes'],
+    isPremium: true
   },
   {
     id: 'sprouts-safety',
     question: "Are sprouts safe during pregnancy?",
-    answer: "Raw sprouts (alfalfa, clover, radish, mung bean) should be AVOIDED during pregnancy. They're grown in warm, humid conditions ideal for bacteria like E. coli and Salmonella. Cook sprouts thoroughly if you want to eat them.",
+    answer: "NO - raw sprouts should be AVOIDED entirely during pregnancy. All raw sprouts (alfalfa, clover, radish, mung bean, broccoli sprouts) are grown in warm, humid conditions ideal for bacterial growth. Even 'clean' looking sprouts can harbor Salmonella, E. coli, or Listeria. Only eat sprouts if thoroughly cooked until steaming hot. This includes sprouts on sandwiches and in salads.",
     category: 'produce',
-    foodTags: ['sprouts']
+    foodTags: ['sprouts'],
+    isPremium: true
   },
   {
-    id: 'papaya-pregnancy',
-    question: "Is papaya safe during pregnancy?",
-    answer: "Ripe papaya is SAFE and nutritious during pregnancy, providing vitamin C and folate. However, UNRIPE (green) papaya contains papain and latex which may cause contractions and should be avoided. Ensure papaya is fully ripe (yellow/orange skin, soft flesh) before eating.",
-    category: 'produce',
-    foodTags: ['papaya']
-  },
-  {
-    id: 'pineapple-pregnancy',
-    question: "Does pineapple cause miscarriage?",
-    answer: "No, this is a myth. Pineapple is safe during pregnancy in normal food amounts. It contains bromelain, which in VERY large concentrated amounts could theoretically affect the cervix, but you would need to eat 7-10 whole pineapples at once. Enjoy pineapple as part of a balanced diet.",
-    category: 'produce',
-    foodTags: ['pineapple']
-  },
-
-  // Nuts & Seeds FAQs
-  {
-    id: 'peanuts-pregnancy',
-    question: "Can eating peanuts during pregnancy cause allergies in my baby?",
-    answer: "Current research suggests that eating peanuts during pregnancy does NOT increase allergy risk in your baby and may actually help prevent allergies. Unless you have a peanut allergy yourself, peanuts are a healthy protein source during pregnancy.",
-    category: 'nuts',
-    foodTags: ['peanuts', 'peanut-butter']
-  },
-  {
-    id: 'brazil-nuts',
-    question: "How many Brazil nuts can I eat during pregnancy?",
-    answer: "Limit Brazil nuts to 1-2 per day maximum. They're extremely high in selenium - just one nut provides your entire daily need. Too much selenium can be harmful. Other nuts like almonds, walnuts, and cashews can be eaten more freely.",
-    category: 'nuts',
-    foodTags: ['brazil-nuts']
-  },
-
-  // Sweeteners & Additives FAQs
-  {
-    id: 'artificial-sweeteners',
-    question: "Are artificial sweeteners safe during pregnancy?",
-    answer: "SAFE in moderation: Aspartame (Equal), Sucralose (Splenda), Stevia, Acesulfame-K. AVOID: Saccharin. LIMIT: Sugar alcohols (sorbitol, xylitol) can cause digestive issues. Natural sugars in moderation are preferable when possible.",
-    category: 'general',
-    foodTags: []
-  },
-  {
-    id: 'honey-pregnancy',
-    question: "Is honey safe during pregnancy?",
-    answer: "Yes, honey is safe for pregnant women. The concern about infant botulism only applies to babies under 1 year old, not adults or pregnant women. Your digestive system can handle the botulinum spores. Enjoy honey in moderation as a natural sweetener.",
-    category: 'general',
-    foodTags: ['honey']
-  },
-
-  // Alcohol FAQs
-  {
-    id: 'alcohol-pregnancy',
-    question: "Is any amount of alcohol safe during pregnancy?",
-    answer: "No safe amount of alcohol during pregnancy has been established. Alcohol crosses the placenta directly to the baby and can cause Fetal Alcohol Spectrum Disorders (FASD). This includes beer, wine, and spirits. If you drank before knowing you were pregnant, stop now and talk to your provider.",
-    category: 'beverages',
-    foodTags: ['alcohol', 'wine', 'beer']
-  },
-  {
-    id: 'cooking-wine',
-    question: "Is cooking with wine safe during pregnancy?",
-    answer: "Most alcohol evaporates during cooking, especially with longer cooking times and high heat. A dish simmered for 2+ hours retains minimal alcohol. Quick dishes like wine sauces retain more. When in doubt, substitute with broth, juice, or non-alcoholic wine.",
-    category: 'beverages',
-    foodTags: ['alcohol', 'wine']
-  },
-
-  // Iron & Nutrition FAQs
-  {
-    id: 'iron-foods',
-    question: "What are the best iron-rich foods during pregnancy?",
-    answer: "BEST sources (heme iron, easily absorbed): Red meat, poultry, fish. PLANT sources (need vitamin C for absorption): Spinach, lentils, fortified cereals, beans, tofu. Tip: Eat vitamin C foods with iron sources to boost absorption. Avoid calcium/coffee/tea with iron-rich meals.",
-    category: 'nutrition',
-    foodTags: ['beef', 'spinach', 'lentils', 'beans', 'tofu']
-  },
-  {
-    id: 'folate-foods',
-    question: "What foods are high in folate/folic acid?",
-    answer: "Folate is crucial for preventing neural tube defects. Best sources: Dark leafy greens (spinach, kale), legumes (lentils, black beans), asparagus, broccoli, citrus fruits, fortified cereals and breads, avocado. Most women also need a prenatal vitamin with 400-800mcg folic acid.",
-    category: 'nutrition',
-    foodTags: ['spinach', 'kale', 'lentils', 'asparagus', 'broccoli', 'orange', 'avocado']
-  },
-  {
-    id: 'omega3-pregnancy',
-    question: "Why are omega-3s important during pregnancy?",
-    answer: "Omega-3 fatty acids (especially DHA) are crucial for baby's brain and eye development. Best sources: Fatty fish (salmon, sardines, trout), fish oil supplements, algae-based DHA supplements (vegan option), walnuts, chia seeds, flaxseeds. Aim for 2-3 fish servings weekly.",
-    category: 'nutrition',
-    foodTags: ['salmon', 'sardines', 'trout', 'walnuts', 'chia-seeds', 'flax-seeds']
-  },
-  {
-    id: 'calcium-pregnancy',
-    question: "How much calcium do I need during pregnancy?",
-    answer: "You need about 1000mg of calcium daily. Sources: Dairy (milk, yogurt, cheese), fortified plant milks, calcium-set tofu, sardines with bones, leafy greens (kale, bok choy), almonds. If you're not getting enough from food, consider a supplement. Vitamin D helps calcium absorption.",
-    category: 'nutrition',
-    foodTags: ['milk', 'yogurt', 'cheese', 'tofu', 'sardines', 'kale', 'almonds']
-  },
-
-  // Food Safety FAQs
-  {
-    id: 'listeria-foods',
-    question: "What foods carry the highest Listeria risk?",
-    answer: "Listeria can grow even in refrigerated foods. HIGH RISK: Deli meats, hot dogs (unless heated), soft cheeses from unpasteurized milk, refrigerated pâtés, smoked seafood, unpasteurized milk/juice, raw sprouts, pre-made salads. When in doubt, heat foods to steaming hot.",
-    category: 'safety',
-    foodTags: ['deli', 'cheese', 'milk']
-  },
-  {
-    id: 'food-poisoning',
-    question: "What should I do if I get food poisoning during pregnancy?",
-    answer: "Stay hydrated with water, clear broths, and electrolyte drinks. Contact your healthcare provider if you have: fever over 101.5°F, bloody stool, severe vomiting, signs of dehydration, or symptoms lasting more than 2 days. Listeria requires antibiotic treatment.",
-    category: 'safety',
-    foodTags: []
-  },
-  {
-    id: 'leftovers-safety',
-    question: "How long can I keep leftovers during pregnancy?",
-    answer: "Be extra careful with leftovers during pregnancy. Refrigerate within 2 hours of cooking. Eat refrigerated leftovers within 2-3 days (not 4-5 like usual). Reheat thoroughly to 165°F until steaming. When in doubt, throw it out.",
-    category: 'safety',
-    foodTags: []
-  },
-
-  // Specific Cravings FAQs
-  {
-    id: 'ice-cravings',
-    question: "Why do I crave ice during pregnancy?",
-    answer: "Craving ice (pica) during pregnancy can be a sign of iron deficiency anemia. Talk to your healthcare provider about getting your iron levels checked. In the meantime, try iron-rich foods like red meat, spinach, and fortified cereals.",
-    category: 'general',
-    foodTags: []
-  },
-  {
-    id: 'spicy-food',
-    question: "Is spicy food safe during pregnancy?",
-    answer: "Yes, spicy food is safe during pregnancy and won't harm your baby. However, it may worsen heartburn and acid reflux, which are common in pregnancy. If you tolerate spicy food well, there's no need to avoid it.",
-    category: 'general',
-    foodTags: ['hot-sauce']
-  },
-
-  // Third Trimester Specific
-  {
-    id: 'dates-labor',
-    question: "Do dates help with labor?",
-    answer: "Research suggests eating 6 dates daily starting at 36 weeks may help: promote cervical ripening, reduce need for labor induction, and shorten early labor. While not guaranteed, dates are nutritious and worth trying. They're high in fiber, potassium, and natural sugars for energy.",
-    category: 'nutrition',
-    foodTags: ['dates']
-  },
-  {
-    id: 'raspberry-leaf-tea',
-    question: "Is raspberry leaf tea safe during pregnancy?",
-    answer: "Raspberry leaf tea is traditionally used to tone the uterus. Most practitioners suggest: AVOID in first trimester, may be okay in moderation in second trimester, often recommended in third trimester (32+ weeks). Always consult your provider first as it may stimulate contractions.",
-    category: 'beverages',
-    foodTags: ['tea']
+    id: 'brie-cheese',
+    question: "Is brie cheese safe during pregnancy?",
+    answer: "Brie made from PASTEURIZED milk is safe during pregnancy. In the US, most commercial brie is pasteurized - check the label. AVOID unpasteurized brie or imported soft-ripened cheeses unless you're certain they're pasteurized. Even pasteurized brie should be avoided from deli counters (Listeria risk). When in doubt, heat until bubbling hot - this kills any potential bacteria.",
+    category: 'dairy',
+    foodTags: ['brie', 'cheese'],
+    isPremium: true
   }
 ];
 
@@ -786,27 +797,36 @@ const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack }) => 
   );
 };
 
-// FAQ View Component
+// FAQ View Component with Premium Feature
 const FAQView = ({ onBack }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   
   const categories = [
-    { id: 'all', label: 'All Questions' },
-    { id: 'general', label: 'General' },
-    { id: 'seafood', label: 'Seafood & Fish' },
-    { id: 'dairy', label: 'Dairy & Cheese' },
-    { id: 'beverages', label: 'Beverages' },
+    { id: 'all', label: 'All' },
+    { id: 'safety', label: 'Food Safety' },
+    { id: 'seafood', label: 'Seafood' },
+    { id: 'dairy', label: 'Dairy' },
     { id: 'proteins', label: 'Meat & Eggs' },
-    { id: 'produce', label: 'Fruits & Vegetables' },
-    { id: 'nuts', label: 'Nuts & Seeds' },
+    { id: 'produce', label: 'Produce' },
+    { id: 'beverages', label: 'Beverages' },
     { id: 'nutrition', label: 'Nutrition' },
-    { id: 'safety', label: 'Food Safety' }
+    { id: 'nuts', label: 'Nuts' },
+    { id: 'general', label: 'General' }
   ];
 
   const filteredFAQs = selectedCategory === 'all' 
     ? ALL_FAQS 
     : ALL_FAQS.filter(faq => faq.category === selectedCategory);
+
+  const handleFAQClick = (index, faq) => {
+    if (faq.isPremium) {
+      setShowPremiumModal(true);
+    } else {
+      setOpenIndex(openIndex === index ? null : index);
+    }
+  };
 
   return (
     <div className="page-view" data-testid="faq-view">
@@ -815,12 +835,22 @@ const FAQView = ({ onBack }) => {
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <h2>FAQ</h2>
-        <div style={{width: '80px'}}></div>
+        <h2>WhatToEat</h2>
+        <button className="profile-btn" data-testid="profile-btn">
+          <User size={22} />
+        </button>
       </div>
 
       <div className="page-content">
-        <p className="page-intro">Common questions about food safety during pregnancy.</p>
+        <div className="faq-title-section">
+          <h1>Most Asked Pregnancy Food Questions</h1>
+          <p>Quick answers to the most common questions about food safety during pregnancy.</p>
+        </div>
+
+        {/* Disclaimer Banner */}
+        <div className="faq-disclaimer-banner">
+          <p>This section provides educational nutrition information compiled from public health sources (WHO, CDC, NHS, ACOG). It does not replace professional medical advice.</p>
+        </div>
         
         {/* Category Filter */}
         <div className="faq-category-filter">
@@ -837,20 +867,32 @@ const FAQView = ({ onBack }) => {
             </button>
           ))}
         </div>
-
-        <p className="faq-count">{filteredFAQs.length} questions</p>
         
         <div className="faq-list">
           {filteredFAQs.map((faq, index) => (
-            <div key={faq.id} className="faq-item" data-testid={`faq-item-${faq.id}`}>
+            <div key={faq.id} className={`faq-item ${faq.isPremium ? 'premium' : ''}`} data-testid={`faq-item-${faq.id}`}>
               <button 
                 className="faq-question"
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                onClick={() => handleFAQClick(index, faq)}
               >
-                <span>{faq.question}</span>
-                {openIndex === index ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                <div className="faq-question-content">
+                  <span className="faq-question-text">{faq.question}</span>
+                  {faq.isPremium && (
+                    <span className="faq-premium-label">Tap to unlock with Premium</span>
+                  )}
+                </div>
+                {faq.isPremium ? (
+                  <div className="lock-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </div>
+                ) : (
+                  openIndex === index ? <ChevronUp size={20} /> : <ChevronRight size={20} />
+                )}
               </button>
-              {openIndex === index && (
+              {!faq.isPremium && openIndex === index && (
                 <div className="faq-answer">
                   <p>{faq.answer}</p>
                   {faq.foodTags.length > 0 && (
@@ -867,6 +909,35 @@ const FAQView = ({ onBack }) => {
           ))}
         </div>
       </div>
+
+      {/* Premium Modal */}
+      {showPremiumModal && (
+        <div className="premium-modal-overlay" onClick={() => setShowPremiumModal(false)}>
+          <div className="premium-modal" onClick={e => e.stopPropagation()}>
+            <button className="premium-modal-close" onClick={() => setShowPremiumModal(false)}>
+              <X size={24} />
+            </button>
+            <div className="premium-modal-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h2>Unlock Premium Access</h2>
+            <p>Get detailed answers to all pregnancy food questions with a Premium subscription.</p>
+            <ul className="premium-features">
+              <li><Check size={16} /> Full answers to 40+ expert-reviewed questions</li>
+              <li><Check size={16} /> Detailed food safety guidelines</li>
+              <li><Check size={16} /> Nutrition recommendations by trimester</li>
+              <li><Check size={16} /> Ad-free experience</li>
+            </ul>
+            <button className="premium-subscribe-btn">
+              Subscribe to Premium
+            </button>
+            <p className="premium-price">$4.99/month or $29.99/year</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
