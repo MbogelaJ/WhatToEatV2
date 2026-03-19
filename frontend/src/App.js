@@ -2352,50 +2352,59 @@ function App() {
       </header>
 
       {/* Main */}
-      <main className="app-main home-main">
-        {/* Personalized Info Banner - Age and Trimester at top */}
-        {(userAge || (trimester && trimesterInfo[trimester])) && (
-          <div className="personalized-top-banner" data-testid="personalized-banner">
-            <div className="personalized-icon">
-              <Sparkles size={18} />
-            </div>
-            <div className="personalized-info">
-              {userAge && <span className="user-age">{userAge} years old</span>}
-              {trimester && trimesterInfo[trimester] && (
-                <>
-                  <span className="user-trimester">{trimesterInfo[trimester].label}</span>
-                  <span className="nutrient-focus">Focus on: {trimesterInfo[trimester].focus}</span>
-                </>
-              )}
+      <main className="app-main home-main-v3">
+        {/* Title Section */}
+        <div className="home-title-section">
+          <h1 className="home-main-title">Pregnancy Nutrition Guide</h1>
+          <p className="home-subtitle">Educational reference information about foods during pregnancy</p>
+        </div>
+
+        {/* Educational Information Banner */}
+        <div className="educational-info-banner">
+          <p><span className="edu-label">Educational Information:</span> This content is for general reference only and does not constitute medical advice. Consult a healthcare professional for personalized guidance.</p>
+        </div>
+
+        {/* Daily Tip */}
+        <DailyTip />
+
+        {/* Trimester Section */}
+        {trimester && trimesterInfo[trimester] && (
+          <div className="trimester-card" data-testid="trimester-card">
+            <Sparkles size={22} className="trimester-sparkle" />
+            <div className="trimester-card-content">
+              <span className="trimester-card-title">{trimesterInfo[trimester].label}</span>
+              <span className="trimester-card-focus">Focus on: {trimesterInfo[trimester].focus}</span>
             </div>
           </div>
         )}
 
         {/* Search Bar */}
-        <div className="home-search-bar">
-          <Search size={18} className="search-icon" />
+        <div className="search-bar-card">
+          <Search size={18} className="search-bar-icon" />
           <input
             type="text"
             placeholder="Search foods..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="home-search-input"
+            className="search-bar-input"
             data-testid="food-search-input"
           />
           {searchQuery && (
-            <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
+            <button className="search-clear-btn" onClick={() => setSearchQuery('')}>
               <X size={18} />
             </button>
           )}
         </div>
         
-        {/* Filters Section */}
-        <div className="filters-section">
+        {/* Category Pills */}
+        <div className="filters-container">
           <CategoryFilter 
             categories={categories}
             selectedCategory={selectedCategory}
             onSelect={setSelectedCategory}
           />
+          
+          {/* Safety Filter */}
           <SafetyFilter 
             selectedSafety={selectedSafety}
             onSelect={setSelectedSafety}
@@ -2403,25 +2412,16 @@ function App() {
 
           {/* Personalized View Toggle */}
           <button 
-            className={`personalized-view-btn ${personalizedView ? 'active' : ''}`}
+            className={`personalized-view-btn-v3 ${personalizedView ? 'active' : ''}`}
             onClick={() => setPersonalizedView(!personalizedView)}
             data-testid="personalized-view-btn"
           >
             Personalized View
           </button>
-
-          {/* Active Dietary Restrictions Indicator */}
-          {dietaryRestrictions.length > 0 && personalizedView && (
-            <div className="active-dietary-indicator" data-testid="active-dietary-indicator">
-              <AlertTriangle size={14} />
-              <span>{dietaryRestrictions.length} dietary restriction{dietaryRestrictions.length > 1 ? 's' : ''} active</span>
-              <button onClick={() => setActiveView('settings')} className="manage-btn">Manage</button>
-            </div>
-          )}
         </div>
 
         {/* Results */}
-        <div className="results-section">
+        <div className="results-section-v3">
           {loading ? (
             <div className="loading-state">
               <div className="spinner"></div>

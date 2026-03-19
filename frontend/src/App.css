@@ -3879,3 +3879,158 @@ body {
   align-items: center;
   gap: 0.5rem;
 }
+
+/* ===== HOME PAGE V3 DESIGN ===== */
+
+.home-main-v3 {
+  padding: 0 1rem 1rem;
+  background: #fafafa;
+}
+
+/* Title Section */
+.home-title-section {
+  padding: 1.25rem 0;
+}
+
+.home-main-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.home-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Educational Information Banner */
+.educational-info-banner {
+  background: #e0f2fe;
+  border-left: 4px solid #0891b2;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0 8px 8px 0;
+}
+
+.educational-info-banner p {
+  font-size: 0.875rem;
+  color: #0e7490;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.edu-label {
+  font-weight: 600;
+  color: #0e7490;
+}
+
+/* Trimester Card */
+.trimester-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.trimester-sparkle {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.trimester-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.trimester-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.trimester-card-focus {
+  font-size: 0.9rem;
+  color: #16a34a;
+}
+
+/* Search Bar Card */
+.search-bar-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.search-bar-icon {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.search-bar-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.search-bar-input::placeholder {
+  color: #9ca3af;
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+/* Filters Container */
+.filters-container {
+  margin-bottom: 1rem;
+}
+
+/* Personalized View Button V3 */
+.personalized-view-btn-v3 {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.625rem 1.25rem;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.75rem;
+}
+
+.personalized-view-btn-v3:hover {
+  background: #15803d;
+}
+
+.personalized-view-btn-v3.active {
+  background: #15803d;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
+}
+
+/* Results Section V3 */
+.results-section-v3 {
+  padding-top: 0.5rem;
+}
