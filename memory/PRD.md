@@ -77,6 +77,13 @@ Strict freemium classification for pregnancy nutrition guidance:
 | LIMIT        | 44    | 39      | 5    | 88%       |
 | SAFE         | 220   | 186     | 34   | 84%       |
 
+**Dynamic Teaser Messages for Locked Foods:**
+- AVOID: "High-risk food — Unlock full safety details"
+- LIMIT: "Unlock portions, safe swaps & timing tips"
+- SAFE: "Unlock nutrition facts & preparation tips"
+
+**Premium Upsell Banner:** Context-aware messaging at bottom of food list
+
 **Free Foods (39 items):**
 - Basic fruits: Apple, Banana, Orange, Grapes, Watermelon
 - Basic vegetables: Carrots, Broccoli, Spinach, Tomatoes, Cucumber, etc.

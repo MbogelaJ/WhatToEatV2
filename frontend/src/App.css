@@ -4034,3 +4034,73 @@ body {
 .results-section-v3 {
   padding-top: 0.5rem;
 }
+
+/* Premium Upsell Banner */
+.premium-upsell-banner {
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #fef9e7 0%, #fef3c7 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.premium-upsell-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.upsell-icon {
+  width: 48px;
+  height: 48px;
+  background: #fef3c7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  color: #d97706;
+}
+
+.upsell-content {
+  margin-bottom: 1rem;
+}
+
+.upsell-content h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0 0 0.5rem 0;
+}
+
+.upsell-content p {
+  font-size: 0.875rem;
+  color: #78350f;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.upsell-btn {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 280px;
+}
+
+.upsell-btn:hover {
+  background: #d97706;
+  transform: scale(1.02);
+}

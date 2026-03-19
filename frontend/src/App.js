@@ -571,6 +571,19 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = fal
   // Always use the standard label: "Generally Safe", "Limit Intake", or "Best Avoided"
   const safetyLabel = safetyConfig.label;
   
+  // Dynamic teaser messages based on safety level for premium foods
+  const getTeaserMessage = () => {
+    switch (food.safety) {
+      case 'AVOID':
+        return 'High-risk food — Unlock full safety details';
+      case 'LIMIT':
+        return 'Unlock portions, safe swaps & timing tips';
+      case 'SAFE':
+      default:
+        return 'Unlock nutrition facts & preparation tips';
+    }
+  };
+  
   return (
     <div 
       data-testid={`food-card-${food.id}`}
@@ -581,7 +594,7 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = fal
         <h3 className={`food-list-name ${showLock ? 'locked' : ''}`}>{food.name}</h3>
         <span className="food-list-category">{food.category}</span>
         {showLock && (
-          <span className="food-list-upgrade-text">Upgrade to Premium to view details</span>
+          <span className="food-list-upgrade-text">{getTeaserMessage()}</span>
         )}
       </div>
       <div className="food-list-right">
@@ -1184,12 +1197,12 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
               </svg>
             </div>
             <h2>Unlock Premium Access</h2>
-            <p>Get detailed answers to all pregnancy food questions with a one-time purchase.</p>
+            <p>Get complete pregnancy nutrition guidance with detailed safety information.</p>
             <ul className="premium-features">
-              <li><Check size={16} /> Full answers to 40+ expert-reviewed questions</li>
-              <li><Check size={16} /> Detailed food safety guidelines</li>
-              <li><Check size={16} /> Nutrition recommendations by trimester</li>
-              <li><Check size={16} /> Ad-free experience</li>
+              <li><Check size={16} /> <strong>All 24 high-risk foods</strong> — Full safety details & reasons to avoid</li>
+              <li><Check size={16} /> <strong>39 limit foods</strong> — Exact portions, safe swaps & timing</li>
+              <li><Check size={16} /> <strong>186 safe foods</strong> — Nutrition facts & preparation tips</li>
+              <li><Check size={16} /> Source references (ACOG, CDC, FDA, WHO)</li>
             </ul>
             <button 
               className="premium-subscribe-btn"
@@ -1829,30 +1842,30 @@ const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
           {/* Main Card */}
           <div className="premium-card-v2">
             <h2>Unlock Premium Pregnancy Nutrition</h2>
-            <p className="premium-card-subtitle">Expand your pregnancy nutrition reference library</p>
+            <p className="premium-card-subtitle">Complete access to 249 expert-reviewed food guides</p>
 
             <div className="premium-features-v2">
-              <h3>Premium Features</h3>
+              <h3>What You'll Unlock</h3>
               <ul>
                 <li>
                   <Check size={18} className="check-icon" />
-                  <span>Curated food ideas for each trimester (based on general public health guidelines)</span>
+                  <span><strong>24 high-risk foods</strong> — Full safety details & why to avoid</span>
                 </li>
                 <li>
                   <Check size={18} className="check-icon" />
-                  <span>Smart filter to browse foods by trimester stage</span>
+                  <span><strong>39 limit foods</strong> — Exact portions, timing & safe alternatives</span>
                 </li>
                 <li>
                   <Check size={18} className="check-icon" />
-                  <span>Expanded food database with detailed nutritional notes</span>
+                  <span><strong>186 safe foods</strong> — Complete nutrition facts & preparation tips</span>
                 </li>
                 <li>
                   <Check size={18} className="check-icon" />
-                  <span>Weekly pregnancy nutrition tip library</span>
+                  <span>Source references (ACOG, CDC, FDA, WHO guidelines)</span>
                 </li>
                 <li>
                   <Check size={18} className="check-icon" />
-                  <span>Priority support</span>
+                  <span>Trimester-specific nutrition recommendations</span>
                 </li>
               </ul>
             </div>
@@ -2463,6 +2476,28 @@ function App() {
                   />
                 ))}
               </div>
+              
+              {/* Premium Upsell Banner - Show when there are premium foods and user is not premium */}
+              {!isPremium && premiumCount > 0 && (
+                <div className="premium-upsell-banner" onClick={() => setActiveView('premium')}>
+                  <div className="upsell-icon">
+                    <Lock size={24} />
+                  </div>
+                  <div className="upsell-content">
+                    <h3>Unlock {premiumCount} Premium Foods</h3>
+                    <p>
+                      {selectedSafety === 'AVOID' 
+                        ? 'Get answers to common questions about Energy Drinks, High Mercury Fish, Deli Meats, and more.'
+                        : selectedSafety === 'LIMIT'
+                        ? 'Get detailed portions, safe alternatives, and timing tips for caffeine, soft cheeses, and more.'
+                        : 'Get complete nutrition facts, preparation tips, and health benefits for all foods.'}
+                    </p>
+                  </div>
+                  <button className="upsell-btn">
+                    Unlock All Foods - $1.99
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
