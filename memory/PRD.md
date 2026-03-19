@@ -66,6 +66,30 @@ Five-step onboarding with progress dots and Back/Continue navigation
 - Category and Safety level filters
 - Pagination support (fetches all pages)
 
+### 6. Freemium Access Model ✅ (Updated March 20, 2026)
+Strict freemium classification for pregnancy nutrition guidance:
+
+**Overall Split: 86% Premium (249 items) / 14% Free (39 items)**
+
+| Safety Level | Total | Premium | Free | Premium % |
+|--------------|-------|---------|------|-----------|
+| AVOID        | 24    | 24      | 0    | 100%      |
+| LIMIT        | 44    | 39      | 5    | 88%       |
+| SAFE         | 220   | 186     | 34   | 84%       |
+
+**Free Foods (39 items):**
+- Basic fruits: Apple, Banana, Orange, Grapes, Watermelon
+- Basic vegetables: Carrots, Broccoli, Spinach, Tomatoes, Cucumber, etc.
+- Basic proteins: Chicken Breast, Eggs, Lentils, Chickpeas
+- Basic dairy: Milk, Greek Yogurt, Cheddar Cheese
+- Basic grains: Oatmeal, Brown Rice, Quinoa, Whole Wheat Bread
+- Basic LIMIT rules: Green Tea, High Sodium Foods (general advice only)
+
+**Premium Foods (249 items):**
+- ALL AVOID foods (high-risk items require detailed safety info)
+- 90% of LIMIT foods (detailed portions, brand specifics, mg breakdowns)
+- 85% of SAFE foods (detailed nutrition, benefits, preparation tips)
+
 ### 6. Premium Feature (MOCKED)
 - Price: US$1.99 one-time purchase
 - UI shows premium modal and features

@@ -219,60 +219,220 @@ async def logout(
     
     return {"success": True, "message": "Logged out successfully"}
 
-# Premium food IDs - foods people commonly search about during pregnancy
-# These are foods with safety concerns, confusion, or high search interest
+# ============================================================================
+# FREEMIUM ACCESS CLASSIFICATION FOR PREGNANCY NUTRITION GUIDANCE
+# ============================================================================
+# Rules:
+# - AVOID foods: 100% PREMIUM (all 24 items locked)
+# - LIMIT foods: 90% PREMIUM (39 locked), 10% FREE (5 basic items)
+# - SAFE foods: 85% PREMIUM (187 locked), 15% FREE (33 basic staples)
+# Target: ~86% premium (250 items), ~14% free (38 items)
+# ============================================================================
+
+# FREE FOODS - Only these IDs are accessible to non-premium users
+# These are basic, high-trust staples that provide immediate value
+FREE_FOOD_IDS = {
+    # === FREE SAFE FOODS (33 items - ~15% of 220 safe foods) ===
+    # Basic fruits (5)
+    "apple-1",           # Apple - basic staple
+    "banana-1",          # Banana - basic staple
+    "orange-1",          # Orange - basic citrus
+    "grapes-1",          # Grapes - common fruit
+    "watermelon-1",      # Watermelon - hydration
+    
+    # Basic vegetables (10)
+    "carrot-1",          # Carrots - basic vegetable
+    "broccoli-1",        # Broccoli - basic vegetable
+    "spinach-1",         # Spinach - basic leafy green
+    "tomato-1",          # Tomatoes - basic vegetable
+    "cucumber-1",        # Cucumber - basic vegetable
+    "lettuce-romaine-1", # Romaine Lettuce - basic salad
+    "onion-1",           # Onions - basic cooking staple
+    "garlic-1",          # Garlic - basic cooking staple
+    "peas-1",            # Peas - basic vegetable
+    "green-beans-1",     # Green Beans - basic vegetable
+    
+    # Basic proteins (5)
+    "chicken-breast-1",  # Chicken Breast - lean protein
+    "egg-1",             # Eggs - basic protein (cooked)
+    "lentils-1",         # Lentils - plant protein
+    "chickpeas-1",       # Chickpeas - plant protein
+    "black-beans-1",     # Black Beans - plant protein
+    
+    # Basic dairy (4)
+    "milk-1",            # Milk - pasteurized basic
+    "yogurt-greek-1",    # Greek Yogurt - basic dairy
+    "cheese-cheddar-1",  # Cheddar Cheese - hard cheese
+    "cottage-cheese-1",  # Cottage Cheese - basic dairy
+    
+    # Basic grains (5)
+    "oatmeal-1",         # Oatmeal - basic grain
+    "bread-whole-wheat-1", # Whole Wheat Bread - basic grain
+    "brown-rice-1",      # Brown Rice - basic grain
+    "quinoa-1",          # Quinoa - complete protein grain
+    "pasta-whole-wheat-1", # Whole Wheat Pasta - basic grain
+    
+    # Basic hydration (2)
+    "water-1",           # Water - essential
+    "coconut-water-1",   # Coconut Water - hydration
+    
+    # Basic other (2)
+    "sweetpotato-1",     # Sweet Potato - nutrient dense
+    "potato-1",          # Potatoes - basic staple
+    
+    # === FREE LIMIT FOODS (5 items - ~10% of 44 limit foods) ===
+    # Only very basic/general limit rules - no detailed portions
+    "green-tea-1",       # Green Tea - basic caffeine limit
+    "herbal-supplements-1", # Basic "consult doctor" advice
+    "high-sodium-foods-1",  # Basic "reduce salt" advice
+    "unwashed-produce-1",   # Basic "wash produce" advice
+    "excess-vitamin-a-1",   # Basic "don't overdo supplements" advice
+    
+    # === NO FREE AVOID FOODS (0 items) ===
+    # All AVOID foods are premium - high-risk items must be locked
+}
+
+# PREMIUM FOOD IDS - All foods NOT in FREE_FOOD_IDS are premium
+# This includes:
+# - ALL 24 AVOID foods (100% locked)
+# - 39 LIMIT foods (90% locked)
+# - 187 SAFE foods (85% locked)
 PREMIUM_FOOD_IDS = {
-    # Seafood - high search interest about mercury, safety
-    "salmon-1", "tuna-1", "sushi-raw-1", "shrimp-1", "crab-1", "lobster-1", 
-    "mackerel-1", "sardines-1", "tilapia-1", "cod-1", "halibut-1", "catfish-1",
-    "oysters-1", "scallops-1", "calamari-1", "swordfish-1", "shark-1", "king-mackerel-1",
-    "shellfish-1", "smoked-salmon-1",
+    # ============================================
+    # ALL AVOID FOODS - 100% PREMIUM (24 items)
+    # High-risk foods - must be locked for safety
+    # ============================================
+    "alcohol-1",              # Alcohol - no safe amount
+    "aloe-vera-1",            # Aloe Vera (Internal) - unsafe
+    "cake-batter-1",          # Cake Batter (Raw) - raw eggs
+    "cookie-dough-1",         # Cookie Dough (Raw) - raw eggs/flour
+    "energy-drinks-1",        # Energy Drinks - excessive caffeine
+    "high-mercury-fish-1",    # High Mercury Fish - developmental risk
+    "king-mackerel-1",        # King Mackerel - high mercury
+    "kombucha-1",             # Kombucha - alcohol/unpasteurized
+    "liver-1",                # Liver - excess vitamin A
+    "meat-spreads-1",         # Meat Spreads/Pate - listeria risk
+    "papaya-unripe-1",        # Papaya (Unripe/Green) - uterine contractions
+    "rare-steak-1",           # Rare Steak - bacterial risk
+    "raw-eggs-1",             # Raw Eggs - salmonella risk
+    "raw-fish-1",             # Raw Fish - parasites/bacteria
+    "raw-meat-1",             # Rare/Raw Meat - bacterial risk
+    "raw-milk-1",             # Raw Milk (Unpasteurized) - listeria
+    "raw-oysters-1",          # Raw Oysters - bacteria/virus
+    "raw-sprouts-1",          # Raw Sprouts - E. coli/salmonella
+    "shark-1",                # Shark - high mercury
+    "soft-cheese-1",          # Soft Cheese (Unpasteurized) - listeria
+    "sushi-raw-1",            # Raw Sushi/Sashimi - parasites
+    "swordfish-1",            # Swordfish - high mercury
+    "undercooked-chicken-1",  # Undercooked Chicken - salmonella
+    "unpasteurized-juice-1",  # Unpasteurized Juice - bacteria
     
-    # Deli meats & processed meats - listeria concerns
-    "deli-meat-1", "hot-dogs-1", "bacon-1", "sausage-1", "pepperoni-1", "salami-1",
-    "ham-1", "pate-1", "prosciutto-1", "game-meat-1",
+    # ============================================
+    # LIMIT FOODS - 90% PREMIUM (39 of 44 items)
+    # Detailed portions, brand info, nuanced advice
+    # ============================================
+    "artificial-sweeteners-1", # Detailed sweetener breakdown
+    "blue-cheese-1",          # Pasteurization details
+    "brazil-nuts-1",          # Selenium limits
+    "brie-1",                 # Soft cheese safety details
+    "buffet-food-1",          # Temperature/safety details
+    "caffeine-general-1",     # Detailed mg breakdown by source
+    "camembert-1",            # Soft cheese safety details
+    "canned-fish-limit-1",    # Mercury calculations
+    "coffee-1",               # Detailed caffeine content
+    "cold-leftovers-1",       # Storage/reheating details
+    "deli-meat-1",            # Heating requirements
+    "edible-flowers-1",       # Safety identification
+    "enoki-mushrooms-1",      # Listeria outbreak details
+    "fast-food-1",            # Specific item guidance
+    "fried-foods-1",          # Health impact details
+    "game-meat-1",            # Lead/parasite risks
+    "grapefruit-1",           # Drug interactions
+    "herbal-tea-chamomile-1", # Herb safety research
+    "herbal-tea-general-1",   # Comprehensive herb guide
+    "hot-dogs-1",             # Listeria/heating details
+    "licorice-1",             # Glycyrrhizin limits
+    "papaya-general-1",       # Ripeness safety
+    "pineapple-large-amounts-1", # Bromelain concerns
+    "pre-made-salads-1",      # Contamination risks
+    "processed-meats-1",      # Nitrate/sodium details
+    "prosciutto-1",           # Cured meat safety
+    "raw-salads-1",           # Washing/contamination
+    "salad-bars-1",           # Temperature concerns
+    "salami-1",               # Cured meat heating
+    "shellfish-1",            # Cooking requirements
+    "smoked-fish-1",          # Listeria risk details
+    "smoked-salmon-1",        # Cold vs hot smoked
+    "soda-1",                 # Sugar/caffeine content
+    "soft-cheese-limit-1",    # Pasteurization guide
+    "soft-serve-ice-cream-1", # Machine hygiene
+    "starfruit-1",            # Kidney function warning
+    "street-food-1",          # Hygiene considerations
+    "tiramisu-1",             # Raw egg/alcohol content
+    "tuna-1",                 # Mercury limits per week
     
-    # Cheese & dairy questions
-    "soft-cheese-1", "soft-cheese-limit-1", "brie-1", "feta-1", "blue-cheese-1", "goat-cheese-1",
-    "cream-cheese-1", "ricotta-1", "cottage-cheese-1", "parmesan-1", "mozzarella-1",
-    "camembert-1", "soft-serve-ice-cream-1",
+    # ============================================
+    # SAFE FOODS - 85% PREMIUM (187 of 220 items)
+    # Detailed nutrition, benefits, preparation
+    # ============================================
+    # Fruits - Premium (most fruits locked)
+    "acorn-squash-1", "apricot-1", "avocado-1", "blackberry-1", "blood-orange-1",
+    "blueberry-1", "cantaloupe-1", "cherry-1", "clementine-1", "coconut-1",
+    "cranberries-1", "dates-1", "dragon-fruit-1", "fig-1", "guava-1",
+    "honeydew-1", "kiwi-1", "lemon-1", "lime-1", "lychee-1", "mango-1",
+    "nectarine-1", "papaya-1", "passion-fruit-1", "peach-1", "pear-1",
+    "persimmon-1", "pineapple-1", "plantain-1", "plum-1", "pomegranate-1",
+    "raspberry-1", "strawberry-1", "tangerine-1",
     
-    # Eggs - cooking concerns
-    "egg-1", "mayonnaise-1", "raw-eggs-1",
+    # Vegetables - Premium (most vegetables locked)
+    "artichoke-1", "arugula-1", "asparagus-1", "bamboo-shoots-1", "beets-1",
+    "bell-pepper-1", "bok-choy-1", "brussels-sprouts-1", "butternut-squash-1",
+    "cabbage-1", "cauliflower-1", "celery-1", "collard-greens-1", "corn-1",
+    "daikon-1", "eggplant-1", "endive-1", "fennel-1", "hearts-of-palm-1",
+    "jicama-1", "kale-1", "kohlrabi-1", "leek-1", "mushrooms-1", "okra-1",
+    "parsnip-1", "radicchio-1", "radish-1", "rutabaga-1", "snow-peas-1",
+    "sugar-snap-peas-1", "swiss-chard-1", "turnip-1", "water-chestnuts-1",
+    "watercress-1", "yam-1", "zucchini-1",
     
-    # Beverages - caffeine, alcohol, herbal safety
-    "coffee-1", "tea-green-1", "tea-black-1", "tea-herbal-1", "alcohol-1", "wine-1",
-    "beer-1", "energy-drinks-1", "soda-1", "kombucha-1", "matcha-1",
-    "herbal-tea-general-1", "caffeine-general-1",
+    # Proteins - Premium (most proteins locked)
+    "almonds-1", "anchovies-1", "beef-lean-1", "bison-1", "cashews-1",
+    "catfish-1", "clams-1", "cod-1", "crab-1", "duck-1", "edamame-1",
+    "goat-1", "haddock-1", "hazelnuts-1", "kidney-beans-1", "lamb-1",
+    "lima-beans-1", "lobster-1", "macadamia-1", "mussels-1", "navy-beans-1",
+    "oysters-cooked-1", "peanut-butter-1", "peanuts-raw-1", "pecans-1",
+    "pistachios-1", "pollock-1", "pork-loin-1", "rabbit-1", "salmon-1",
+    "sardines-1", "scallops-1", "seitan-1", "shrimp-1", "split-peas-1",
+    "tempeh-1", "tilapia-1", "tofu-1", "trout-1", "turkey-1", "venison-1",
+    "walnuts-1", "white-beans-1",
     
-    # Controversial/questioned foods
-    "pineapple-1", "papaya-1", "papaya-general-1", "grapefruit-1", "licorice-1", "artificial-sweeteners-1",
+    # Dairy - Premium (most dairy locked)
+    "almond-milk-1", "butter-1", "cashew-milk-1", "cream-cheese-1",
+    "feta-pasteurized-1", "ghee-1", "goat-cheese-1", "kefir-1",
+    "mozzarella-1", "oat-milk-1", "parmesan-1", "provolone-1",
+    "ricotta-1", "sour-cream-1", "soy-milk-1", "swiss-cheese-1",
     
-    # Meat safety questions
-    "liver-1", "beef-rare-1", "raw-meat-1", "jerky-1",
+    # Grains - Premium (most grains locked)
+    "amaranth-1", "barley-1", "buckwheat-1", "cornmeal-1", "couscous-1",
+    "farro-1", "millet-1", "polenta-1", "rice-noodles-1", "soba-noodles-1",
+    "sorghum-1", "spelt-1", "tapioca-1", "teff-1", "tortilla-corn-1",
+    "wild-rice-1",
     
-    # Herbs and supplements
-    "ginger-1", "turmeric-1", "cinnamon-1", "basil-1", "oregano-1", "parsley-1",
+    # Seeds - Premium
+    "chia-seeds-1", "flax-seeds-1", "hemp-seeds-1", "pumpkin-seeds-1",
+    "sesame-seeds-1", "sunflower-seeds-1",
     
-    # Condiments and misc with questions
-    "soy-sauce-1", "fish-sauce-1", "vinegar-1", "wasabi-1", "mustard-1",
-    "honey-1", "raw-honey-1", "maple-syrup-1",
+    # Beverages - Premium (except water/coconut water)
+    "bone-broth-1", "herbal-tea-ginger-1", "herbal-tea-peppermint-1",
+    "herbal-tea-rooibos-1", "orange-juice-1", "smoothie-1", "sparkling-water-1",
     
-    # Sprouts and raw items
-    "sprouts-1", "bean-sprouts-1", "alfalfa-sprouts-1", "raw-salad-1", "raw-salads-1",
-    
-    # Nuts with allergy concerns
-    "peanuts-1", "tree-nuts-1",
-    
-    # Soy products
-    "tofu-1", "tempeh-1", "edamame-1", "soy-milk-1",
-    
-    # Chocolate and sweets
-    "dark-chocolate-1", "chocolate-1", "tiramisu-1",
-    
-    # Street food and processed
-    "buffet-food-1", "cold-leftovers-1", "fast-food-1", "fried-foods-1",
-    "pre-made-salads-1", "street-food-1", "enoki-mushrooms-1",
+    # Condiments & Other - Premium
+    "apple-cider-vinegar-1", "avocado-toast-1", "dark-chocolate-1",
+    "dried-fruit-mix-1", "energy-balls-1", "fruit-smoothie-bowl-1",
+    "granola-1", "honey-1", "hot-sauce-1", "hummus-1", "kimchi-1",
+    "maple-syrup-1", "mayonnaise-1", "miso-1", "mustard-1",
+    "nut-butter-1", "nutritional-yeast-1", "olive-oil-1", "olives-1",
+    "overnight-oats-1", "pickles-1", "salsa-1", "sauerkraut-1",
+    "soy-sauce-1", "tahini-1", "trail-mix-1", "vinegar-1",
 }
 
 def add_premium_field(food):
