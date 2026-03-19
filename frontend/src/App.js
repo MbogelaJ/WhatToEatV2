@@ -753,10 +753,7 @@ const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack }) => 
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <div className="header-logo">
-          <div className="logo-icon-sm">W</div>
-          <h2>WhatToEat</h2>
-        </div>
+        <h2>Settings</h2>
         <div style={{width: '80px'}}></div>
       </div>
 
@@ -930,13 +927,8 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <div className="header-logo">
-          <div className="logo-icon-sm">W</div>
-          <h2>WhatToEat</h2>
-        </div>
-        <button className="profile-btn" data-testid="profile-btn">
-          <User size={22} />
-        </button>
+        <h2>FAQ</h2>
+        <div style={{width: '80px'}}></div>
       </div>
 
       <div className="page-content">
@@ -1101,10 +1093,7 @@ const TopicsView = ({ onBack, onNavigateHome }) => {
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <div className="header-logo">
-          <div className="logo-icon-sm">W</div>
-          <h2>WhatToEat</h2>
-        </div>
+        <h2>Topics</h2>
         <div style={{width: '80px'}}></div>
       </div>
 
@@ -1144,10 +1133,7 @@ const AboutView = ({ onBack }) => {
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <div className="header-logo">
-          <div className="logo-icon-sm">W</div>
-          <h2>WhatToEat</h2>
-        </div>
+        <h2>About</h2>
         <div style={{width: '80px'}}></div>
       </div>
 
@@ -1212,7 +1198,7 @@ const AboutView = ({ onBack }) => {
 
         <div className="about-footer">
           <p>Made with ❤️ for expectant mothers</p>
-          <p className="copyright">© 2026 WhatToEat. All rights reserved.</p>
+          <p className="copyright">© PenX Technologies. All Rights Reserved.</p>
         </div>
       </div>
     </div>
@@ -1273,7 +1259,7 @@ const DisclaimerPage = ({ onAccept }) => {
           <p>By continuing, you acknowledge that you have read and understood this disclaimer, and agree that this app is for educational purposes only.</p>
         </div>
 
-        <p className="disclaimer-copyright">© PenX Technologies</p>
+        <p className="disclaimer-copyright">© PenX Technologies. All Rights Reserved.</p>
       </div>
 
       {/* Button */}
@@ -1695,14 +1681,6 @@ function App() {
   if (activeView === 'settings') {
     return (
       <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
-            <div className="logo">
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-            </div>
-          </div>
-        </header>
         <SettingsView 
           dietaryRestrictions={dietaryRestrictions}
           onUpdateRestrictions={setDietaryRestrictions}
@@ -1717,14 +1695,6 @@ function App() {
   if (activeView === 'faq') {
     return (
       <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
-            <div className="logo">
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-            </div>
-          </div>
-        </header>
         <FAQView 
           onBack={() => setActiveView('home')} 
           onNavigateToFood={handleNavigateToFood}
@@ -1741,14 +1711,6 @@ function App() {
   if (activeView === 'topics') {
     return (
       <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
-            <div className="logo">
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-            </div>
-          </div>
-        </header>
         <TopicsView 
           onBack={() => setActiveView('home')}
           onNavigateHome={() => setActiveView('home')}
@@ -1762,14 +1724,6 @@ function App() {
   if (activeView === 'about') {
     return (
       <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
-            <div className="logo">
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-            </div>
-          </div>
-        </header>
         <AboutView onBack={() => setActiveView('home')} />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
