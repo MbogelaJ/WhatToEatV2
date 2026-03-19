@@ -1223,6 +1223,7 @@ const DisclaimerPage = ({ onAccept }) => {
           <span className="dot"></span>
           <span className="dot"></span>
           <span className="dot"></span>
+          <span className="dot"></span>
         </div>
       </div>
 
@@ -1307,6 +1308,7 @@ const CreateAccountPage = ({ onNext, onBack }) => {
         <div className="progress-dots">
           <span className="dot"></span>
           <span className="dot active"></span>
+          <span className="dot"></span>
           <span className="dot"></span>
           <span className="dot"></span>
         </div>
@@ -1424,6 +1426,7 @@ const DietaryConsiderationsPage = ({ onNext, onBack, dietaryRestrictions, onUpda
         <div className="progress-dots">
           <span className="dot"></span>
           <span className="dot"></span>
+          <span className="dot"></span>
           <span className="dot active"></span>
           <span className="dot"></span>
         </div>
@@ -1466,36 +1469,87 @@ const DietaryConsiderationsPage = ({ onNext, onBack, dietaryRestrictions, onUpda
   );
 };
 
-        <div className="divider">
-          <span>Or continue with</span>
+// Age and Pregnancy Stage Page Component
+const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setTrimester }) => {
+  const ageRanges = [
+    { id: 'under-18', label: 'Under 18' },
+    { id: '18-24', label: '18-24' },
+    { id: '25-29', label: '25-29' },
+    { id: '30-34', label: '30-34' },
+    { id: '35-39', label: '35-39' },
+    { id: '40-plus', label: '40+' },
+    { id: 'prefer-not', label: 'Prefer not to say' }
+  ];
+
+  const trimesters = [
+    { id: 'first', label: 'First Trimester', description: 'Weeks 1-12' },
+    { id: 'second', label: 'Second Trimester', description: 'Weeks 13-26' },
+    { id: 'third', label: 'Third Trimester', description: 'Weeks 27-40' },
+    { id: 'postpartum', label: 'Postpartum', description: 'After birth' },
+    { id: 'planning', label: 'Planning/Trying', description: 'Before pregnancy' }
+  ];
+
+  return (
+    <div className="onboarding-page" data-testid="age-pregnancy-page">
+      <div className="onboarding-header">
+        <div className="onboarding-logo">
+          <span>W</span>
+        </div>
+        <h1>WhatToEat</h1>
+        <p className="onboarding-subtitle">Pregnancy Nutrition Guide</p>
+        <div className="progress-dots">
+          <span className="dot"></span>
+          <span className="dot"></span>
+          <span className="dot active"></span>
+          <span className="dot"></span>
+          <span className="dot"></span>
+        </div>
+      </div>
+
+      <div className="onboarding-card age-pregnancy-card">
+        <h2>About You</h2>
+        <p className="card-subtitle">Help us personalize your experience</p>
+
+        <div className="form-section">
+          <label className="section-label">Your Age Range</label>
+          <div className="age-options">
+            {ageRanges.map(age => (
+              <button 
+                key={age.id}
+                className={`age-option ${userAge === age.id ? 'selected' : ''}`}
+                onClick={() => setUserAge(age.id)}
+                data-testid={`age-${age.id}`}
+              >
+                {age.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <button className="social-btn apple" onClick={() => handleSocialSignIn('apple')}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-          </svg>
-          <span>Sign in with Apple</span>
-        </button>
-
-        <button className="social-btn google" onClick={() => handleSocialSignIn('google')}>
-          <svg width="20" height="20" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          <span>Sign in with Google</span>
-        </button>
-
-        <p className="security-note">Your data is stored securely</p>
+        <div className="form-section">
+          <label className="section-label">Pregnancy Stage</label>
+          <div className="trimester-options">
+            {trimesters.map(tri => (
+              <button 
+                key={tri.id}
+                className={`trimester-option ${trimester === tri.id ? 'selected' : ''}`}
+                onClick={() => setTrimester(tri.id)}
+                data-testid={`trimester-${tri.id}`}
+              >
+                <span className="trimester-label">{tri.label}</span>
+                <span className="trimester-desc">{tri.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="onboarding-buttons">
-        <button className="onboarding-btn secondary" onClick={onSkip} data-testid="onboarding-back-btn">
+        <button className="onboarding-btn secondary" onClick={onBack} data-testid="age-pregnancy-back-btn">
           <ChevronLeft size={18} />
           <span>Back</span>
         </button>
-        <button className="onboarding-btn primary" onClick={handleContinue} data-testid="onboarding-next-btn">
+        <button className="onboarding-btn primary" onClick={onNext} data-testid="age-pregnancy-next-btn">
           <span>Continue</span>
           <ChevronRight size={18} />
         </button>
@@ -1630,6 +1684,7 @@ const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
 // Daily Tip Component
 const DailyTip = () => {
   const [tip, setTip] = useState(null);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     // Get tip based on day of year for consistency
@@ -1638,17 +1693,21 @@ const DailyTip = () => {
     setTip(DAILY_TIPS[tipIndex]);
   }, []);
 
-  if (!tip) return null;
+  if (!tip || dismissed) return null;
 
   return (
-    <div className="daily-tip" data-testid="daily-tip">
-      <div className="daily-tip-header">
-        <Lightbulb size={16} />
-        <span>Daily Tip</span>
+    <div className="daily-tip-v2" data-testid="daily-tip">
+      <button className="tip-dismiss" onClick={() => setDismissed(true)}>
+        <X size={16} />
+      </button>
+      <div className="tip-icon-v2">
+        <Lightbulb size={24} />
       </div>
-      <div className="daily-tip-content">
-        <span className="tip-icon">{tip.icon}</span>
-        <p>{tip.tip}</p>
+      <div className="tip-content-v2">
+        <span className="tip-label">DAILY TIP</span>
+        <p className="tip-text">{tip.tip}</p>
+        <p className="tip-source">(Source: CDC Nutrition During Pregnancy Guidelines)</p>
+        <button className="tip-readmore">Read more &gt;</button>
       </div>
     </div>
   );
@@ -1713,58 +1772,60 @@ function App() {
   const [selectedFood, setSelectedFood] = useState(null);
   const [activeView, setActiveView] = useState('home');
   
-  // Onboarding and Premium states
-  const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useState(() => {
-    return localStorage.getItem('disclaimerAccepted') === 'true';
+  // Onboarding flow: Disclaimer -> CreateAccount -> AgePregnancy -> DietaryConsiderations -> Premium -> Home
+  // Step tracking: 0=Disclaimer, 1=CreateAccount, 2=AgePregnancy, 3=DietaryConsiderations, 4=Premium, 5=Home
+  const [onboardingStep, setOnboardingStep] = useState(() => {
+    const step = localStorage.getItem('onboardingStep');
+    return step ? parseInt(step, 10) : 0;
   });
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
-    return localStorage.getItem('onboardingCompleted') === 'true';
-  });
-  const [hasSeenPremiumOffer, setHasSeenPremiumOffer] = useState(() => {
-    return localStorage.getItem('hasSeenPremiumOffer') === 'true';
-  });
+  
   const [isPremium, setIsPremium] = useState(() => {
     return localStorage.getItem('isPremium') === 'true';
   });
-  
-  // Show premium page after onboarding if not seen yet
-  const [showPremiumAfterOnboarding, setShowPremiumAfterOnboarding] = useState(false);
   
   const [dietaryRestrictions, setDietaryRestrictions] = useState(() => {
     const saved = localStorage.getItem('dietaryRestrictions');
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Handle disclaimer acceptance
-  const handleDisclaimerAccept = () => {
-    localStorage.setItem('disclaimerAccepted', 'true');
-    setHasAcceptedDisclaimer(true);
+  // User profile states for onboarding
+  const [userAge, setUserAge] = useState(() => {
+    return localStorage.getItem('userAge') || '';
+  });
+  const [trimester, setTrimester] = useState(() => {
+    return localStorage.getItem('trimester') || '';
+  });
+  
+  // Personalized view state
+  const [personalizedView, setPersonalizedView] = useState(false);
+
+  // Persist user profile to localStorage
+  useEffect(() => {
+    if (userAge) localStorage.setItem('userAge', userAge);
+  }, [userAge]);
+
+  useEffect(() => {
+    if (trimester) localStorage.setItem('trimester', trimester);
+  }, [trimester]);
+
+  // Handle onboarding step progression
+  const goToNextStep = () => {
+    const nextStep = onboardingStep + 1;
+    localStorage.setItem('onboardingStep', nextStep.toString());
+    setOnboardingStep(nextStep);
   };
 
-  // Handle onboarding completion - single page now goes directly to premium/home
-  const handleOnboardingNext = () => {
-    // Complete onboarding and persist
-    localStorage.setItem('onboardingCompleted', 'true');
-    setHasCompletedOnboarding(true);
-    
-    // Show premium offer if not seen and not already premium
-    if (!localStorage.getItem('hasSeenPremiumOffer') && !isPremium) {
-      setShowPremiumAfterOnboarding(true);
-    }
+  const goToPreviousStep = () => {
+    const prevStep = Math.max(0, onboardingStep - 1);
+    localStorage.setItem('onboardingStep', prevStep.toString());
+    setOnboardingStep(prevStep);
   };
 
-  const handleOnboardingSkip = () => {
-    // Go back to disclaimer (Back button)
-    setHasAcceptedDisclaimer(false);
-    localStorage.removeItem('disclaimerAccepted');
-  };
-
-  // Handle premium page close (after onboarding flow)
+  // Handle premium page close (skip premium)
   const handlePremiumClose = () => {
-    localStorage.setItem('hasSeenPremiumOffer', 'true');
-    setHasSeenPremiumOffer(true);
-    setShowPremiumAfterOnboarding(false);
-    setActiveView('home');
+    const nextStep = 5; // Go to Home
+    localStorage.setItem('onboardingStep', nextStep.toString());
+    setOnboardingStep(nextStep);
   };
 
   // Handle premium purchase
@@ -1773,6 +1834,7 @@ function App() {
     localStorage.setItem('isPremium', 'true');
     setIsPremium(true);
     alert('Thank you for purchasing Premium! You now have full access to all features.');
+    handlePremiumClose();
   };
 
   // Save dietary restrictions to localStorage
@@ -1824,42 +1886,68 @@ function App() {
     }, 100);
   };
 
-  // Render Disclaimer Page (First time only)
-  if (!hasAcceptedDisclaimer) {
-    return <DisclaimerPage onAccept={handleDisclaimerAccept} />;
+  // Onboarding Flow: Step 0 = Disclaimer
+  if (onboardingStep === 0) {
+    return <DisclaimerPage onAccept={goToNextStep} />;
   }
 
-  // Render Onboarding Pages (First time only)
-  if (!hasCompletedOnboarding) {
+  // Onboarding Flow: Step 1 = Create Account
+  if (onboardingStep === 1) {
     return (
-      <OnboardingPage 
-        page={onboardingPage} 
-        onNext={handleOnboardingNext} 
-        onSkip={handleOnboardingSkip} 
+      <CreateAccountPage 
+        onNext={goToNextStep} 
+        onBack={goToPreviousStep} 
       />
     );
   }
 
-  // Show Premium offer after completing onboarding (first time only)
-  if (showPremiumAfterOnboarding && !isPremium) {
+  // Onboarding Flow: Step 2 = Age and Pregnancy Stage
+  if (onboardingStep === 2) {
+    return (
+      <AgePregnancyPage 
+        onNext={goToNextStep} 
+        onBack={goToPreviousStep}
+        userAge={userAge}
+        setUserAge={setUserAge}
+        trimester={trimester}
+        setTrimester={setTrimester}
+      />
+    );
+  }
+
+  // Onboarding Flow: Step 3 = Dietary Considerations
+  if (onboardingStep === 3) {
+    return (
+      <DietaryConsiderationsPage 
+        onNext={goToNextStep} 
+        onBack={goToPreviousStep}
+        dietaryRestrictions={dietaryRestrictions}
+        onUpdateRestrictions={setDietaryRestrictions}
+      />
+    );
+  }
+
+  // Onboarding Flow: Step 4 = Premium Offer
+  if (onboardingStep === 4) {
     return (
       <PremiumPage 
         onBack={handlePremiumClose}
-        onPurchase={() => {
-          handlePremiumPurchase();
-          handlePremiumClose();
-        }}
+        onPurchase={handlePremiumPurchase}
         isPremium={isPremium}
       />
     );
   }
 
-  // Render Premium Page (from nav)
+  // Render Premium Page (from nav - after onboarding completed)
   if (activeView === 'premium') {
     return (
       <PremiumPage 
         onBack={() => setActiveView('home')}
-        onPurchase={handlePremiumPurchase}
+        onPurchase={() => {
+          localStorage.setItem('isPremium', 'true');
+          setIsPremium(true);
+          alert('Thank you for purchasing Premium! You now have full access to all features.');
+        }}
         isPremium={isPremium}
       />
     );
@@ -1950,23 +2038,65 @@ function App() {
     );
   }
 
+  // Trimester info mapping
+  const trimesterInfo = {
+    'first': { label: 'First Trimester', focus: 'Folate, Vitamin B6, Protein' },
+    'second': { label: 'Second Trimester', focus: 'Calcium, Vitamin D, Omega-3s' },
+    'third': { label: 'Third Trimester', focus: 'Iron, Calcium, DHA, Protein' },
+    'postpartum': { label: 'Postpartum', focus: 'Iron, Protein, Calcium, Hydration' },
+    'planning': { label: 'Planning/Trying', focus: 'Folate, Iron, Zinc' }
+  };
+
+  // Calculate free vs premium food counts
+  const freeCount = Math.floor(filteredFoods.length * 0.35);
+  const premiumCount = filteredFoods.length - freeCount;
+
   return (
     <div className="app" data-testid="food-search-app">
       {/* Header */}
-      <header className="app-header">
+      <header className="app-header home-header">
         <div className="header-content">
           <div className="logo">
             <div className="logo-icon">W</div>
             <h1>WhatToEat</h1>
           </div>
-          <p className="tagline">Find nutritional info for any food</p>
+          <div className="header-actions">
+            <button className="header-icon-btn" data-testid="logout-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+            </button>
+            <button className="header-icon-btn" onClick={() => setActiveView('settings')} data-testid="profile-btn">
+              <User size={20} />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Main */}
       <main className="app-main">
+        {/* Educational Disclaimer Banner */}
+        <div className="educational-banner" data-testid="educational-banner">
+          <p><strong>Educational Information:</strong> This content is for general reference only and does not constitute medical advice. Consult a healthcare professional for personalized guidance.</p>
+        </div>
+
         {/* Daily Tip */}
         <DailyTip />
+
+        {/* Trimester Section */}
+        {trimester && trimesterInfo[trimester] && (
+          <div className="trimester-banner" data-testid="trimester-banner">
+            <div className="trimester-icon">
+              <Sparkles size={20} />
+            </div>
+            <div className="trimester-content">
+              <span className="trimester-title">{trimesterInfo[trimester].label}</span>
+              <span className="trimester-focus">Focus on: {trimesterInfo[trimester].focus}</span>
+            </div>
+          </div>
+        )}
         
         {/* Search */}
         <div className="search-section">
@@ -1975,7 +2105,7 @@ function App() {
               <Search size={20} className="search-icon" />
               <input
                 type="text"
-                placeholder="Search foods... (e.g., apple, chicken, pasta)"
+                placeholder="Search foods..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="search-input"
@@ -1989,15 +2119,6 @@ function App() {
             </div>
           </div>
 
-          {/* Active Dietary Restrictions Indicator */}
-          {dietaryRestrictions.length > 0 && (
-            <div className="active-dietary-indicator" data-testid="active-dietary-indicator">
-              <AlertTriangle size={14} />
-              <span>{dietaryRestrictions.length} dietary restriction{dietaryRestrictions.length > 1 ? 's' : ''} active</span>
-              <button onClick={() => setActiveView('settings')} className="manage-btn">Manage</button>
-            </div>
-          )}
-
           {/* Filters */}
           <CategoryFilter 
             categories={categories}
@@ -2008,6 +2129,24 @@ function App() {
             selectedSafety={selectedSafety}
             onSelect={setSelectedSafety}
           />
+
+          {/* Personalized View Toggle */}
+          <button 
+            className={`personalized-view-btn ${personalizedView ? 'active' : ''}`}
+            onClick={() => setPersonalizedView(!personalizedView)}
+            data-testid="personalized-view-btn"
+          >
+            Personalized View
+          </button>
+
+          {/* Active Dietary Restrictions Indicator */}
+          {dietaryRestrictions.length > 0 && personalizedView && (
+            <div className="active-dietary-indicator" data-testid="active-dietary-indicator">
+              <AlertTriangle size={14} />
+              <span>{dietaryRestrictions.length} dietary restriction{dietaryRestrictions.length > 1 ? 's' : ''} active</span>
+              <button onClick={() => setActiveView('settings')} className="manage-btn">Manage</button>
+            </div>
+          )}
         </div>
 
         {/* Results */}
@@ -2025,7 +2164,7 @@ function App() {
             </div>
           ) : (
             <>
-              <p className="results-count">Showing {filteredFoods.length} foods</p>
+              <p className="results-count">{freeCount} free foods · {premiumCount} premium foods</p>
               <div className="foods-grid">
                 {filteredFoods.map((food) => (
                   <FoodCard 
