@@ -3097,3 +3097,130 @@ body {
 .tip-readmore:hover {
   text-decoration: underline;
 }
+
+/* Dietary Considerations V2 - 2-column grid layout */
+.dietary-card-v2 {
+  max-height: none;
+}
+
+.dietary-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.dietary-icon {
+  width: 44px;
+  height: 44px;
+  background: #fef3c7;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.dietary-card-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.dietary-card-header .card-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.dietary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.dietary-grid-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.dietary-grid-option:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.dietary-grid-option.selected {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.dietary-grid-option .check-mark {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+/* Header with left actions */
+.header-left-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.home-header .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home-header .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* About page tagline */
+.about-tagline {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0.25rem 0 0.5rem 0;
+}
+
+/* Home header full width layout */
+.home-header .header-content {
+  max-width: none;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home-header .logo {
+  margin-bottom: 0;
+  flex: 1;
+  justify-content: center;
+}
+
+/* Home header with green gradient and action buttons */
+.app-header.home-header {
+  background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+  border-bottom: none;
+  padding: 1rem 1rem;
+}
+
+.app-header.home-header .logo-icon {
+  background: white;
+  color: #16a34a;
+}
+
+.app-header.home-header h1 {
+  color: white;
+}

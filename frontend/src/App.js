@@ -1145,6 +1145,7 @@ const AboutView = ({ onBack }) => {
             <div className="logo-icon large">W</div>
           </div>
           <h1>WhatToEat</h1>
+          <p className="about-tagline">Pregnancy Nutrition Guide</p>
           <p className="version">Version 1.0.0</p>
         </div>
 
@@ -1390,30 +1391,36 @@ const CreateAccountPage = ({ onNext, onBack }) => {
 // Dietary Considerations Page Component
 const DietaryConsiderationsPage = ({ onNext, onBack, dietaryRestrictions, onUpdateRestrictions }) => {
   const dietaryOptions = [
-    { id: 'vegetarian', label: 'Vegetarian', description: 'No meat or fish' },
-    { id: 'vegan', label: 'Vegan', description: 'No animal products' },
-    { id: 'pescatarian', label: 'Pescatarian', description: 'Fish but no meat' },
-    { id: 'gluten-free', label: 'Gluten-Free', description: 'No gluten' },
-    { id: 'dairy-free', label: 'Dairy-Free', description: 'No dairy products' },
-    { id: 'nut-free', label: 'Nut-Free', description: 'No tree nuts or peanuts' },
-    { id: 'egg-free', label: 'Egg-Free', description: 'No eggs' },
-    { id: 'soy-free', label: 'Soy-Free', description: 'No soy products' },
-    { id: 'low-sodium', label: 'Low Sodium', description: 'Limit salt intake' },
-    { id: 'diabetic', label: 'Diabetic Friendly', description: 'Low sugar options' },
-    { id: 'kosher', label: 'Kosher', description: 'Kosher dietary laws' },
-    { id: 'halal', label: 'Halal', description: 'Halal dietary laws' },
-    { id: 'paleo', label: 'Paleo', description: 'Paleo diet' },
-    { id: 'keto', label: 'Keto', description: 'Ketogenic diet' },
-    { id: 'low-fodmap', label: 'Low FODMAP', description: 'Low FODMAP diet' }
+    { id: 'none', label: 'No Dietary Restrictions' },
+    { id: 'vegetarian', label: 'Vegetarian' },
+    { id: 'vegan', label: 'Vegan' },
+    { id: 'gluten-free', label: 'Gluten-Free' },
+    { id: 'dairy-free', label: 'Dairy-Free' },
+    { id: 'halal', label: 'Halal' },
+    { id: 'kosher', label: 'Kosher' },
+    { id: 'nut-allergy', label: 'Nut Allergy' },
+    { id: 'shellfish-allergy', label: 'Shellfish Allergy' },
+    { id: 'food-allergies', label: 'Food Allergies' },
+    { id: 'lactose-intolerance', label: 'Lactose Intolerance' },
+    { id: 'gestational-diabetes', label: 'Gestational Diabetes' },
+    { id: 'high-blood-pressure', label: 'High Blood Pressure' },
+    { id: 'anemia', label: 'Anemia' }
   ];
 
   const toggleRestriction = (id) => {
-    if (dietaryRestrictions.includes(id)) {
-      onUpdateRestrictions(dietaryRestrictions.filter(r => r !== id));
+    if (id === 'none') {
+      // Clear all restrictions when "No Dietary Restrictions" is selected
+      onUpdateRestrictions([]);
     } else {
-      onUpdateRestrictions([...dietaryRestrictions, id]);
+      if (dietaryRestrictions.includes(id)) {
+        onUpdateRestrictions(dietaryRestrictions.filter(r => r !== id));
+      } else {
+        onUpdateRestrictions([...dietaryRestrictions, id]);
+      }
     }
   };
+
+  const isNoneSelected = dietaryRestrictions.length === 0;
 
   return (
     <div className="onboarding-page" data-testid="dietary-considerations-page">
@@ -1432,25 +1439,30 @@ const DietaryConsiderationsPage = ({ onNext, onBack, dietaryRestrictions, onUpda
         </div>
       </div>
 
-      <div className="onboarding-card dietary-card">
-        <h2>Dietary Considerations</h2>
-        <p className="card-subtitle">Select any that apply to personalize your experience</p>
+      <div className="onboarding-card dietary-card-v2">
+        <div className="dietary-card-header">
+          <div className="dietary-icon">
+            <Utensils size={24} />
+          </div>
+          <div>
+            <h2>Dietary Considerations</h2>
+            <p className="card-subtitle">Select any that apply to you</p>
+          </div>
+        </div>
 
-        <div className="dietary-options">
+        <div className="dietary-grid">
           {dietaryOptions.map(option => (
-            <label key={option.id} className={`dietary-option ${dietaryRestrictions.includes(option.id) ? 'selected' : ''}`}>
-              <input
-                type="checkbox"
-                checked={dietaryRestrictions.includes(option.id)}
-                onChange={() => toggleRestriction(option.id)}
-              />
-              <div className="option-content">
-                <span className="option-label">{option.label}</span>
-              </div>
-              <div className={`checkbox-indicator ${dietaryRestrictions.includes(option.id) ? 'checked' : ''}`}>
-                {dietaryRestrictions.includes(option.id) && <Check size={14} />}
-              </div>
-            </label>
+            <button 
+              key={option.id}
+              className={`dietary-grid-option ${option.id === 'none' ? (isNoneSelected ? 'selected' : '') : (dietaryRestrictions.includes(option.id) ? 'selected' : '')}`}
+              onClick={() => toggleRestriction(option.id)}
+              data-testid={`dietary-${option.id}`}
+            >
+              <span>{option.label}</span>
+              {(option.id === 'none' ? isNoneSelected : dietaryRestrictions.includes(option.id)) && (
+                <Check size={16} className="check-mark" />
+              )}
+            </button>
           ))}
         </div>
       </div>
@@ -1482,11 +1494,11 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
   ];
 
   const trimesters = [
-    { id: 'first', label: 'First Trimester', description: 'Weeks 1-12' },
-    { id: 'second', label: 'Second Trimester', description: 'Weeks 13-26' },
-    { id: 'third', label: 'Third Trimester', description: 'Weeks 27-40' },
-    { id: 'postpartum', label: 'Postpartum', description: 'After birth' },
-    { id: 'planning', label: 'Planning/Trying', description: 'Before pregnancy' }
+    { id: 'first', label: 'First Trimester (Week 1 - 12)' },
+    { id: 'second', label: 'Second Trimester (Week 13 - 26)' },
+    { id: 'third', label: 'Third Trimester (Week 27 - 40)' },
+    { id: 'postpartum', label: 'Postpartum (After birth)' },
+    { id: 'planning', label: 'Planning/Trying (Before pregnancy)' }
   ];
 
   return (
@@ -1537,7 +1549,6 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
                 data-testid={`trimester-${tri.id}`}
               >
                 <span className="trimester-label">{tri.label}</span>
-                <span className="trimester-desc">{tri.description}</span>
               </button>
             ))}
           </div>
@@ -1828,6 +1839,21 @@ function App() {
     setOnboardingStep(nextStep);
   };
 
+  // Handle going back to Age/Pregnancy onboarding from Home
+  const goBackToOnboarding = () => {
+    localStorage.setItem('onboardingStep', '2'); // Go to Age/Pregnancy step
+    setOnboardingStep(2);
+  };
+
+  // Handle closing/exiting the app
+  const handleCloseApp = () => {
+    if (window.confirm('Are you sure you want to close the app?')) {
+      // For web, we can close the window if it was opened by script
+      // For Capacitor/mobile, this would use App.exitApp()
+      window.close();
+    }
+  };
+
   // Handle premium purchase
   const handlePremiumPurchase = () => {
     // In a real app, this would integrate with payment provider
@@ -2024,14 +2050,6 @@ function App() {
   if (activeView === 'about') {
     return (
       <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
-            <div className="logo">
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-            </div>
-          </div>
-        </header>
         <AboutView onBack={() => setActiveView('home')} />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
@@ -2056,19 +2074,20 @@ function App() {
       {/* Header */}
       <header className="app-header home-header">
         <div className="header-content">
+          <div className="header-left-actions">
+            <button className="header-icon-btn" onClick={goBackToOnboarding} data-testid="back-to-onboarding-btn" title="Go back to settings">
+              <ArrowLeft size={20} />
+            </button>
+          </div>
           <div className="logo">
             <div className="logo-icon">W</div>
             <h1>WhatToEat</h1>
           </div>
           <div className="header-actions">
-            <button className="header-icon-btn" data-testid="logout-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
+            <button className="header-icon-btn" onClick={handleCloseApp} data-testid="close-app-btn" title="Close app">
+              <X size={20} />
             </button>
-            <button className="header-icon-btn" onClick={() => setActiveView('settings')} data-testid="profile-btn">
+            <button className="header-icon-btn" onClick={() => setActiveView('settings')} data-testid="profile-btn" title="Profile settings">
               <User size={20} />
             </button>
           </div>
