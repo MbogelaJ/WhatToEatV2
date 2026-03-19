@@ -663,6 +663,126 @@ body {
   padding: 1.5rem;
 }
 
+/* Benefits Section */
+.benefits-section {
+  background: var(--accent-green-dim);
+  border-left: 3px solid var(--accent-green);
+  padding: 1rem 1.25rem;
+  margin: 0 1rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.benefits-content {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.benefits-icon {
+  color: var(--accent-green);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.benefits-content p {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Allergy Warning */
+.allergy-warning {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin: 1rem;
+  color: #ef4444;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.allergy-warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Precautions Section */
+.precautions-section {
+  margin: 0 1rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.precautions-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: var(--bg-secondary);
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.precautions-toggle:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.precautions-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.precautions-header svg {
+  color: var(--accent-orange);
+}
+
+.precautions-list {
+  padding: 0.75rem 1rem 1rem 2.5rem;
+  margin: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+}
+
+.precautions-list li {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.precautions-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Disclaimer Section */
+.disclaimer-section {
+  padding: 0.75rem 1rem;
+  margin: 0 1rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.disclaimer-section p {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin: 0;
+  font-style: italic;
+}
+
 .nutrition-item {
   display: flex;
   flex-direction: column;

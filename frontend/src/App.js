@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Search, Utensils, Flame, Dumbbell, Wheat, Droplet, Leaf, X, AlertCircle, Filter, ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
+import { Search, Utensils, Flame, Dumbbell, Wheat, Droplet, Leaf, X, AlertCircle, Filter, ShieldCheck, ShieldAlert, ShieldX, Heart, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -76,6 +76,8 @@ const FoodCard = ({ food, onClick }) => {
 
 // Food Detail Modal
 const FoodDetailModal = ({ food, onClose }) => {
+  const [showPrecautions, setShowPrecautions] = useState(false);
+  
   if (!food) return null;
 
   return (
@@ -105,6 +107,25 @@ const FoodDetailModal = ({ food, onClose }) => {
           </div>
         </div>
 
+        {/* Benefits One-Liner */}
+        {food.benefits && (
+          <div className="benefits-section" data-testid="benefits-section">
+            <div className="benefits-content">
+              <Heart size={18} className="benefits-icon" />
+              <p>{food.benefits}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Allergy Warning */}
+        {food.allergy_warning && (
+          <div className="allergy-warning" data-testid="allergy-warning">
+            <AlertTriangle size={16} />
+            <span>{food.allergy_warning}</span>
+          </div>
+        )}
+
+        {/* Nutrition Grid */}
         <div className="nutrition-grid">
           <div className="nutrition-item calories">
             <Flame size={24} />
@@ -133,6 +154,35 @@ const FoodDetailModal = ({ food, onClose }) => {
               <div className="nutrition-label">Fiber</div>
             </div>
           )}
+        </div>
+
+        {/* Precautions Section - Collapsible */}
+        {food.precautions && food.precautions.length > 0 && (
+          <div className="precautions-section" data-testid="precautions-section">
+            <button 
+              className="precautions-toggle"
+              onClick={() => setShowPrecautions(!showPrecautions)}
+              data-testid="precautions-toggle"
+            >
+              <div className="precautions-header">
+                <AlertCircle size={16} />
+                <span>Things to Watch Out For</span>
+              </div>
+              {showPrecautions ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </button>
+            {showPrecautions && (
+              <ul className="precautions-list" data-testid="precautions-list">
+                {food.precautions.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Doctor Disclaimer */}
+        <div className="disclaimer-section">
+          <p>Always check with your doctor if you have allergies or concerns.</p>
         </div>
       </div>
     </div>
