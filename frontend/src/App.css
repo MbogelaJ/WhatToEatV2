@@ -3371,3 +3371,91 @@ body {
 .auth-error-message svg {
   flex-shrink: 0;
 }
+
+/* Age Input Field */
+.age-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  transition: border-color 0.2s;
+}
+
+.age-input-wrapper:focus-within {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.age-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: transparent;
+  width: 80px;
+  -moz-appearance: textfield;
+}
+
+.age-input::-webkit-outer-spin-button,
+.age-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.age-input::placeholder {
+  font-weight: 400;
+  font-size: 1rem;
+  color: #9ca3af;
+}
+
+.age-suffix {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Personalized Banner (Age + Trimester) */
+.personalized-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.personalized-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.personalized-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.personalized-age {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.personalized-trimester {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.personalized-focus {
+  font-size: 0.85rem;
+  color: #16a34a;
+  opacity: 0.9;
+}

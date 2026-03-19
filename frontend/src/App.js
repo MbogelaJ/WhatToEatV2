@@ -1693,16 +1693,6 @@ const DietaryConsiderationsPage = ({ onNext, onBack, dietaryRestrictions, onUpda
 
 // Age and Pregnancy Stage Page Component
 const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setTrimester }) => {
-  const ageRanges = [
-    { id: 'under-18', label: 'Under 18' },
-    { id: '18-24', label: '18-24' },
-    { id: '25-29', label: '25-29' },
-    { id: '30-34', label: '30-34' },
-    { id: '35-39', label: '35-39' },
-    { id: '40-plus', label: '40+' },
-    { id: 'prefer-not', label: 'Prefer not to say' }
-  ];
-
   const trimesters = [
     { id: 'first', label: 'First Trimester (Week 1 - 12)' },
     { id: 'second', label: 'Second Trimester (Week 13 - 26)' },
@@ -1710,6 +1700,14 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
     { id: 'postpartum', label: 'Postpartum (After birth)' },
     { id: 'planning', label: 'Planning/Trying (Before pregnancy)' }
   ];
+
+  const handleAgeChange = (e) => {
+    const value = e.target.value;
+    // Only allow numbers and limit to 2 digits
+    if (value === '' || (/^\d{1,2}$/.test(value) && parseInt(value) <= 99)) {
+      setUserAge(value);
+    }
+  };
 
   return (
     <div className="onboarding-page" data-testid="age-pregnancy-page">
@@ -1733,18 +1731,19 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
         <p className="card-subtitle">Help us personalize your experience</p>
 
         <div className="form-section">
-          <label className="section-label">Your Age Range</label>
-          <div className="age-options">
-            {ageRanges.map(age => (
-              <button 
-                key={age.id}
-                className={`age-option ${userAge === age.id ? 'selected' : ''}`}
-                onClick={() => setUserAge(age.id)}
-                data-testid={`age-${age.id}`}
-              >
-                {age.label}
-              </button>
-            ))}
+          <label className="section-label">Your Age (Years)</label>
+          <div className="age-input-wrapper">
+            <input
+              type="number"
+              min="13"
+              max="60"
+              placeholder="Enter your age"
+              value={userAge}
+              onChange={handleAgeChange}
+              className="age-input"
+              data-testid="age-input"
+            />
+            <span className="age-suffix">years old</span>
           </div>
         </div>
 
@@ -2372,15 +2371,22 @@ function App() {
         {/* Daily Tip */}
         <DailyTip />
 
-        {/* Trimester Section */}
-        {trimester && trimesterInfo[trimester] && (
-          <div className="trimester-banner" data-testid="trimester-banner">
-            <div className="trimester-icon">
+        {/* Personalized Info Section - Age and Trimester */}
+        {(userAge || (trimester && trimesterInfo[trimester])) && (
+          <div className="personalized-banner" data-testid="personalized-banner">
+            <div className="personalized-icon">
               <Sparkles size={20} />
             </div>
-            <div className="trimester-content">
-              <span className="trimester-title">{trimesterInfo[trimester].label}</span>
-              <span className="trimester-focus">Focus on: {trimesterInfo[trimester].focus}</span>
+            <div className="personalized-content">
+              {userAge && (
+                <span className="personalized-age">{userAge} years old</span>
+              )}
+              {trimester && trimesterInfo[trimester] && (
+                <>
+                  <span className="personalized-trimester">{trimesterInfo[trimester].label}</span>
+                  <span className="personalized-focus">Focus on: {trimesterInfo[trimester].focus}</span>
+                </>
+              )}
             </div>
           </div>
         )}
