@@ -1082,13 +1082,12 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
 
   return (
     <div className="page-view" data-testid="faq-view">
-      <div className="page-header">
-        <button className="back-button" onClick={onBack} data-testid="faq-back-btn">
-          <ArrowLeft size={20} />
-          <span>Back</span>
-        </button>
-        <h2>WhatToEat</h2>
-        <button className="profile-btn" data-testid="profile-btn">
+      <div className="faq-header">
+        <div className="faq-header-left">
+          <div className="logo-icon-v2">W</div>
+          <span className="logo-text-v2">WhatToEat</span>
+        </div>
+        <button className="header-action-btn" data-testid="faq-profile-btn">
           <User size={22} />
         </button>
       </div>
@@ -2272,14 +2271,6 @@ function App() {
   if (activeView === 'faq') {
     return (
       <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
-            <div className="logo">
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-            </div>
-          </div>
-        </header>
         <FAQView 
           onBack={() => setActiveView('home')} 
           onNavigateToFood={handleNavigateToFood}
@@ -2380,28 +2371,25 @@ function App() {
           </div>
         )}
 
-        {/* Daily Tip */}
-        <DailyTip />
-
-        {/* Search Bar - Hidden per screenshot, but keeping functionality */}
-        {searchQuery && (
-          <div className="search-active-bar">
-            <Search size={18} />
-            <input
-              type="text"
-              placeholder="Search foods..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input-active"
-              data-testid="food-search-input"
-            />
+        {/* Search Bar */}
+        <div className="home-search-bar">
+          <Search size={18} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search foods..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="home-search-input"
+            data-testid="food-search-input"
+          />
+          {searchQuery && (
             <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
               <X size={18} />
             </button>
-          </div>
-        )}
+          )}
+        </div>
         
-        {/* Search Section - Filters */}
+        {/* Filters Section */}
         <div className="filters-section">
           <CategoryFilter 
             categories={categories}
