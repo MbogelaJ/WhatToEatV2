@@ -1,10 +1,38 @@
 import { useState, useEffect } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Search, Utensils, Flame, Dumbbell, Wheat, Droplet, Leaf, X, AlertCircle, Filter } from "lucide-react";
+import { Search, Utensils, Flame, Dumbbell, Wheat, Droplet, Leaf, X, AlertCircle, Filter, ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Safety badge colors and icons
+const SAFETY_CONFIG = {
+  SAFE: { color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.15)', label: 'Safe', Icon: ShieldCheck },
+  LIMIT: { color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)', label: 'Limit', Icon: ShieldAlert },
+  AVOID: { color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.15)', label: 'Avoid', Icon: ShieldX },
+};
+
+// Safety Badge Component
+const SafetyBadge = ({ safety }) => {
+  const config = SAFETY_CONFIG[safety] || SAFETY_CONFIG.SAFE;
+  const { Icon } = config;
+  
+  return (
+    <span 
+      className="safety-badge"
+      style={{ 
+        backgroundColor: config.bgColor, 
+        color: config.color,
+        borderColor: config.color 
+      }}
+      data-testid={`safety-badge-${safety?.toLowerCase()}`}
+    >
+      <Icon size={12} />
+      {config.label}
+    </span>
+  );
+};
 
 // Food Card Component
 const FoodCard = ({ food, onClick }) => {
@@ -25,7 +53,10 @@ const FoodCard = ({ food, onClick }) => {
       </div>
       <div className="food-card-content">
         <h3 className="food-card-name">{food.name}</h3>
-        {food.category && <p className="food-card-category">{food.category}</p>}
+        <div className="food-card-meta">
+          {food.category && <span className="food-card-category">{food.category}</span>}
+          {food.safety && <SafetyBadge safety={food.safety} />}
+        </div>
         <div className="food-card-nutrients">
           {food.calories !== null && food.calories !== undefined && (
             <span className="nutrient-badge calories">
@@ -64,7 +95,10 @@ const FoodDetailModal = ({ food, onClose }) => {
           )}
           <div className="modal-title">
             <h2>{food.name}</h2>
-            {food.category && <p className="modal-brand">{food.category}</p>}
+            <div className="modal-meta">
+              {food.category && <span className="modal-category">{food.category}</span>}
+              {food.safety && <SafetyBadge safety={food.safety} />}
+            </div>
             {food.serving_size && (
               <p className="modal-serving">Per {food.serving_size}</p>
             )}
@@ -110,7 +144,7 @@ const CategoryFilter = ({ categories, selectedCategory, onSelect }) => {
   if (!categories || categories.length === 0) return null;
   
   return (
-    <div className="category-filter" data-testid="category-filter">
+    <div className="filter-section" data-testid="category-filter">
       <div className="filter-header">
         <Filter size={14} />
         <span>Categories</span>
@@ -119,7 +153,7 @@ const CategoryFilter = ({ categories, selectedCategory, onSelect }) => {
         <button
           className={`filter-tag ${selectedCategory === '' ? 'active' : ''}`}
           onClick={() => onSelect('')}
-          data-testid="filter-all"
+          data-testid="filter-category-all"
         >
           All
         </button>
@@ -128,7 +162,7 @@ const CategoryFilter = ({ categories, selectedCategory, onSelect }) => {
             key={category}
             className={`filter-tag ${selectedCategory === category ? 'active' : ''}`}
             onClick={() => onSelect(category)}
-            data-testid={`filter-${category.toLowerCase().replace(/\s+/g, '-')}`}
+            data-testid={`filter-category-${category.toLowerCase().replace(/\s+/g, '-')}`}
           >
             {category}
           </button>
@@ -138,11 +172,53 @@ const CategoryFilter = ({ categories, selectedCategory, onSelect }) => {
   );
 };
 
+// Safety Filter Component
+const SafetyFilter = ({ selectedSafety, onSelect }) => {
+  const safetyLevels = ['SAFE', 'LIMIT', 'AVOID'];
+  
+  return (
+    <div className="filter-section" data-testid="safety-filter">
+      <div className="filter-header">
+        <ShieldCheck size={14} />
+        <span>Safety Level</span>
+      </div>
+      <div className="filter-tags">
+        <button
+          className={`filter-tag ${selectedSafety === '' ? 'active' : ''}`}
+          onClick={() => onSelect('')}
+          data-testid="filter-safety-all"
+        >
+          All
+        </button>
+        {safetyLevels.map((level) => {
+          const config = SAFETY_CONFIG[level];
+          return (
+            <button
+              key={level}
+              className={`filter-tag safety-tag ${selectedSafety === level ? 'active' : ''}`}
+              onClick={() => onSelect(level)}
+              data-testid={`filter-safety-${level.toLowerCase()}`}
+              style={selectedSafety === level ? { 
+                backgroundColor: config.bgColor, 
+                borderColor: config.color,
+                color: config.color 
+              } : {}}
+            >
+              {config.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 function App() {
-  // Search and filter state - these trigger instant re-renders
+  // Search and filter state - INSTANT UPDATES
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSafety, setSelectedSafety] = useState('');
   
   // Data state
   const [foods, setFoods] = useState([]);
@@ -157,16 +233,13 @@ function App() {
     const loadFoods = async () => {
       setLoading(true);
       try {
-        // Load all foods from API
         const response = await axios.get(`${API}/foods/all`);
         const loadedFoods = response.data.foods || [];
         setFoods(loadedFoods);
         
         // Extract unique categories
         const uniqueCategories = [...new Set(
-          loadedFoods
-            .map(food => food.category)
-            .filter(Boolean)
+          loadedFoods.map(food => food.category).filter(Boolean)
         )].sort();
         setCategories(uniqueCategories);
         
@@ -182,9 +255,9 @@ function App() {
   }, []);
 
   // CLIENT-SIDE FILTERING - INSTANT, NO DEBOUNCE, NO API CALL
-  // This computes on EVERY render when searchQuery or selectedCategory changes
+  // Filters: searchQuery + selectedCategory + selectedSafety
   const filteredFoods = (foods || []).filter((food) => {
-    // Search filter - check name and category
+    // 1. Search filter - matches name or category
     const name = (food.name || '').toLowerCase();
     const category = (food.category || '').toLowerCase();
     const query = (searchQuery || '').toLowerCase().trim();
@@ -193,14 +266,19 @@ function App() {
       name.includes(query) || 
       category.includes(query);
     
-    // Category filter
+    // 2. Category filter
     const matchesCategory = selectedCategory === '' || 
       food.category === selectedCategory;
     
-    return matchesSearch && matchesCategory;
+    // 3. Safety filter
+    const matchesSafety = selectedSafety === '' || 
+      food.safety === selectedSafety;
+    
+    // All filters must match
+    return matchesSearch && matchesCategory && matchesSafety;
   });
 
-  // Handle search input - INSTANT UPDATE
+  // Handle search input - INSTANT UPDATE, NO DEBOUNCE
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -215,10 +293,25 @@ function App() {
     setSelectedCategory(category);
   };
 
+  // Handle safety selection
+  const handleSafetySelect = (safety) => {
+    setSelectedSafety(safety);
+  };
+
   // Handle suggestion click
   const handleSuggestionClick = (term) => {
     setSearchQuery(term);
   };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('');
+    setSelectedSafety('');
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery || selectedCategory || selectedSafety;
 
   return (
     <div className="app" data-testid="food-search-app">
@@ -261,12 +354,18 @@ function App() {
             </div>
           </div>
 
-          {/* Category Filter */}
-          <CategoryFilter 
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onSelect={handleCategorySelect}
-          />
+          {/* Filters */}
+          <div className="filters-container">
+            <CategoryFilter 
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelect={handleCategorySelect}
+            />
+            <SafetyFilter 
+              selectedSafety={selectedSafety}
+              onSelect={handleSafetySelect}
+            />
+          </div>
         </div>
 
         {/* Results Section */}
@@ -282,27 +381,39 @@ function App() {
               <h3>No foods found</h3>
               <p>
                 {searchQuery 
-                  ? `No results for "${searchQuery}". Try a different search term.`
-                  : selectedCategory 
-                    ? `No foods in ${selectedCategory} category.`
+                  ? `No results for "${searchQuery}".`
+                  : hasActiveFilters 
+                    ? 'No foods match the selected filters.'
                     : 'Try searching for "apple", "chicken", or "rice"'}
               </p>
               <div className="suggestion-chips">
                 <button onClick={() => handleSuggestionClick("apple")} data-testid="suggestion-apple">Apple</button>
                 <button onClick={() => handleSuggestionClick("chicken")} data-testid="suggestion-chicken">Chicken</button>
                 <button onClick={() => handleSuggestionClick("rice")} data-testid="suggestion-rice">Rice</button>
-                <button onClick={() => { setSearchQuery(''); setSelectedCategory(''); }} data-testid="suggestion-clear">Show All</button>
+                <button onClick={handleClearFilters} data-testid="suggestion-clear">Clear Filters</button>
               </div>
             </div>
           ) : (
             <>
               <div className="results-header">
                 <p data-testid="results-count">
-                  {searchQuery || selectedCategory 
-                    ? `Found ${filteredFoods.length} result${filteredFoods.length !== 1 ? 's' : ''}${searchQuery ? ` for "${searchQuery}"` : ''}${selectedCategory ? ` in ${selectedCategory}` : ''}`
+                  {hasActiveFilters 
+                    ? `Found ${filteredFoods.length} result${filteredFoods.length !== 1 ? 's' : ''}`
                     : `Showing all ${filteredFoods.length} foods`
                   }
+                  {searchQuery && ` for "${searchQuery}"`}
+                  {selectedCategory && ` in ${selectedCategory}`}
+                  {selectedSafety && ` • ${SAFETY_CONFIG[selectedSafety]?.label || selectedSafety}`}
                 </p>
+                {hasActiveFilters && (
+                  <button 
+                    className="clear-filters-btn"
+                    onClick={handleClearFilters}
+                    data-testid="clear-filters-btn"
+                  >
+                    Clear all
+                  </button>
+                )}
               </div>
               <div className="foods-grid" data-testid="foods-grid">
                 {filteredFoods.map((food) => (

@@ -3,49 +3,65 @@
 ## Original Problem Statement
 Apple App Store Review Feedback (Submission ID: ac697cb9-cc29-408a-945e-8a724103acf7):
 - **Issue**: Guideline 2.1(a) - Performance - App Completeness
-- **Bug**: Error message was displayed when attempting to search foods + search not filtering results
+- **Bug**: Search fails or appears unresponsive due to API latency
 - **Device**: iPad Air 11-inch (M3), iPadOS 26.3.1
 
 ## Architecture
-- **Frontend**: React.js with Tailwind CSS
-- **Backend**: FastAPI (Python)  
-- **Database**: Local food database (85 foods)
+- **Frontend**: React.js + Capacitor
+- **Backend**: FastAPI (Python)
+- **Database**: Local food database (89 foods)
 
-## What Was Implemented (March 2026)
+## Bug Fixes Applied (March 2026)
 
-### Bug Fixes Applied
-1. **Search Error Fix**: Replaced external API with local database to eliminate API rate limit errors
-2. **Search Filtering Fix**: Implemented instant client-side filtering without useMemo
-   - Removed broken useMemo dependency
-   - filteredFoods computed directly on each render
-   - Search input directly updates searchQuery state
-   - UI renders filteredFoods (not raw foods array)
+### 1. Replaced API-based Search with Client-Side Filtering
+- Removed debounced API calls for search
+- Foods loaded ONCE on mount, then filtered locally
+- Search is now INSTANT with no network dependency
 
-### Features Working
-- ✅ 85 foods load instantly on app startup
-- ✅ Instant search filtering (no debounce, no API calls)
-- ✅ Category filtering (8 categories)
-- ✅ Food detail modal with nutrition info
-- ✅ iPad-optimized responsive layout
-- ✅ No error messages - graceful empty state handling
+### 2. Client-Side Filtering Implementation
+```javascript
+const filteredFoods = (foods || []).filter((food) => {
+  const matchesSearch = query === '' || name.includes(query);
+  const matchesCategory = selectedCategory === '' || food.category === selectedCategory;
+  const matchesSafety = selectedSafety === '' || food.safety === selectedSafety;
+  return matchesSearch && matchesCategory && matchesSafety;
+});
+```
 
-## Food Categories
-- Fruits (15 items)
-- Vegetables (15 items)
-- Proteins (14 items)
-- Grains (10 items)
-- Dairy (9 items)
-- Nuts & Seeds (8 items)
-- Beverages (6 items)
-- Snacks (8 items)
+### 3. Search Input Connected
+```javascript
+const [searchQuery, setSearchQuery] = useState('');
+onChange={(e) => setSearchQuery(e.target.value)}
+```
 
-## API Endpoints
-- `GET /api/foods/all` - Get all 85 foods
-- `GET /api/foods/search?query={term}` - Search foods  
-- `GET /api/foods/{id}` - Get food details
-- `GET /api/categories` - Get all categories
+### 4. Renders filteredFoods (not foods)
+```javascript
+{filteredFoods.map((food) => <FoodCard key={food.id} food={food} />)}
+```
+
+### 5. Empty Results Handled
+Shows "No foods found" with suggestions when filteredFoods.length === 0
+
+### 6. Filters Work Together
+- searchQuery (text search)
+- selectedCategory (8 categories)
+- selectedSafety (SAFE / LIMIT / AVOID)
+
+## Features Working
+- ✅ 89 foods load instantly on startup
+- ✅ Instant search filtering (no debounce, no API)
+- ✅ Category filter (8 categories)
+- ✅ Safety filter (SAFE: 60, LIMIT: 21, AVOID: 8)
+- ✅ Food detail modal
+- ✅ iPad-optimized layout
+- ✅ Works offline after initial load
+
+## API Endpoints (for initial data load only)
+- `GET /api/foods/all` - Get all 89 foods
+- `GET /api/categories` - Get categories
+- `GET /api/safety-levels` - Get safety levels
 
 ## Next Action Items
 1. **P1**: Add more foods to database
-2. **P2**: Add food favorites feature
+2. **P2**: Add favorites feature
 3. **P2**: Add meal logging
