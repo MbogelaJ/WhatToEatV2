@@ -101,10 +101,20 @@ Every food detail page now displays a prominent disclaimer at the bottom:
 - 90% of LIMIT foods (detailed portions, brand specifics, mg breakdowns)
 - 85% of SAFE foods (detailed nutrition, benefits, preparation tips)
 
-### 6. Premium Feature (MOCKED)
-- Price: US$1.99 one-time purchase
-- UI shows premium modal and features
-- State saved in localStorage (no real payment)
+### 8. Stripe Payment Integration ✅ (Added March 20, 2026)
+Real payment processing for premium subscription:
+- **Price**: US$1.99 one-time purchase
+- **Backend Endpoints**:
+  - `POST /api/payments/checkout` - Create Stripe checkout session
+  - `GET /api/payments/status/{session_id}` - Poll payment status
+  - `POST /api/webhook/stripe` - Handle Stripe webhooks
+  - `GET /api/payments/premium-status` - Check user premium status
+- **Features**:
+  - Secure checkout via Stripe
+  - Payment status polling on frontend
+  - Transaction records in MongoDB (`payment_transactions` collection)
+  - Automatic premium status update on successful payment
+  - Processing overlay UI during payment verification
 
 ## API Endpoints
 - `GET /api/foods/all` - Get all foods
@@ -114,8 +124,9 @@ Every food detail page now displays a prominent disclaimer at the bottom:
 - `POST /api/auth/logout` - Logout
 
 ## Database Collections (MongoDB)
-- `users` - User profiles (user_id, email, name, picture, auth_provider)
+- `users` - User profiles (user_id, email, name, picture, auth_provider, is_premium, premium_since)
 - `user_sessions` - Active sessions (session_token, user_id, expires_at)
+- `payment_transactions` - Payment records (session_id, amount, currency, payment_status, user_id, created_at)
 
 ## What's FUNCTIONAL
 1. ✅ Google Sign-In (via Emergent Auth)
@@ -124,16 +135,33 @@ Every food detail page now displays a prominent disclaimer at the bottom:
 4. ✅ Session management
 5. ✅ Complete onboarding flow
 6. ✅ Food search and filtering
+7. ✅ Stripe payment for premium ($1.99)
+8. ✅ Medical disclaimer on all food details
+9. ✅ Dynamic teaser messages for locked foods
 
 ## What's MOCKED
 1. Email/Password authentication - UI only
-2. Payment processing for Premium - localStorage only
 
 ## Next Action Items (Priority Order)
-1. **P0 CRITICAL**: Refactor App.js monolith (2500+ lines) into proper component structure
-2. **P1**: Implement real payment integration (Apple In-App Purchase for iOS)
-3. **P1**: Implement email/password authentication
-4. **P1**: Implement "Favorites" feature for bookmarking foods
+1. **P0 IN PROGRESS**: Refactor App.js monolith - component files created, need to integrate
+2. **P1**: Implement email/password authentication
+3. **P1**: Implement "Favorites" feature for bookmarking foods
+
+## Completed Features
+- Stripe payment integration for premium subscription ($1.99)
+- Medical disclaimer footer with WHO, FDA, CDC, ACOG, NHS sources
+- Dynamic teaser messages for locked foods
+- Freemium classification (86% premium, 14% free)
+- Component files created for refactor:
+  - /app/frontend/src/components/SafetyBadge.jsx
+  - /app/frontend/src/components/FoodCard.jsx
+  - /app/frontend/src/components/CategoryFilter.jsx
+  - /app/frontend/src/components/SafetyFilter.jsx
+  - /app/frontend/src/components/BottomNav.jsx
+  - /app/frontend/src/components/DailyTip.jsx
+  - /app/frontend/src/utils/constants.js
+  - /app/frontend/src/utils/helpers.js
+  - /app/frontend/src/data/dailyTips.js
 
 ## Future Tasks
 - **P2**: Add food images

@@ -1786,7 +1786,7 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
 };
 
 // Premium Page Component
-const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
+const PremiumPage = ({ onBack, onPurchase, isPremium, isProcessing, paymentError }) => {
   return (
     <div className="premium-page-v2" data-testid="premium-page">
       {/* Header */}
@@ -1796,6 +1796,25 @@ const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
         </div>
         <h1>WhatToEat</h1>
       </div>
+
+      {/* Processing Payment Overlay */}
+      {isProcessing && (
+        <div className="payment-processing-overlay">
+          <div className="payment-processing-content">
+            <div className="payment-spinner"></div>
+            <h3>Processing Payment...</h3>
+            <p>Please wait while we verify your payment.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Error */}
+      {paymentError && (
+        <div className="payment-error-banner">
+          <span>{paymentError}</span>
+          <button onClick={() => window.location.reload()}>Try Again</button>
+        </div>
+      )}
 
       {isPremium ? (
         <div className="premium-active-v2">
@@ -1886,9 +1905,10 @@ const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
           <button 
             className="premium-buy-btn"
             onClick={onPurchase}
+            disabled={isProcessing}
             data-testid="premium-purchase-btn"
           >
-            Get Premium for $1.99
+            {isProcessing ? 'Processing...' : 'Get Premium for $1.99'}
           </button>
 
           <button className="premium-free-btn" onClick={onBack}>
@@ -2116,14 +2136,101 @@ function App() {
     }
   };
 
-  // Handle premium purchase
-  const handlePremiumPurchase = () => {
-    // In a real app, this would integrate with payment provider
-    localStorage.setItem('isPremium', 'true');
-    setIsPremium(true);
-    alert('Thank you for purchasing Premium! You now have full access to all features.');
-    handlePremiumClose();
+  // Handle premium purchase - Stripe integration
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState(null);
+
+  const handlePremiumPurchase = async () => {
+    setIsProcessingPayment(true);
+    setPaymentError(null);
+    
+    try {
+      // Get user_id if logged in
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const userId = user?.user_id || null;
+      
+      // Create checkout session
+      const response = await axios.post(`${API}/payments/checkout`, {
+        origin_url: window.location.origin,
+        user_id: userId
+      });
+      
+      if (response.data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = response.data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      setPaymentError('Failed to start payment. Please try again.');
+      setIsProcessingPayment(false);
+    }
   };
+
+  // Check payment status on page load (after redirect from Stripe)
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get('session_id');
+      const paymentStatus = urlParams.get('payment');
+      
+      if (sessionId && paymentStatus === 'success') {
+        setIsProcessingPayment(true);
+        
+        // Poll for payment status
+        let attempts = 0;
+        const maxAttempts = 10;
+        const pollInterval = 2000;
+        
+        const pollStatus = async () => {
+          try {
+            const response = await axios.get(`${API}/payments/status/${sessionId}`);
+            
+            if (response.data.payment_status === 'paid') {
+              // Payment successful!
+              localStorage.setItem('isPremium', 'true');
+              setIsPremium(true);
+              setIsProcessingPayment(false);
+              
+              // Clean URL
+              window.history.replaceState({}, '', window.location.pathname);
+              
+              // Show success message
+              alert('🎉 Payment successful! You now have premium access to all 249 foods.');
+              setActiveView('home');
+              return;
+            } else if (response.data.status === 'expired') {
+              setPaymentError('Payment session expired. Please try again.');
+              setIsProcessingPayment(false);
+              window.history.replaceState({}, '', window.location.pathname);
+              return;
+            }
+            
+            // Continue polling
+            attempts++;
+            if (attempts < maxAttempts) {
+              setTimeout(pollStatus, pollInterval);
+            } else {
+              setPaymentError('Payment verification timed out. Please check your email for confirmation.');
+              setIsProcessingPayment(false);
+            }
+          } catch (error) {
+            console.error('Error checking payment status:', error);
+            setPaymentError('Error verifying payment. Please contact support.');
+            setIsProcessingPayment(false);
+          }
+        };
+        
+        pollStatus();
+      } else if (paymentStatus === 'cancelled') {
+        // User cancelled payment
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+    
+    checkPaymentStatus();
+  }, []);
 
   // Save dietary restrictions to localStorage
   useEffect(() => {
@@ -2246,6 +2353,8 @@ function App() {
         onBack={handlePremiumClose}
         onPurchase={handlePremiumPurchase}
         isPremium={isPremium}
+        isProcessing={isProcessingPayment}
+        paymentError={paymentError}
       />
     );
   }
@@ -2255,12 +2364,10 @@ function App() {
     return (
       <PremiumPage 
         onBack={() => setActiveView('home')}
-        onPurchase={() => {
-          localStorage.setItem('isPremium', 'true');
-          setIsPremium(true);
-          alert('Thank you for purchasing Premium! You now have full access to all features.');
-        }}
+        onPurchase={handlePremiumPurchase}
         isPremium={isPremium}
+        isProcessing={isProcessingPayment}
+        paymentError={paymentError}
       />
     );
   }
