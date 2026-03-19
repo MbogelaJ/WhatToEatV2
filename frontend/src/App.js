@@ -62,7 +62,7 @@ const ALL_FAQS = [
     question: "What foods should I avoid completely during pregnancy?",
     answer: "AVOID COMPLETELY: 1) Raw/undercooked meat, poultry, eggs, and seafood. 2) High-mercury fish: shark, swordfish, king mackerel, tilefish, bigeye tuna. 3) Unpasteurized dairy products and juices. 4) Raw sprouts (alfalfa, clover, mung bean). 5) Deli meats and hot dogs unless heated to steaming. 6) Refrigerated smoked seafood (lox) unless cooked. 7) Alcohol - no safe amount. 8) Raw cookie dough/batter. 9) Soft cheeses from unpasteurized milk. These foods carry risks of Listeria, Salmonella, Toxoplasma, or mercury exposure which can harm your baby.",
     category: 'safety',
-    foodTags: [],
+    foodTags: ['tuna', 'sprouts', 'cheese', 'eggs'],
     isPremium: true
   },
   {
@@ -86,7 +86,7 @@ const ALL_FAQS = [
     question: "What fish and seafood can I eat, and how much?",
     answer: "EAT 8-12 oz (2-3 servings) per week of LOW-MERCURY fish: salmon, shrimp, pollock, tilapia, cod, catfish, sardines, anchovies, trout. LIMIT: Albacore tuna to 6 oz/week (higher mercury than light tuna). AVOID COMPLETELY: Shark, swordfish, king mackerel, tilefish, bigeye tuna - these have dangerous mercury levels. All fish must be cooked to 145°F. No raw fish, sushi, sashimi, or ceviche. Mercury accumulates and can harm baby's developing brain and nervous system. Omega-3s from safe fish are crucial for baby's development.",
     category: 'seafood',
-    foodTags: ['fish', 'salmon', 'tuna', 'shrimp'],
+    foodTags: ['salmon', 'shrimp', 'tilapia', 'cod', 'tuna', 'sardines'],
     isPremium: true
   },
   {
@@ -118,7 +118,7 @@ const ALL_FAQS = [
     question: "Is unpasteurized juice, cider, or raw milk safe?",
     answer: "NO - avoid all unpasteurized/raw products. This includes: raw milk, raw milk cheese, fresh-squeezed unpasteurized juice, fresh cider from farm stands. These can contain dangerous bacteria including Listeria, Salmonella, and E. coli. ALWAYS CHOOSE: Pasteurized milk and dairy, pasteurized 100% juice (check labels), commercially bottled juice. If you're unsure about cider or juice freshness, boil it first. Farmers market products are higher risk unless specifically labeled pasteurized. Pasteurization kills harmful bacteria without significantly affecting nutrition.",
     category: 'dairy',
-    foodTags: ['milk', 'juice', 'cider'],
+    foodTags: ['milk', 'cheese'],
     isPremium: true
   },
   {
@@ -134,7 +134,7 @@ const ALL_FAQS = [
     question: "How many extra calories do I need? Am I 'eating for two'?",
     answer: "MYTH BUSTED: You're not eating for two adults! ACTUAL NEEDS: First trimester - no extra calories needed. Second trimester - about 340 extra calories/day. Third trimester - about 450 extra calories/day. That's roughly equivalent to a yogurt parfait with fruit and granola - not double portions! FOCUS ON: Quality over quantity. Nutrient-dense foods, adequate protein (75-100g daily), iron, folate, calcium, omega-3s. WEIGHT GAIN GUIDELINES (varies by pre-pregnancy BMI): Underweight 28-40 lbs, Normal weight 25-35 lbs, Overweight 15-25 lbs, Obese 11-20 lbs. Consult your provider for personalized guidance.",
     category: 'nutrition',
-    foodTags: [],
+    foodTags: ['yogurt'],
     isPremium: true
   },
   {
@@ -142,7 +142,7 @@ const ALL_FAQS = [
     question: "Is liver or high-vitamin-A foods safe?",
     answer: "LIMIT liver during pregnancy. Liver is extremely high in retinol (preformed vitamin A). Too much retinol can cause birth defects, especially in the first trimester. RECOMMENDATIONS: Avoid liver pâté entirely. If eating liver, limit to very small portions (1-2 oz) no more than once a month. Avoid vitamin A supplements (retinol form). SAFE: Beta-carotene from plants (carrots, sweet potatoes) - your body converts only what it needs. Prenatal vitamins with vitamin A as beta-carotene, not retinol. Check supplement labels carefully.",
     category: 'proteins',
-    foodTags: ['liver'],
+    foodTags: ['liver', 'carrots', 'sweet potato'],
     isPremium: true
   },
   {
@@ -158,7 +158,7 @@ const ALL_FAQS = [
     question: "Can I eat sushi, sashimi, ceviche, or raw shellfish?",
     answer: "AVOID all raw and undercooked seafood during pregnancy. This includes: sushi with raw fish, sashimi, raw oysters, raw clams, ceviche (acid doesn't kill parasites), poke bowls with raw fish, tartare. RISKS: Parasites, Vibrio, Listeria, and other bacteria that can cause serious illness in pregnancy. SAFE ALTERNATIVES: Cooked sushi rolls (shrimp tempura, eel, cooked crab), vegetable rolls, fully cooked poke bowls. Many sushi restaurants offer 'pregnancy-safe' options - just ask! All fish should be cooked to 145°F/63°C internal temperature.",
     category: 'seafood',
-    foodTags: ['sushi', 'fish'],
+    foodTags: ['sushi', 'shrimp', 'crab'],
     isPremium: true
   },
   {
@@ -174,7 +174,7 @@ const ALL_FAQS = [
     question: "Are nuts and seeds safe during pregnancy?",
     answer: "YES! Nuts and seeds are excellent during pregnancy - rich in healthy fats, protein, fiber, and minerals. SAFE OPTIONS: Almonds, walnuts, cashews, peanuts, sunflower seeds, pumpkin seeds, chia seeds, flax seeds (ground). EXCEPTION: Brazil nuts - limit to 1-2 per day due to very high selenium content. ALLERGY NOTE: Current research suggests eating nuts during pregnancy does NOT increase baby's allergy risk and may actually help prevent allergies. Avoid if YOU have a nut allergy. Choose unsalted when possible to limit sodium.",
     category: 'nuts',
-    foodTags: ['nuts', 'seeds', 'almonds', 'peanuts'],
+    foodTags: ['almonds', 'walnuts', 'peanuts', 'chia seeds', 'flax seeds'],
     isPremium: true
   },
   {
@@ -182,7 +182,7 @@ const ALL_FAQS = [
     question: "Are premade deli salads safe (tuna, egg, chicken salad)?",
     answer: "HIGHER RISK - best to avoid or make fresh at home. Store-made deli salads (tuna salad, egg salad, chicken salad, potato salad) have higher Listeria risk due to: handling by multiple people, time sitting at deli counter, mayo-based mixture at variable temperatures. SAFER OPTIONS: Make your own at home with fresh ingredients. If buying premade, choose sealed packages with clear dates, eat immediately, and ensure it's been properly refrigerated. Avoid deli salads from salad bars or that have been sitting out.",
     category: 'safety',
-    foodTags: ['tuna', 'chicken', 'eggs'],
+    foodTags: ['tuna', 'chicken', 'eggs', 'potato'],
     isPremium: true
   },
   {
@@ -190,7 +190,7 @@ const ALL_FAQS = [
     question: "What nutrients are most important during pregnancy?",
     answer: "KEY NUTRIENTS: 1) FOLIC ACID (400-800mcg) - prevents neural tube defects; leafy greens, fortified cereals, prenatal vitamin. 2) IRON (27mg) - prevents anemia, supports blood volume; red meat, spinach, beans, fortified cereals. 3) CALCIUM (1000mg) - builds baby's bones; dairy, fortified plant milk, leafy greens. 4) DHA/OMEGA-3 (200-300mg) - brain development; fatty fish, fish oil, algae supplements. 5) PROTEIN (75-100g) - tissue growth; meat, eggs, dairy, legumes. 6) VITAMIN D (600IU) - calcium absorption; sunlight, fortified foods, supplements. 7) CHOLINE (450mg) - brain development; eggs, liver, soybeans. Take prenatal vitamins to cover gaps.",
     category: 'nutrition',
-    foodTags: [],
+    foodTags: ['spinach', 'eggs', 'salmon', 'beans', 'milk'],
     isPremium: true
   },
   {
@@ -206,7 +206,7 @@ const ALL_FAQS = [
     question: "Should I avoid all seafood, or is some beneficial?",
     answer: "DON'T avoid all seafood - low-mercury fish is HIGHLY BENEFICIAL! Omega-3 fatty acids (DHA, EPA) from fish are crucial for baby's brain and eye development. Studies show babies of mothers who ate fish have better developmental outcomes. EAT 8-12 oz weekly of: salmon, sardines, anchovies, herring, trout, shrimp, tilapia, cod, pollock. AVOID: High-mercury fish (shark, swordfish, king mackerel, tilefish, bigeye tuna) and all raw fish. If you don't eat fish, consider a DHA supplement from fish oil or algae. The benefits of low-mercury fish far outweigh the risks.",
     category: 'seafood',
-    foodTags: ['fish', 'salmon'],
+    foodTags: ['salmon', 'sardines', 'shrimp', 'tilapia', 'cod'],
     isPremium: true
   },
   {
@@ -222,7 +222,7 @@ const ALL_FAQS = [
     question: "Are herbal teas and supplements safe during pregnancy?",
     answer: "SOME are safe, others should be avoided. GENERALLY SAFE: Ginger tea (great for nausea - limit to 1g dried ginger daily), peppermint, rooibos, lemon balm in moderation. USE WITH CAUTION: Chamomile (limit 1-2 cups daily), raspberry leaf (usually only in third trimester). AVOID: Licorice root, dong quai, pennyroyal, blue/black cohosh, St. John's wort, ginseng, comfrey, ephedra, kava. SUPPLEMENTS: Only take supplements approved by your provider. Avoid herbal weight loss or cleansing products. Prenatal vitamins are safe and recommended. 'Natural' doesn't mean safe during pregnancy.",
     category: 'beverages',
-    foodTags: ['tea', 'ginger'],
+    foodTags: ['ginger', 'tea', 'peppermint'],
     isPremium: true
   },
   {
@@ -246,7 +246,7 @@ const ALL_FAQS = [
     question: "What foods help with nausea, constipation, or anemia?",
     answer: "FOR NAUSEA: Ginger (tea, candies, ale), plain crackers before rising, cold foods (less smell), small frequent meals, lemon/citrus, bland foods (BRAT: bananas, rice, applesauce, toast), protein snacks. FOR CONSTIPATION: High-fiber foods (fruits, vegetables, whole grains, beans), prunes/prune juice (natural laxative), plenty of water, physical activity. FOR ANEMIA: Iron-rich foods - red meat (best absorbed), spinach, lentils, fortified cereals, beans. Pair plant iron with vitamin C for absorption. Avoid calcium/coffee/tea with iron-rich meals. Your provider may recommend iron supplements.",
     category: 'nutrition',
-    foodTags: ['ginger', 'fiber'],
+    foodTags: ['ginger', 'banana', 'rice', 'spinach', 'lentils', 'beans'],
     isPremium: true
   },
   {
@@ -254,7 +254,7 @@ const ALL_FAQS = [
     question: "Can certain foods cause miscarriage or preterm birth?",
     answer: "HIGH-RISK FOODS TO AVOID: 1) Alcohol - linked to miscarriage, stillbirth, FASD. 2) High-mercury fish - can affect fetal brain development. 3) Listeria sources (deli meat, unpasteurized products) - can cause miscarriage, stillbirth, severe illness. 4) Raw/undercooked foods - infection risk. LESS CLEAR EVIDENCE: Very high caffeine (>300mg) may increase miscarriage risk. Pineapple, papaya, spicy food - myths with no solid evidence when eaten in normal amounts. IMPORTANT: Most miscarriages are due to chromosomal abnormalities, not food. Focus on avoiding clearly risky foods and eating a balanced diet. Talk to your provider about specific concerns.",
     category: 'safety',
-    foodTags: [],
+    foodTags: ['pineapple', 'papaya', 'coffee'],
     isPremium: true
   },
   // Additional specific food questions
@@ -295,7 +295,7 @@ const ALL_FAQS = [
     question: "Can I drink herbal tea while pregnant?",
     answer: "SAFE in moderation: Ginger (great for nausea), peppermint, rooibos, lemon balm. LIMIT: Chamomile to 1-2 cups daily. AVOID: Licorice root, dong quai, pennyroyal, blue/black cohosh, excessive amounts of any single herb. Herbal teas are unregulated - choose reputable brands. Always check with your provider about specific herbal teas.",
     category: 'beverages',
-    foodTags: ['tea'],
+    foodTags: ['tea', 'ginger', 'peppermint'],
     isPremium: true
   },
   {
@@ -803,10 +803,65 @@ const FAQView = ({ onBack, onNavigateToFood, foods }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   
+  // Mapping of tags to actual food names in database
+  const tagToFoodName = {
+    'salmon': 'Salmon',
+    'yogurt': 'Greek Yogurt',
+    'shrimp': 'Shrimp',
+    'cheese': 'Cheddar Cheese',
+    'brie': 'Soft Cheese (Unpasteurized)',
+    'feta': 'Feta Cheese (Pasteurized)',
+    'tuna': 'Tuna (Light, Canned)',
+    'eggs': 'Eggs',
+    'coffee': 'Coffee',
+    'tea': 'Green Tea',
+    'chocolate': 'Dark Chocolate',
+    'milk': 'Milk',
+    'sprouts': 'Bean Sprouts',
+    'liver': 'Liver',
+    'sushi': 'Raw Sushi/Sashimi',
+    'almonds': 'Almonds',
+    'walnuts': 'Walnuts',
+    'peanuts': 'Peanuts',
+    'chia seeds': 'Chia Seeds',
+    'flax seeds': 'Flax Seeds',
+    'chicken': 'Chicken Breast',
+    'beef': 'Beef (Lean)',
+    'steak': 'Beef (Lean)',
+    'pineapple': 'Pineapple',
+    'papaya': 'Papaya (Ripe)',
+    'grapes': 'Grapes',
+    'ginger': 'Ginger',
+    'spinach': 'Spinach',
+    'lentils': 'Lentils',
+    'beans': 'Black Beans',
+    'banana': 'Banana',
+    'rice': 'Brown Rice',
+    'carrots': 'Carrots',
+    'sweet potato': 'Sweet Potato',
+    'tilapia': 'Tilapia',
+    'cod': 'Cod',
+    'sardines': 'Sardines',
+    'crab': 'Crab',
+    'potato': 'Potatoes',
+    'peppermint': 'Peppermint Tea'
+  };
+  
   // Find food by tag name
   const findFoodByTag = (tag) => {
     if (!foods || foods.length === 0) return null;
     const normalizedTag = tag.toLowerCase();
+    
+    // First try exact mapping
+    const mappedName = tagToFoodName[normalizedTag];
+    if (mappedName) {
+      const exactMatch = foods.find(food => 
+        (food.name || '').toLowerCase() === mappedName.toLowerCase()
+      );
+      if (exactMatch) return exactMatch;
+    }
+    
+    // Then try partial match
     return foods.find(food => {
       const foodName = (food.name || '').toLowerCase();
       return foodName.includes(normalizedTag) || normalizedTag.includes(foodName.split(' ')[0].toLowerCase());
