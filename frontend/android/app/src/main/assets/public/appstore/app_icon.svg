@@ -1,0 +1,23 @@
+<!-- NurtureNote App Icon - Save as SVG and convert to 1024x1024 PNG -->
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C9A92"/>
+      <stop offset="100%" style="stop-color:#5D7A72"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="180" fill="url(#bg)"/>
+  
+  <!-- Heart Icon -->
+  <path d="M512 780C512 780 280 620 280 420C280 320 360 240 460 240C500 240 540 260 512 300C484 260 524 240 564 240C664 240 744 320 744 420C744 620 512 780 512 780Z" 
+        fill="white" 
+        opacity="0.95"
+        transform="translate(0, -40)"/>
+  
+  <!-- Leaf/Sprout -->
+  <ellipse cx="512" cy="620" rx="60" ry="100" fill="white" opacity="0.9"/>
+  <ellipse cx="480" cy="580" rx="40" ry="70" fill="#7C9A92" transform="rotate(-20, 480, 580)"/>
+  <ellipse cx="544" cy="580" rx="40" ry="70" fill="#7C9A92" transform="rotate(20, 544, 580)"/>
+</svg>

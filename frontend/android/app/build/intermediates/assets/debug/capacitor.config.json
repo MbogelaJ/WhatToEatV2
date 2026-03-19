@@ -1,0 +1,33 @@
+{
+	"appId": "com.whattoeat.penx",
+	"appName": "WhatToEat",
+	"webDir": "build",
+	"server": {
+		"androidScheme": "https",
+		"iosScheme": "capacitor",
+		"allowNavigation": [
+			"health-ed-guide.emergent.host",
+			"*.emergent.host",
+			"*.emergentagent.com"
+		]
+	},
+	"ios": {
+		"contentInset": "automatic",
+		"backgroundColor": "#FDFCF8",
+		"minVersion": "15.0",
+		"limitsNavigationsToAppBoundDomains": false
+	},
+	"android": {
+		"backgroundColor": "#FDFCF8",
+		"allowMixedContent": true
+	},
+	"plugins": {
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		}
+	}
+}

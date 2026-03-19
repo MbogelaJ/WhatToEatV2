@@ -1,0 +1,40 @@
+PODS:
+  - Capacitor (5.7.8):
+    - CapacitorCordova
+  - CapacitorCordova (5.7.8)
+  - CapacitorPushNotifications (5.1.2):
+    - Capacitor
+  - CapawesomeCapacitorAppleSignIn (0.1.0):
+    - Capacitor
+  - CordovaPlugins (5.7.8):
+    - CapacitorCordova
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
+  - "CapawesomeCapacitorAppleSignIn (from `../../node_modules/@capawesome/capacitor-apple-sign-in`)"
+  - CordovaPlugins (from `../capacitor-cordova-ios-plugins`)
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorCordova:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorPushNotifications:
+    :path: "../../node_modules/@capacitor/push-notifications"
+  CapawesomeCapacitorAppleSignIn:
+    :path: "../../node_modules/@capawesome/capacitor-apple-sign-in"
+  CordovaPlugins:
+    :path: "../capacitor-cordova-ios-plugins"
+
+SPEC CHECKSUMS:
+  Capacitor: 9686e5711b48a1aa84671ede795d0175848abcba
+  CapacitorCordova: 31ab98dca2ddcee051027a1afe7e8c85c82f7297
+  CapacitorPushNotifications: 95dc889e9f3540e3c4f118f7ed53fd61db82100b
+  CapawesomeCapacitorAppleSignIn: 75182237c73f27c01fe0ac28e72881c9300c211a
+  CordovaPlugins: 7209d077aeefe32e4161878cde3fd3eb7db448b7
+
+PODFILE CHECKSUM: 839ee2c94c9c9945e454ed6fb0a80a6ae21cb1a5
+
+COCOAPODS: 1.16.2

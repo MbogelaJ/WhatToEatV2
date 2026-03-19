@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WhatToEat App Icon Generator</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 40px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; }
+        h1 { color: #2D3748; }
+        .icon-preview { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
+        .icon { border-radius: 22%; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        canvas { display: none; }
+        .download-btn { background: #7C9A92; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 16px; cursor: pointer; margin: 5px; }
+        .download-btn:hover { background: #6B8A82; }
+        .instructions { background: #f8f8f8; padding: 20px; border-radius: 10px; margin-top: 20px; }
+        code { background: #eee; padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍃 WhatToEat App Icon</h1>
+        <p>Download your app icons for App Store submission.</p>
+        
+        <div class="icon-preview">
+            <div>
+                <canvas id="canvas1024" width="1024" height="1024"></canvas>
+                <img id="preview1024" class="icon" width="180" height="180" alt="1024x1024">
+                <p style="text-align:center; color:#666;">1024×1024</p>
+            </div>
+            <div>
+                <img id="preview512" class="icon" width="120" height="120" alt="512x512">
+                <p style="text-align:center; color:#666;">512×512</p>
+            </div>
+            <div>
+                <img id="preview180" class="icon" width="90" height="90" alt="180x180">
+                <p style="text-align:center; color:#666;">180×180</p>
+            </div>
+        </div>
+        
+        <div>
+            <button class="download-btn" onclick="downloadIcon(1024)">Download 1024×1024 (App Store)</button>
+            <button class="download-btn" onclick="downloadIcon(512)">Download 512×512</button>
+            <button class="download-btn" onclick="downloadIcon(180)">Download 180×180</button>
+            <button class="download-btn" onclick="downloadAll()">Download All Sizes</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>📱 How to Add to Xcode:</h3>
+            <ol>
+                <li>Download the <strong>1024×1024</strong> icon</li>
+                <li>Open your Xcode project</li>
+                <li>Navigate to <code>App → Assets.xcassets → AppIcon</code></li>
+                <li>Drag the 1024×1024 PNG into the <strong>App Store - 1x</strong> slot</li>
+                <li>Xcode will auto-generate other sizes, or use an icon generator</li>
+            </ol>
+            <p><strong>Tip:</strong> Use <a href="https://appicon.co" target="_blank">appicon.co</a> to generate all required sizes from your 1024×1024 icon.</p>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas1024');
+        const ctx = canvas.getContext('2d');
+        
+        function drawIcon(size) {
+            const scale = size / 1024;
+            ctx.canvas.width = size;
+            ctx.canvas.height = size;
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#7C9A92');
+            gradient.addColorStop(1, '#5D7A72');
+            
+            // Rounded rectangle background
+            const radius = size * 0.176;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Heart
+            ctx.save();
+            ctx.translate(size/2, size * 0.38);
+            ctx.scale(scale * 1.8, scale * 1.8);
+            ctx.beginPath();
+            ctx.moveTo(0, 30);
+            ctx.bezierCurveTo(-100, -50, -150, -120, -90, -150);
+            ctx.bezierCurveTo(-30, -180, 0, -120, 0, -80);
+            ctx.bezierCurveTo(0, -120, 30, -180, 90, -150);
+            ctx.bezierCurveTo(150, -120, 100, -50, 0, 30);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fill();
+            ctx.restore();
+            
+            // Leaf/sprout center
+            ctx.beginPath();
+            ctx.ellipse(size/2, size * 0.68, size * 0.06, size * 0.12, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fill();
+            
+            // Left leaf
+            ctx.save();
+            ctx.translate(size * 0.44, size * 0.64);
+            ctx.rotate(-0.4);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size * 0.04, size * 0.08, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#5D7A72';
+            ctx.fill();
+            ctx.restore();
+            
+            // Right leaf
+            ctx.save();
+            ctx.translate(size * 0.56, size * 0.64);
+            ctx.rotate(0.4);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size * 0.04, size * 0.08, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#5D7A72';
+            ctx.fill();
+            ctx.restore();
+            
+            return canvas.toDataURL('image/png');
+        }
+        
+        // Generate previews
+        window.onload = function() {
+            document.getElementById('preview1024').src = drawIcon(1024);
+            document.getElementById('preview512').src = drawIcon(512);
+            document.getElementById('preview180').src = drawIcon(180);
+        };
+        
+        function downloadIcon(size) {
+            const dataUrl = drawIcon(size);
+            const link = document.createElement('a');
+            link.download = `nurturenote_icon_${size}x${size}.png`;
+            link.href = dataUrl;
+            link.click();
+        }
+        
+        function downloadAll() {
+            [1024, 512, 180, 120, 87, 80, 60, 58, 40, 29, 20].forEach((size, i) => {
+                setTimeout(() => downloadIcon(size), i * 200);
+            });
+        }
+    </script>
+</body>
+</html>

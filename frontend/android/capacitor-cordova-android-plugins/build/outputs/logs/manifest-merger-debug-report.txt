@@ -1,0 +1,33 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:2:1-8:12
+INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:2:1-8:12
+INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:2:1-8:12
+	package
+		INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+		ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:2:1-8:12
+		INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+	xmlns:amazon
+		ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:3:1-57
+	xmlns:android
+		ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:2:11-69
+application
+ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:4:1-6:15
+uses-permission#com.android.vending.BILLING
+ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:7:1-62
+	android:name
+		ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml:7:18-60
+uses-sdk
+INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+		ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+		INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+		ADDED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml
+		INJECTED from /Users/jackson1/WhatToEatV2/frontend/android/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml

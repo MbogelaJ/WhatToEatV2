@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.whattoeat.penx.app-mergeDebugResources-29:/values-v24/values-v24.xml",
+            "map": [
+                {
+                    "source": "/Users/jackson1/.gradle/caches/transforms-3/2c523de199432fd6b93f698d40d46d7f/transformed/appcompat-1.7.0/res/values-v24/values-v24.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,212",
+                        "endColumns": "156,134",
+                        "endOffsets": "207,342"
+                    }
+                }
+            ]
+        }
+    ]
+}
