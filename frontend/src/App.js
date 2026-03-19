@@ -572,35 +572,30 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = fal
   return (
     <div 
       data-testid={`food-card-${food.id}`}
-      className={`food-card ${dietaryConcerns.length > 0 ? 'has-dietary-concern' : ''} ${showLock ? 'premium-locked' : ''}`}
+      className={`food-list-item ${showLock ? 'premium-locked' : ''}`}
       onClick={() => onClick(food)}
     >
-      <div className="food-card-icon">
-        <Utensils size={24} />
+      <div className="food-list-left">
+        <h3 className={`food-list-name ${showLock ? 'locked' : ''}`}>{food.name}</h3>
+        <span className="food-list-category">{food.category}</span>
+        {showLock && (
+          <span className="food-list-upgrade-text">Upgrade to Premium to view details</span>
+        )}
       </div>
-      <div className="food-card-content">
-        <h3 className="food-card-name">
-          {food.name}
-          {showLock && <Lock size={14} className="premium-lock-icon" />}
-        </h3>
-        <span className="food-card-category">{food.category}</span>
-        <span 
-          className="food-card-safety"
-          style={{ backgroundColor: safetyConfig.bgColor, color: safetyConfig.color }}
-        >
-          <Check size={12} />
-          {food.safety_label || safetyConfig.label}
-        </span>
-        {dietaryConcerns.length > 0 && (
-          <div className="food-card-dietary-warning">
-            <AlertTriangle size={12} />
-            <span>{dietaryConcerns[0]}</span>
-          </div>
+      <div className="food-list-right">
+        <div className="food-list-safety" style={{ color: safetyConfig.color }}>
+          <Check size={16} />
+          <span>{food.safety_label || safetyConfig.label}</span>
+        </div>
+        {showLock ? (
+          <Lock size={18} className="food-list-lock" />
+        ) : (
+          <ChevronRight size={18} className="food-list-chevron" />
         )}
       </div>
       {showLock && (
-        <div className="premium-badge-corner">
-          <Lock size={12} />
+        <div className="premium-corner-badge">
+          <Lock size={14} />
         </div>
       )}
     </div>
@@ -809,14 +804,10 @@ const CategoryFilter = ({ categories, selectedCategory, onSelect }) => {
   if (!categories || categories.length === 0) return null;
   
   return (
-    <div className="filter-section">
-      <div className="filter-label">
-        <Filter size={14} />
-        <span>CATEGORIES</span>
-      </div>
-      <div className="filter-chips">
+    <div className="category-filter-section">
+      <div className="category-pills">
         <button
-          className={`filter-chip ${selectedCategory === '' ? 'active' : ''}`}
+          className={`category-pill ${selectedCategory === '' ? 'active' : ''}`}
           onClick={() => onSelect('')}
         >
           All
@@ -824,7 +815,7 @@ const CategoryFilter = ({ categories, selectedCategory, onSelect }) => {
         {categories.map((category) => (
           <button
             key={category}
-            className={`filter-chip ${selectedCategory === category ? 'active' : ''}`}
+            className={`category-pill ${selectedCategory === category ? 'active' : ''}`}
             onClick={() => onSelect(category)}
           >
             {category}
@@ -844,14 +835,14 @@ const SafetyFilter = ({ selectedSafety, onSelect }) => {
   ];
   
   return (
-    <div className="filter-section">
-      <div className="filter-label">
-        <Check size={14} />
-        <span>SAFETY LEVEL</span>
+    <div className="safety-filter-section">
+      <div className="safety-filter-label">
+        <span>Filter by safety:</span>
+        <Info size={14} className="info-icon" />
       </div>
-      <div className="filter-chips">
+      <div className="safety-pills">
         <button
-          className={`filter-chip ${selectedSafety === '' ? 'active' : ''}`}
+          className={`safety-pill ${selectedSafety === '' ? 'active' : ''}`}
           onClick={() => onSelect('')}
         >
           All
@@ -859,7 +850,7 @@ const SafetyFilter = ({ selectedSafety, onSelect }) => {
         {safetyLevels.map((level) => (
           <button
             key={level.key}
-            className={`filter-chip ${selectedSafety === level.key ? 'active' : ''}`}
+            className={`safety-pill ${selectedSafety === level.key ? 'active' : ''}`}
             onClick={() => onSelect(level.key)}
           >
             {level.label}
@@ -2348,80 +2339,67 @@ function App() {
   return (
     <div className="app" data-testid="food-search-app">
       {/* Header */}
-      <header className="app-header home-header">
-        <div className="header-content">
-          <div className="header-left-actions">
-            <button className="header-icon-btn" onClick={goBackToOnboarding} data-testid="back-to-onboarding-btn" title="Go back to settings">
-              <ArrowLeft size={20} />
-            </button>
+      <header className="app-header home-header-v2">
+        <div className="header-content-v2">
+          <div className="header-logo-v2">
+            <div className="logo-icon-v2">W</div>
+            <span className="logo-text-v2">WhatToEat</span>
           </div>
-          <div className="logo">
-            <div className="logo-icon">W</div>
-            <h1>WhatToEat</h1>
-          </div>
-          <div className="header-actions">
-            <button className="header-icon-btn" onClick={handleCloseApp} data-testid="close-app-btn" title="Close app">
-              <X size={20} />
+          <div className="header-actions-v2">
+            <button className="header-action-btn" onClick={handleLogout} data-testid="logout-btn" title="Logout">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
             </button>
-            <button className="header-icon-btn" onClick={() => setActiveView('settings')} data-testid="profile-btn" title="Profile settings">
-              <User size={20} />
+            <button className="header-action-btn" onClick={() => setActiveView('settings')} data-testid="profile-btn" title="Profile">
+              <User size={22} />
             </button>
           </div>
         </div>
       </header>
 
       {/* Main */}
-      <main className="app-main">
-        {/* Educational Disclaimer Banner */}
-        <div className="educational-banner" data-testid="educational-banner">
-          <p><strong>Educational Information:</strong> This content is for general reference only and does not constitute medical advice. Consult a healthcare professional for personalized guidance.</p>
-        </div>
-
-        {/* Daily Tip */}
-        <DailyTip />
-
-        {/* Personalized Info Section - Age and Trimester */}
+      <main className="app-main home-main">
+        {/* Personalized Info Banner - Age and Trimester at top */}
         {(userAge || (trimester && trimesterInfo[trimester])) && (
-          <div className="personalized-banner" data-testid="personalized-banner">
+          <div className="personalized-top-banner" data-testid="personalized-banner">
             <div className="personalized-icon">
-              <Sparkles size={20} />
+              <Sparkles size={18} />
             </div>
-            <div className="personalized-content">
-              {userAge && (
-                <span className="personalized-age">{userAge} years old</span>
-              )}
+            <div className="personalized-info">
+              {userAge && <span className="user-age">{userAge} years old</span>}
               {trimester && trimesterInfo[trimester] && (
                 <>
-                  <span className="personalized-trimester">{trimesterInfo[trimester].label}</span>
-                  <span className="personalized-focus">Focus on: {trimesterInfo[trimester].focus}</span>
+                  <span className="user-trimester">{trimesterInfo[trimester].label}</span>
+                  <span className="nutrient-focus">Focus on: {trimesterInfo[trimester].focus}</span>
                 </>
               )}
             </div>
           </div>
         )}
-        
-        {/* Search */}
-        <div className="search-section">
-          <div className="search-container">
-            <div className="search-input-wrapper">
-              <Search size={20} className="search-icon" />
-              <input
-                type="text"
-                placeholder="Search foods..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-                data-testid="food-search-input"
-              />
-              {searchQuery && (
-                <button className="clear-btn" onClick={() => setSearchQuery('')}>
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-          </div>
 
-          {/* Filters */}
+        {/* Search Bar - Hidden per screenshot, but keeping functionality */}
+        {searchQuery && (
+          <div className="search-active-bar">
+            <Search size={18} />
+            <input
+              type="text"
+              placeholder="Search foods..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input-active"
+              data-testid="food-search-input"
+            />
+            <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
+              <X size={18} />
+            </button>
+          </div>
+        )}
+        
+        {/* Search Section - Filters */}
+        <div className="filters-section">
           <CategoryFilter 
             categories={categories}
             selectedCategory={selectedCategory}
@@ -2467,7 +2445,7 @@ function App() {
           ) : (
             <>
               <p className="results-count">{freeCount} free foods · {premiumCount} premium foods</p>
-              <div className="foods-grid">
+              <div className="foods-list">
                 {filteredFoods.map((food) => (
                   <FoodCard 
                     key={food.id} 
