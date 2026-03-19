@@ -566,8 +566,10 @@ const SafetyBadge = ({ safety, label }) => {
 // Food Card Component (for grid)
 const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = false }) => {
   const safetyConfig = SAFETY_CONFIG[food.safety] || SAFETY_CONFIG.SAFE;
-  const dietaryConcerns = checkDietaryConcerns(food, dietaryRestrictions);
   const showLock = food.is_premium && !isPremiumUser;
+  
+  // Always use the standard label: "Generally Safe", "Limit Intake", or "Best Avoided"
+  const safetyLabel = safetyConfig.label;
   
   return (
     <div 
@@ -585,7 +587,7 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = fal
       <div className="food-list-right">
         <div className="food-list-safety" style={{ color: safetyConfig.color }}>
           <Check size={16} />
-          <span>{food.safety_label || safetyConfig.label}</span>
+          <span>{safetyLabel}</span>
         </div>
         {showLock ? (
           <Lock size={18} className="food-list-lock" />
