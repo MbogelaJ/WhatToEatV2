@@ -2294,13 +2294,40 @@ body {
 .premium-page-v2 {
   min-height: 100vh;
   background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
-  padding: 1.5rem 1rem;
+  padding: 0;
   overflow-y: auto;
+}
+
+.premium-page-header {
+  text-align: center;
+  padding: 1.5rem 1rem 1rem;
+}
+
+.premium-logo {
+  width: 48px;
+  height: 48px;
+  background: #16a34a;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+}
+
+.premium-page-header h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .premium-content-v2 {
   max-width: 500px;
   margin: 0 auto;
+  padding: 0 1rem 1.5rem;
 }
 
 .premium-header-v2 {

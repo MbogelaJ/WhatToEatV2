@@ -1345,6 +1345,14 @@ const OnboardingPage = ({ page, onNext, onSkip }) => {
 const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
   return (
     <div className="premium-page-v2" data-testid="premium-page">
+      {/* Header */}
+      <div className="premium-page-header">
+        <div className="premium-logo">
+          <span>W</span>
+        </div>
+        <h1>WhatToEat</h1>
+      </div>
+
       {isPremium ? (
         <div className="premium-active-v2">
           <div className="premium-badge-large">
@@ -1380,12 +1388,6 @@ const PremiumPage = ({ onBack, onPurchase, isPremium }) => {
         </div>
       ) : (
         <div className="premium-content-v2">
-          {/* Header */}
-          <div className="premium-header-v2">
-            <h1>Expand Your Pregnancy Food Library</h1>
-            <p className="premium-tagline-v2">Access more educational food information from public health sources</p>
-          </div>
-
           {/* Main Card */}
           <div className="premium-card-v2">
             <h2>Unlock Premium Pregnancy Nutrition</h2>
