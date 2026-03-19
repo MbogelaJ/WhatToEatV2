@@ -1,54 +1,51 @@
-# WhatToEatSearch - Food Search App PRD
+# WhatToEat - Food Search App PRD
 
 ## Original Problem Statement
 Apple App Store Review Feedback (Submission ID: ac697cb9-cc29-408a-945e-8a724103acf7):
 - **Issue**: Guideline 2.1(a) - Performance - App Completeness
-- **Bug**: Error message was displayed when attempting to search foods
+- **Bug**: Error message was displayed when attempting to search foods + search not filtering results
 - **Device**: iPad Air 11-inch (M3), iPadOS 26.3.1
 
 ## Architecture
 - **Frontend**: React.js with Tailwind CSS
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB (search history)
-- **External API**: USDA FoodData Central API
+- **Backend**: FastAPI (Python)  
+- **Database**: Local food database (85 foods)
 
 ## What Was Implemented (March 2026)
 
-### Bug Fix Applied
-1. **Root Cause**: Original food search API was timing out or returning errors that were displayed to users
-2. **Fix**: Implemented USDA FoodData Central API integration with proper error handling
-3. **Key Change**: Search errors now gracefully degrade to "No foods found" instead of showing error messages
+### Bug Fixes Applied
+1. **Search Error Fix**: Replaced external API with local database to eliminate API rate limit errors
+2. **Search Filtering Fix**: Implemented instant client-side filtering without useMemo
+   - Removed broken useMemo dependency
+   - filteredFoods computed directly on each render
+   - Search input directly updates searchQuery state
+   - UI renders filteredFoods (not raw foods array)
 
 ### Features Working
-- ✅ Food search with USDA FoodData Central API
-- ✅ Nutritional information display (calories, protein, carbs, fat, fiber)
-- ✅ Food detail modal with full nutrition breakdown
-- ✅ Search history tracking
-- ✅ Quick suggestion buttons
-- ✅ iPad-optimized responsive design
-- ✅ Graceful error handling (no error messages shown to users)
+- ✅ 85 foods load instantly on app startup
+- ✅ Instant search filtering (no debounce, no API calls)
+- ✅ Category filtering (8 categories)
+- ✅ Food detail modal with nutrition info
+- ✅ iPad-optimized responsive layout
+- ✅ No error messages - graceful empty state handling
+
+## Food Categories
+- Fruits (15 items)
+- Vegetables (15 items)
+- Proteins (14 items)
+- Grains (10 items)
+- Dairy (9 items)
+- Nuts & Seeds (8 items)
+- Beverages (6 items)
+- Snacks (8 items)
 
 ## API Endpoints
-- `GET /api/foods/search?query={term}` - Search foods
+- `GET /api/foods/all` - Get all 85 foods
+- `GET /api/foods/search?query={term}` - Search foods  
 - `GET /api/foods/{id}` - Get food details
-- `GET /api/search-history` - Get recent searches
-- `GET /api/health` - Health check
-
-## Configuration
-- Backend requires `USDA_API_KEY` in `.env` (currently using DEMO_KEY with rate limits)
-- For production: Get free API key from https://fdc.nal.usda.gov/api-key-signup.html
-
-## Known Limitations
-- USDA DEMO_KEY has rate limits (30 requests/hour)
-- Production deployment should use a proper USDA API key
+- `GET /api/categories` - Get all categories
 
 ## Next Action Items
-1. **P0**: Obtain production USDA API key for consistent search results
-2. **P1**: Add food favorites/bookmarking feature
-3. **P2**: Implement meal logging with daily tracking
-
-## Backlog
-- Barcode scanning for packaged foods
-- Recipe search integration
-- Meal planning calendar
-- Export nutrition data
+1. **P1**: Add more foods to database
+2. **P2**: Add food favorites feature
+3. **P2**: Add meal logging

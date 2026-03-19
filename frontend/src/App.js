@@ -1,27 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Search, Utensils, Flame, Dumbbell, Wheat, Droplet, Leaf, Clock, X, AlertCircle } from "lucide-react";
+import { Search, Utensils, Flame, Dumbbell, Wheat, Droplet, Leaf, X, AlertCircle, Filter } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-
-// Debounce hook
-function useDebounce(value, delay) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 // Food Card Component
 const FoodCard = ({ food, onClick }) => {
@@ -42,7 +25,7 @@ const FoodCard = ({ food, onClick }) => {
       </div>
       <div className="food-card-content">
         <h3 className="food-card-name">{food.name}</h3>
-        {food.brand && <p className="food-card-brand">{food.brand}</p>}
+        {food.category && <p className="food-card-category">{food.category}</p>}
         <div className="food-card-nutrients">
           {food.calories !== null && food.calories !== undefined && (
             <span className="nutrient-badge calories">
@@ -81,7 +64,7 @@ const FoodDetailModal = ({ food, onClose }) => {
           )}
           <div className="modal-title">
             <h2>{food.name}</h2>
-            {food.brand && <p className="modal-brand">{food.brand}</p>}
+            {food.category && <p className="modal-brand">{food.category}</p>}
             {food.serving_size && (
               <p className="modal-serving">Per {food.serving_size}</p>
             )}
@@ -122,22 +105,32 @@ const FoodDetailModal = ({ food, onClose }) => {
   );
 };
 
-// Search History Component
-const SearchHistory = ({ history, onSelect }) => {
-  if (!history || history.length === 0) return null;
-
+// Category Filter Component
+const CategoryFilter = ({ categories, selectedCategory, onSelect }) => {
+  if (!categories || categories.length === 0) return null;
+  
   return (
-    <div className="search-history" data-testid="search-history">
-      <h4><Clock size={14} /> Recent Searches</h4>
-      <div className="history-tags">
-        {history.slice(0, 5).map((item, index) => (
-          <button 
-            key={item.id || index}
-            className="history-tag"
-            onClick={() => onSelect(item.query)}
-            data-testid={`history-tag-${index}`}
+    <div className="category-filter" data-testid="category-filter">
+      <div className="filter-header">
+        <Filter size={14} />
+        <span>Categories</span>
+      </div>
+      <div className="filter-tags">
+        <button
+          className={`filter-tag ${selectedCategory === '' ? 'active' : ''}`}
+          onClick={() => onSelect('')}
+          data-testid="filter-all"
+        >
+          All
+        </button>
+        {categories.map((category) => (
+          <button
+            key={category}
+            className={`filter-tag ${selectedCategory === category ? 'active' : ''}`}
+            onClick={() => onSelect(category)}
+            data-testid={`filter-${category.toLowerCase().replace(/\s+/g, '-')}`}
           >
-            {item.query}
+            {category}
           </button>
         ))}
       </div>
@@ -147,85 +140,84 @@ const SearchHistory = ({ history, onSelect }) => {
 
 // Main App Component
 function App() {
-  const [searchQuery, setSearchQuery] = useState("");
+  // Search and filter state - these trigger instant re-renders
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  
+  // Data state
   const [foods, setFoods] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // UI state
   const [selectedFood, setSelectedFood] = useState(null);
-  const [searchHistory, setSearchHistory] = useState([]);
-  const [totalResults, setTotalResults] = useState(0);
-  const [hasSearched, setHasSearched] = useState(false);
 
-  const debouncedSearch = useDebounce(searchQuery, 500);
-
-  // Fetch search history on mount
+  // Load all foods on mount - ONE TIME LOAD
   useEffect(() => {
-    const fetchHistory = async () => {
+    const loadFoods = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(`${API}/search-history`);
-        setSearchHistory(response.data);
+        // Load all foods from API
+        const response = await axios.get(`${API}/foods/all`);
+        const loadedFoods = response.data.foods || [];
+        setFoods(loadedFoods);
+        
+        // Extract unique categories
+        const uniqueCategories = [...new Set(
+          loadedFoods
+            .map(food => food.category)
+            .filter(Boolean)
+        )].sort();
+        setCategories(uniqueCategories);
+        
       } catch (e) {
-        console.log("Could not fetch search history");
+        console.error("Failed to load foods:", e);
+        setFoods([]);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchHistory();
+
+    loadFoods();
   }, []);
 
-  // Search foods when debounced query changes
-  const searchFoods = useCallback(async (query) => {
-    if (!query || !query.trim()) {
-      setFoods([]);
-      setTotalResults(0);
-      setHasSearched(false);
-      return;
-    }
+  // CLIENT-SIDE FILTERING - INSTANT, NO DEBOUNCE, NO API CALL
+  // This computes on EVERY render when searchQuery or selectedCategory changes
+  const filteredFoods = (foods || []).filter((food) => {
+    // Search filter - check name and category
+    const name = (food.name || '').toLowerCase();
+    const category = (food.category || '').toLowerCase();
+    const query = (searchQuery || '').toLowerCase().trim();
+    
+    const matchesSearch = query === '' || 
+      name.includes(query) || 
+      category.includes(query);
+    
+    // Category filter
+    const matchesCategory = selectedCategory === '' || 
+      food.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
-    setLoading(true);
-    setHasSearched(true);
-
-    try {
-      const response = await axios.get(`${API}/foods/search`, {
-        params: { query: query.trim(), page: 1, page_size: 20 }
-      });
-      
-      setFoods(response.data.foods || []);
-      setTotalResults(response.data.total || 0);
-      
-      // Refresh history after search
-      try {
-        const historyResponse = await axios.get(`${API}/search-history`);
-        setSearchHistory(historyResponse.data);
-      } catch (e) {
-        // Ignore history fetch errors
-      }
-    } catch (e) {
-      console.error("Search error:", e);
-      // Show empty results instead of error - this fixes the bug
-      setFoods([]);
-      setTotalResults(0);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    searchFoods(debouncedSearch);
-  }, [debouncedSearch, searchFoods]);
-
+  // Handle search input - INSTANT UPDATE
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleHistorySelect = (query) => {
-    setSearchQuery(query);
-    // Trigger search immediately for history selection
-    searchFoods(query);
+  // Handle clear search
+  const handleClearSearch = () => {
+    setSearchQuery('');
   };
 
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setFoods([]);
-    setTotalResults(0);
-    setHasSearched(false);
+  // Handle category selection
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (term) => {
+    setSearchQuery(term);
   };
 
   return (
@@ -250,7 +242,7 @@ function App() {
               <Search size={20} className="search-icon" />
               <input
                 type="text"
-                placeholder="Search for foods... (e.g., apple, chicken, pasta)"
+                placeholder="Search foods... (e.g., apple, chicken, pasta)"
                 value={searchQuery}
                 onChange={handleSearchChange}
                 className="search-input"
@@ -269,10 +261,12 @@ function App() {
             </div>
           </div>
 
-          {/* Search History */}
-          {!searchQuery && (
-            <SearchHistory history={searchHistory} onSelect={handleHistorySelect} />
-          )}
+          {/* Category Filter */}
+          <CategoryFilter 
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelect={handleCategorySelect}
+          />
         </div>
 
         {/* Results Section */}
@@ -280,23 +274,38 @@ function App() {
           {loading ? (
             <div className="loading-state" data-testid="loading-state">
               <div className="spinner"></div>
-              <p>Searching foods...</p>
+              <p>Loading foods...</p>
             </div>
-          ) : hasSearched && foods.length === 0 ? (
+          ) : filteredFoods.length === 0 ? (
             <div className="empty-state" data-testid="no-results-state">
               <AlertCircle size={48} />
               <h3>No foods found</h3>
-              <p>Try a different search term like "apple", "bread", or "chicken"</p>
+              <p>
+                {searchQuery 
+                  ? `No results for "${searchQuery}". Try a different search term.`
+                  : selectedCategory 
+                    ? `No foods in ${selectedCategory} category.`
+                    : 'Try searching for "apple", "chicken", or "rice"'}
+              </p>
+              <div className="suggestion-chips">
+                <button onClick={() => handleSuggestionClick("apple")} data-testid="suggestion-apple">Apple</button>
+                <button onClick={() => handleSuggestionClick("chicken")} data-testid="suggestion-chicken">Chicken</button>
+                <button onClick={() => handleSuggestionClick("rice")} data-testid="suggestion-rice">Rice</button>
+                <button onClick={() => { setSearchQuery(''); setSelectedCategory(''); }} data-testid="suggestion-clear">Show All</button>
+              </div>
             </div>
-          ) : foods.length > 0 ? (
+          ) : (
             <>
               <div className="results-header">
                 <p data-testid="results-count">
-                  Found {totalResults.toLocaleString()} results for "{searchQuery}"
+                  {searchQuery || selectedCategory 
+                    ? `Found ${filteredFoods.length} result${filteredFoods.length !== 1 ? 's' : ''}${searchQuery ? ` for "${searchQuery}"` : ''}${selectedCategory ? ` in ${selectedCategory}` : ''}`
+                    : `Showing all ${filteredFoods.length} foods`
+                  }
                 </p>
               </div>
               <div className="foods-grid" data-testid="foods-grid">
-                {foods.map((food) => (
+                {filteredFoods.map((food) => (
                   <FoodCard 
                     key={food.id} 
                     food={food} 
@@ -305,18 +314,6 @@ function App() {
                 ))}
               </div>
             </>
-          ) : (
-            <div className="welcome-state" data-testid="welcome-state">
-              <Utensils size={64} />
-              <h2>Welcome to WhatToEat</h2>
-              <p>Search for any food to see its nutritional information</p>
-              <div className="suggestion-chips">
-                <button onClick={() => setSearchQuery("apple")} data-testid="suggestion-apple">Apple</button>
-                <button onClick={() => setSearchQuery("chicken breast")} data-testid="suggestion-chicken">Chicken</button>
-                <button onClick={() => setSearchQuery("rice")} data-testid="suggestion-rice">Rice</button>
-                <button onClick={() => setSearchQuery("banana")} data-testid="suggestion-banana">Banana</button>
-              </div>
-            </div>
           )}
         </div>
       </main>
@@ -331,7 +328,7 @@ function App() {
 
       {/* Footer */}
       <footer className="app-footer">
-        <p>Powered by USDA FoodData Central</p>
+        <p>WhatToEat - Nutrition Database</p>
       </footer>
     </div>
   );
