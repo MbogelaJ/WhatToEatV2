@@ -753,7 +753,10 @@ const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack }) => 
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <h2>Settings</h2>
+        <div className="header-logo">
+          <div className="logo-icon-sm">W</div>
+          <h2>WhatToEat</h2>
+        </div>
         <div style={{width: '80px'}}></div>
       </div>
 
@@ -927,7 +930,10 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <h2>WhatToEat</h2>
+        <div className="header-logo">
+          <div className="logo-icon-sm">W</div>
+          <h2>WhatToEat</h2>
+        </div>
         <button className="profile-btn" data-testid="profile-btn">
           <User size={22} />
         </button>
@@ -1095,7 +1101,10 @@ const TopicsView = ({ onBack, onNavigateHome }) => {
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <h2>Topics</h2>
+        <div className="header-logo">
+          <div className="logo-icon-sm">W</div>
+          <h2>WhatToEat</h2>
+        </div>
         <div style={{width: '80px'}}></div>
       </div>
 
@@ -1135,7 +1144,10 @@ const AboutView = ({ onBack }) => {
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <h2>About</h2>
+        <div className="header-logo">
+          <div className="logo-icon-sm">W</div>
+          <h2>WhatToEat</h2>
+        </div>
         <div style={{width: '80px'}}></div>
       </div>
 
