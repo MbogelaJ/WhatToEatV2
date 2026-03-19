@@ -619,7 +619,6 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = fal
 
 // Food Detail Modal - Matching your design
 const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
-  const [showReferences, setShowReferences] = useState(false);
   const [showFAQs, setShowFAQs] = useState(true);
   const [expandedFAQ, setExpandedFAQ] = useState(null);
   
@@ -788,25 +787,19 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
           </div>
         )}
 
-        {/* View References (Collapsible) */}
-        <button 
-          className="references-toggle"
-          onClick={() => setShowReferences(!showReferences)}
-          data-testid="references-toggle"
-        >
-          <span>View References</span>
-          {showReferences ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </button>
-        
-        {showReferences && (
-          <div className="references-content" data-testid="references-content">
-            <p>Sources: World Health Organization (WHO), USDA FoodData Central, American College of Obstetricians and Gynecologists (ACOG), FDA Food Safety Guidelines for Pregnancy, CDC Pregnancy Nutrition Guidelines</p>
+        {/* Medical Disclaimer Footer */}
+        <div className="medical-disclaimer-footer" data-testid="medical-disclaimer">
+          <div className="disclaimer-icon">
+            <Info size={18} />
           </div>
-        )}
-
-        {/* Educational Disclaimer */}
-        <div className="educational-disclaimer">
-          <p><strong>Educational Information:</strong> This content is for general reference only and does not constitute medical advice. Consult a healthcare professional for personalized guidance.</p>
+          <div className="disclaimer-content">
+            <p className="disclaimer-text">
+              This is general nutrition guidance only — not medical advice. Consult your doctor, midwife, or healthcare provider for personalized advice.
+            </p>
+            <p className="disclaimer-sources">
+              <strong>Sources:</strong> WHO (World Health Organization), FDA (Food and Drug Administration), CDC (Centers for Disease Control and Prevention), ACOG (American College of Obstetricians and Gynecologists), NHS (National Health Service)
+            </p>
+          </div>
         </div>
 
       </div>

@@ -66,8 +66,12 @@ Five-step onboarding with progress dots and Back/Continue navigation
 - Category and Safety level filters
 - Pagination support (fetches all pages)
 
-### 6. Freemium Access Model ✅ (Updated March 20, 2026)
-Strict freemium classification for pregnancy nutrition guidance:
+### 6. Medical Disclaimer Footer ✅ (Added March 20, 2026)
+Every food detail page now displays a prominent disclaimer at the bottom:
+- **Disclaimer**: "This is general nutrition guidance only — not medical advice. Consult your doctor, midwife, or healthcare provider for personalized advice."
+- **Sources**: WHO, FDA, CDC, ACOG, NHS (with full organization names)
+
+### 7. Freemium Access Model ✅ (Updated March 20, 2026)
 
 **Overall Split: 86% Premium (249 items) / 14% Free (39 items)**
 
