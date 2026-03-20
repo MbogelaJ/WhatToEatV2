@@ -1427,15 +1427,6 @@ const TopicsView = ({ onBack, onNavigateHome, isPremium, onNavigateToPremium }) 
 
   return (
     <div className="page-view" data-testid="topics-view">
-      <div className="page-header">
-        <button className="back-button" onClick={onBack} data-testid="topics-back-btn">
-          <ArrowLeft size={20} />
-          <span>Back</span>
-        </button>
-        <h2>Topics</h2>
-        <div style={{width: '80px'}}></div>
-      </div>
-
       <div className="page-content">
         <p className="page-intro">Learn about pregnancy nutrition topics.</p>
         
