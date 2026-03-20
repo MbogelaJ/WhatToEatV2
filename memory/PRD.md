@@ -137,10 +137,10 @@ Native iOS payment via App Store:
 - Europe (English-speaking users)
 
 ## What's FUNCTIONAL
-1. ✅ Google Sign-In (via Emergent Auth)
-2. ✅ Apple Sign-In (on iOS native app)
-3. ✅ User logout
-4. ✅ Session management
+1. ✅ Google Sign-In (Capacitor native + Emergent Auth web fallback)
+2. ✅ Apple Sign-In (iOS native app via Capacitor plugin)
+3. ✅ User logout (clears Capacitor Preferences + localStorage)
+4. ✅ Session management with persistence across app restarts
 5. ✅ Complete onboarding flow (5 steps)
 6. ✅ Food search and filtering
 7. ✅ Apple In-App Purchase integration ($1.99)
@@ -156,6 +156,19 @@ Native iOS payment via App Store:
 17. ✅ Personalized Daily Tips (based on dietary restrictions from onboarding)
 18. ✅ Age + Trimester display on home page
 19. ✅ Simplified navigation (4 tabs: Home, FAQ, Topics, About)
+
+### Authentication Implementation (March 20, 2026)
+**Capacitor Plugins Installed:**
+- `@codetrix-studio/capacitor-google-auth` - Native Google Sign-In for iOS/Android
+- `@capacitor-community/apple-sign-in` - Native Apple Sign-In for iOS
+- `@capacitor/preferences` - Session persistence across app restarts
+- `@capacitor/core` - Core Capacitor functionality
+
+**Auth Flow:**
+- **Web**: Google Sign-In redirects to Emergent Auth, Apple shows iOS-only message
+- **iOS Native**: Uses native Sign in with Apple and Google Sign-In SDK
+- **Android Native**: Uses native Google Sign-In SDK
+- **Session Persistence**: Uses Capacitor Preferences + localStorage for cross-restart sessions
 
 ## What's MOCKED
 - Frontend Apple IAP purchase flow on web - shows alert directing users to iOS app for actual purchase
