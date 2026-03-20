@@ -1117,6 +1117,7 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
   const [openIndex, setOpenIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Mapping of tags to actual food names in database
   const tagToFoodName = {
@@ -1204,9 +1205,22 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
     { id: 'general', label: 'General' }
   ];
 
-  const filteredFAQs = selectedCategory === 'all' 
-    ? ALL_FAQS 
-    : ALL_FAQS.filter(faq => faq.category === selectedCategory);
+  // Filter FAQs by category and search query
+  const filteredFAQs = ALL_FAQS.filter(faq => {
+    // Category filter
+    const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
+    
+    // Search filter
+    if (!searchQuery.trim()) return matchesCategory;
+    
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = 
+      faq.question.toLowerCase().includes(query) ||
+      faq.answer.toLowerCase().includes(query) ||
+      (faq.foodTags && faq.foodTags.some(tag => tag.toLowerCase().includes(query)));
+    
+    return matchesCategory && matchesSearch;
+  });
 
   const handleFAQClick = (index, faq) => {
     if (faq.isPremium && !isPremium) {
@@ -1222,6 +1236,38 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
         <div className="faq-title-section">
           <h1>Most Asked Pregnancy Food Questions</h1>
           <p>Quick answers to the most common questions about food safety during pregnancy.</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="faq-search-container">
+          <div className="faq-search-wrapper">
+            <Search size={18} className="faq-search-icon" />
+            <input
+              type="text"
+              placeholder="Search questions..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setOpenIndex(null);
+              }}
+              className="faq-search-input"
+              data-testid="faq-search-input"
+            />
+            {searchQuery && (
+              <button 
+                className="faq-search-clear" 
+                onClick={() => setSearchQuery('')}
+                data-testid="faq-search-clear"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="faq-search-results">
+              {filteredFAQs.length} {filteredFAQs.length === 1 ? 'result' : 'results'} found
+            </p>
+          )}
         </div>
 
         {/* Disclaimer Banner */}
