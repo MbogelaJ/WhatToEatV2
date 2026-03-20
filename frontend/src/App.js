@@ -4,7 +4,16 @@ import axios from "axios";
 import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock, Star, Sparkles, Shield, Heart, Lightbulb, Crown } from "lucide-react";
 
 // Import static foods data for offline/production use
-import { STATIC_FOODS_DATA } from './data/staticFoods';
+// Using try-catch to handle potential import failures in native builds
+let STATIC_FOODS_DATA = [];
+try {
+  const staticFoodsModule = require('./data/staticFoods');
+  STATIC_FOODS_DATA = staticFoodsModule.STATIC_FOODS_DATA || staticFoodsModule.default || [];
+  console.log('Static foods loaded via require:', STATIC_FOODS_DATA.length);
+} catch (e) {
+  console.error('Failed to load static foods:', e);
+  STATIC_FOODS_DATA = [];
+}
 
 // Debug: Log static data availability at startup
 console.log('App starting, static foods available:', STATIC_FOODS_DATA?.length || 0);
@@ -2493,8 +2502,26 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSafety, setSelectedSafety] = useState('');
-  const [foods, setFoods] = useState([]);
-  const [categories, setCategories] = useState([]);
+  // Initialize foods with static data immediately (for iOS/Android builds)
+  const [foods, setFoods] = useState(() => {
+    // Try to use static data immediately for native apps
+    if (STATIC_FOODS_DATA && STATIC_FOODS_DATA.length > 0) {
+      console.log('Initializing with static foods:', STATIC_FOODS_DATA.length);
+      return STATIC_FOODS_DATA;
+    }
+    return [];
+  });
+  // Initialize categories from static data immediately
+  const [categories, setCategories] = useState(() => {
+    if (STATIC_FOODS_DATA && STATIC_FOODS_DATA.length > 0) {
+      const uniqueCategories = [...new Set(
+        STATIC_FOODS_DATA.map(food => food.category).filter(Boolean)
+      )].sort();
+      console.log('Initializing categories:', uniqueCategories.length);
+      return uniqueCategories;
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
   const [foodOpenedFrom, setFoodOpenedFrom] = useState(null); // Track where food modal was opened from

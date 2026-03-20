@@ -12,13 +12,19 @@
     }
   },
   "ios": {
-    "contentInset": "automatic"
+    "contentInset": "automatic",
+    "backgroundColor": "#e8f5f0",
+    "preferredContentMode": "mobile"
   },
   "plugins": {
     "GoogleAuth": {
       "scopes": ["profile", "email"],
       "serverClientId": "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
       "forceCodeForRefreshToken": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#e8f5f0"
     }
   }
 }
