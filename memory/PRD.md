@@ -128,6 +128,15 @@ Native iOS payment via App Store:
 - `user_sessions` - Active sessions (session_token, user_id, expires_at)
 - `iap_purchases` - Apple IAP records (receipt_data, product_id, user_id, payment_status, created_at)
 
+## Target Markets
+- United States
+- Canada
+- United Kingdom
+- Ireland
+- Australia
+- New Zealand
+- Europe (English-speaking users)
+
 ## What's FUNCTIONAL
 1. ✅ Google Sign-In (via Emergent Auth)
 2. ✅ Apple Sign-In (on iOS native app)
@@ -139,11 +148,12 @@ Native iOS payment via App Store:
 8. ✅ Medical disclaimer on all food details
 9. ✅ Dynamic teaser messages for locked foods
 10. ✅ Restore purchases functionality
-11. ✅ Share button (Web Share API + clipboard fallback)
-12. ✅ Daily Tip "Read more" expansion
+11. ✅ Share button (Web Share API for mobile + clipboard fallback)
+12. ✅ Daily Tip "Read more" expansion with detailed content
 13. ✅ Topics page with premium lock (6 premium, 2 free)
 14. ✅ FAQ page with premium lock (4 free, rest premium)
-15. ✅ New health condition topics (Gestational Diabetes, Preeclampsia)
+15. ✅ Health condition topics (Gestational Diabetes, Preeclampsia)
+16. ✅ Food category icons/symbols (🍎 fruits, 🐟 fish, 🥛 dairy, etc.)
 
 ## What's MOCKED
 1. Email/Password authentication - UI only

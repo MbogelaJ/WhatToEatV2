@@ -4385,3 +4385,46 @@ body {
   background: #f0fdf4;
   border-color: #10b981;
 }
+
+/* Food List Icon */
+.food-list-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+}
+
+.food-list-item {
+  display: flex;
+  align-items: flex-start;
+}
+
+.premium-locked .food-list-icon {
+  opacity: 0.6;
+}
+
+/* Food Detail Icon */
+.food-detail-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  margin-right: 1rem;
+  border: 2px solid #bbf7d0;
+}
+
+.food-title-section {
+  display: flex;
+  align-items: flex-start;
+}

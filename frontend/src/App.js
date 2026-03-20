@@ -630,6 +630,55 @@ const SafetyBadge = ({ safety, label }) => {
   );
 };
 
+// Food Category Icons - Simple symbols for each category
+const CATEGORY_ICONS = {
+  'Fruits': '🍎',
+  'Vegetables': '🥬',
+  'Proteins': '🍗',
+  'Meat & Protein': '🥩',
+  'Fish & Seafood': '🐟',
+  'Dairy': '🥛',
+  'Grains': '🌾',
+  'Beverages': '🥤',
+  'Condiments': '🧂',
+  'Desserts & Sweets': '🍰',
+  'Nuts & Seeds': '🥜',
+  'Legumes': '🫘',
+  'Herbs & Spices': '🌿',
+  'Street & Processed Foods': '🍔',
+  'Eggs': '🥚',
+  'Seafood': '🦐',
+  'Poultry': '🍗',
+  'default': '🍽️'
+};
+
+// Get icon for food category
+const getCategoryIcon = (category) => {
+  if (!category) return CATEGORY_ICONS.default;
+  
+  // Check for exact match first
+  if (CATEGORY_ICONS[category]) return CATEGORY_ICONS[category];
+  
+  // Check for partial matches
+  const lowerCat = category.toLowerCase();
+  if (lowerCat.includes('fruit')) return '🍎';
+  if (lowerCat.includes('vegetable') || lowerCat.includes('veg')) return '🥬';
+  if (lowerCat.includes('fish') || lowerCat.includes('seafood')) return '🐟';
+  if (lowerCat.includes('meat') || lowerCat.includes('protein')) return '🥩';
+  if (lowerCat.includes('dairy') || lowerCat.includes('milk') || lowerCat.includes('cheese')) return '🥛';
+  if (lowerCat.includes('grain') || lowerCat.includes('bread') || lowerCat.includes('cereal')) return '🌾';
+  if (lowerCat.includes('beverage') || lowerCat.includes('drink')) return '🥤';
+  if (lowerCat.includes('nut') || lowerCat.includes('seed')) return '🥜';
+  if (lowerCat.includes('egg')) return '🥚';
+  if (lowerCat.includes('herb') || lowerCat.includes('spice')) return '🌿';
+  if (lowerCat.includes('dessert') || lowerCat.includes('sweet')) return '🍰';
+  if (lowerCat.includes('processed') || lowerCat.includes('fast') || lowerCat.includes('street')) return '🍔';
+  if (lowerCat.includes('legume') || lowerCat.includes('bean')) return '🫘';
+  if (lowerCat.includes('condiment') || lowerCat.includes('sauce')) return '🧂';
+  
+  return CATEGORY_ICONS.default;
+};
+
 // Food Card Component (for grid)
 const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = false }) => {
   const safetyConfig = SAFETY_CONFIG[food.safety] || SAFETY_CONFIG.SAFE;
@@ -637,6 +686,9 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = fal
   
   // Always use the standard label: "Generally Safe", "Limit Intake", or "Best Avoided"
   const safetyLabel = safetyConfig.label;
+  
+  // Get category icon
+  const categoryIcon = getCategoryIcon(food.category);
   
   // Dynamic teaser messages based on safety level for premium foods
   const getTeaserMessage = () => {
@@ -657,6 +709,9 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = fal
       className={`food-list-item ${showLock ? 'premium-locked' : ''}`}
       onClick={() => onClick(food)}
     >
+      <div className="food-list-icon">
+        <span>{categoryIcon}</span>
+      </div>
       <div className="food-list-left">
         <h3 className={`food-list-name ${showLock ? 'locked' : ''}`}>{food.name}</h3>
         <span className="food-list-category">{food.category}</span>
@@ -743,6 +798,9 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
 
         {/* Food Title Section */}
         <div className="food-title-section">
+          <div className="food-detail-icon">
+            <span>{getCategoryIcon(food.category)}</span>
+          </div>
           <div className="food-title-content">
             <h1 data-testid="food-name">{food.name}</h1>
             <p className="food-category-label">{food.category}</p>
