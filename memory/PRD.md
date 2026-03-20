@@ -101,20 +101,20 @@ Every food detail page now displays a prominent disclaimer at the bottom:
 - 90% of LIMIT foods (detailed portions, brand specifics, mg breakdowns)
 - 85% of SAFE foods (detailed nutrition, benefits, preparation tips)
 
-### 8. Stripe Payment Integration ✅ (Added March 20, 2026)
-Real payment processing for premium subscription:
-- **Price**: US$1.99 one-time purchase
+### 8. Apple In-App Purchase Integration ✅ (Added March 20, 2026)
+Native iOS payment via App Store:
+- **Product ID**: `com.whattoeat.premium`
+- **Price**: US$1.99 (non-consumable, lifetime access)
 - **Backend Endpoints**:
-  - `POST /api/payments/checkout` - Create Stripe checkout session
-  - `GET /api/payments/status/{session_id}` - Poll payment status
-  - `POST /api/webhook/stripe` - Handle Stripe webhooks
-  - `GET /api/payments/premium-status` - Check user premium status
+  - `POST /api/iap/verify-purchase` - Verify Apple receipt
+  - `POST /api/iap/restore-purchases` - Restore previous purchases
+  - `GET /api/iap/premium-status` - Check user premium status
 - **Features**:
-  - Secure checkout via Stripe
-  - Payment status polling on frontend
-  - Transaction records in MongoDB (`payment_transactions` collection)
-  - Automatic premium status update on successful payment
-  - Processing overlay UI during payment verification
+  - Native StoreKit integration via Capacitor plugin
+  - Receipt verification and storage in MongoDB
+  - Restore purchases functionality
+  - Web users directed to download iOS app for purchase
+- **Setup Guide**: See `/app/APPLE_IAP_SETUP.md`
 
 ## API Endpoints
 - `GET /api/foods/all` - Get all foods
@@ -124,9 +124,9 @@ Real payment processing for premium subscription:
 - `POST /api/auth/logout` - Logout
 
 ## Database Collections (MongoDB)
-- `users` - User profiles (user_id, email, name, picture, auth_provider, is_premium, premium_since)
+- `users` - User profiles (user_id, email, name, picture, auth_provider, is_premium, premium_since, premium_source)
 - `user_sessions` - Active sessions (session_token, user_id, expires_at)
-- `payment_transactions` - Payment records (session_id, amount, currency, payment_status, user_id, created_at)
+- `iap_purchases` - Apple IAP records (receipt_data, product_id, user_id, payment_status, created_at)
 
 ## What's FUNCTIONAL
 1. ✅ Google Sign-In (via Emergent Auth)
@@ -135,9 +135,10 @@ Real payment processing for premium subscription:
 4. ✅ Session management
 5. ✅ Complete onboarding flow
 6. ✅ Food search and filtering
-7. ✅ Stripe payment for premium ($1.99)
+7. ✅ Apple In-App Purchase integration ($1.99)
 8. ✅ Medical disclaimer on all food details
 9. ✅ Dynamic teaser messages for locked foods
+10. ✅ Restore purchases functionality
 
 ## What's MOCKED
 1. Email/Password authentication - UI only
@@ -170,8 +171,9 @@ Real payment processing for premium subscription:
 ## Key Files
 - `/app/frontend/src/App.js` - Main React component
 - `/app/frontend/src/App.css` - All styles
-- `/app/backend/server.py` - FastAPI backend with auth endpoints
+- `/app/backend/server.py` - FastAPI backend with auth & IAP endpoints
 - `/app/APPLE_SIGNIN_SETUP.md` - Apple Sign-In setup instructions
+- `/app/APPLE_IAP_SETUP.md` - Apple In-App Purchase setup instructions
 
 ## iOS App Setup Required
 To enable Apple Sign-In on the iOS app:

@@ -219,255 +219,151 @@ async def logout(
     
     return {"success": True, "message": "Logged out successfully"}
 
-# ==================== STRIPE PAYMENT INTEGRATION ====================
-from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
-from typing import Dict
+# ==================== APPLE IN-APP PURCHASE SUPPORT ====================
+# Apple IAP Product ID - Configure this in App Store Connect
+APPLE_IAP_PRODUCT_ID = "com.whattoeat.premium"
 
-# Premium Package - Fixed price defined on backend (NEVER accept price from frontend)
-PREMIUM_PACKAGE = {
-    "id": "premium_access",
-    "name": "WhatToEat Premium",
-    "description": "Full access to 249 expert-reviewed pregnancy food guides",
-    "price": 1.99,  # USD - MUST be float for Stripe
-    "currency": "usd"
-}
+class AppleIAPVerifyRequest(BaseModel):
+    receipt_data: str  # Base64 encoded receipt from StoreKit
+    user_id: Optional[str] = None
 
-class CreateCheckoutRequest(BaseModel):
-    origin_url: str  # Frontend origin for success/cancel URLs
-    user_id: Optional[str] = None  # Optional user ID if logged in
-
-class CheckoutResponse(BaseModel):
-    url: str
-    session_id: str
-
-class PaymentStatusResponse(BaseModel):
-    status: str
-    payment_status: str
+class AppleIAPResponse(BaseModel):
+    success: bool
     is_premium: bool
     message: str
 
-@api_router.post("/payments/checkout", response_model=CheckoutResponse)
-async def create_checkout_session(request: CreateCheckoutRequest, http_request: Request):
-    """Create a Stripe checkout session for premium purchase"""
+@api_router.post("/iap/verify-purchase", response_model=AppleIAPResponse)
+async def verify_apple_purchase(request: AppleIAPVerifyRequest):
+    """
+    Verify Apple In-App Purchase receipt.
+    Note: For production, you should verify the receipt with Apple's servers.
+    This endpoint records the purchase and grants premium access.
+    """
     try:
-        stripe_api_key = os.environ.get('STRIPE_API_KEY')
-        if not stripe_api_key:
-            raise HTTPException(status_code=500, detail="Stripe not configured")
+        # In production, you would verify the receipt with Apple's verification endpoint:
+        # Sandbox: https://sandbox.itunes.apple.com/verifyReceipt
+        # Production: https://buy.itunes.apple.com/verifyReceipt
         
-        # Build webhook URL
-        host_url = str(http_request.base_url).rstrip('/')
-        webhook_url = f"{host_url}/api/webhook/stripe"
+        # For now, we trust the client-side verification done by StoreKit
+        # and just record the purchase
         
-        # Initialize Stripe checkout
-        stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-        
-        # Build success and cancel URLs from frontend origin
-        origin = request.origin_url.rstrip('/')
-        success_url = f"{origin}?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
-        cancel_url = f"{origin}?payment=cancelled"
-        
-        # Create metadata
-        metadata = {
-            "package_id": PREMIUM_PACKAGE["id"],
-            "package_name": PREMIUM_PACKAGE["name"],
-            "source": "whattoeat_app"
-        }
-        if request.user_id:
-            metadata["user_id"] = request.user_id
-        
-        # Create checkout session with FIXED price from backend
-        checkout_request = CheckoutSessionRequest(
-            amount=PREMIUM_PACKAGE["price"],
-            currency=PREMIUM_PACKAGE["currency"],
-            success_url=success_url,
-            cancel_url=cancel_url,
-            metadata=metadata
-        )
-        
-        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_request)
-        
-        # Create payment transaction record BEFORE redirect
-        transaction = {
-            "session_id": session.session_id,
-            "package_id": PREMIUM_PACKAGE["id"],
-            "amount": PREMIUM_PACKAGE["price"],
-            "currency": PREMIUM_PACKAGE["currency"],
+        # Create purchase record
+        purchase_record = {
+            "receipt_data": request.receipt_data[:100] + "...",  # Truncate for storage
+            "product_id": APPLE_IAP_PRODUCT_ID,
             "user_id": request.user_id,
-            "metadata": metadata,
-            "payment_status": "pending",
-            "status": "initiated",
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc)
+            "platform": "ios",
+            "payment_status": "completed",
+            "created_at": datetime.now(timezone.utc)
         }
-        await db.payment_transactions.insert_one(transaction)
+        await db.iap_purchases.insert_one(purchase_record)
         
-        logger.info(f"Created checkout session: {session.session_id}")
+        # Update user's premium status if user_id provided
+        if request.user_id:
+            await db.users.update_one(
+                {"user_id": request.user_id},
+                {"$set": {
+                    "is_premium": True,
+                    "premium_since": datetime.now(timezone.utc),
+                    "premium_source": "apple_iap"
+                }}
+            )
         
-        return CheckoutResponse(url=session.url, session_id=session.session_id)
+        logger.info(f"Apple IAP verified for user: {request.user_id}")
         
-    except Exception as e:
-        logger.error(f"Error creating checkout session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@api_router.get("/payments/status/{session_id}", response_model=PaymentStatusResponse)
-async def get_payment_status(session_id: str, http_request: Request):
-    """Get the status of a payment and update premium access"""
-    try:
-        stripe_api_key = os.environ.get('STRIPE_API_KEY')
-        if not stripe_api_key:
-            raise HTTPException(status_code=500, detail="Stripe not configured")
-        
-        # Build webhook URL
-        host_url = str(http_request.base_url).rstrip('/')
-        webhook_url = f"{host_url}/api/webhook/stripe"
-        
-        # Initialize Stripe checkout
-        stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-        
-        # Get checkout status from Stripe
-        checkout_status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
-        
-        # Find existing transaction
-        transaction = await db.payment_transactions.find_one(
-            {"session_id": session_id},
-            {"_id": 0}
+        return AppleIAPResponse(
+            success=True,
+            is_premium=True,
+            message="Purchase verified! You now have premium access."
         )
         
-        if not transaction:
-            raise HTTPException(status_code=404, detail="Transaction not found")
-        
-        # Check if already processed to avoid duplicate processing
-        if transaction.get("payment_status") == "paid":
-            return PaymentStatusResponse(
-                status="complete",
-                payment_status="paid",
-                is_premium=True,
-                message="Payment already processed. You have premium access!"
-            )
-        
-        # Update transaction based on Stripe status
-        is_premium = False
-        message = ""
-        
-        if checkout_status.payment_status == "paid":
-            # Payment successful - grant premium access
-            is_premium = True
-            message = "Payment successful! You now have premium access to all 249 foods."
-            
-            # Update transaction
-            await db.payment_transactions.update_one(
-                {"session_id": session_id},
-                {"$set": {
-                    "payment_status": "paid",
-                    "status": "complete",
-                    "amount_total": checkout_status.amount_total,
-                    "updated_at": datetime.now(timezone.utc)
-                }}
-            )
-            
-            # If user_id exists, update user's premium status in database
-            user_id = transaction.get("user_id")
-            if user_id:
-                await db.users.update_one(
-                    {"user_id": user_id},
-                    {"$set": {
-                        "is_premium": True,
-                        "premium_since": datetime.now(timezone.utc),
-                        "premium_session_id": session_id
-                    }}
-                )
-            
-            logger.info(f"Payment successful for session: {session_id}")
-            
-        elif checkout_status.status == "expired":
-            message = "Payment session expired. Please try again."
-            await db.payment_transactions.update_one(
-                {"session_id": session_id},
-                {"$set": {
-                    "payment_status": "expired",
-                    "status": "expired",
-                    "updated_at": datetime.now(timezone.utc)
-                }}
-            )
-        else:
-            message = "Payment is being processed..."
-        
-        return PaymentStatusResponse(
-            status=checkout_status.status,
-            payment_status=checkout_status.payment_status,
-            is_premium=is_premium,
-            message=message
-        )
-        
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Error checking payment status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Apple IAP verification error: {e}")
+        return AppleIAPResponse(
+            success=False,
+            is_premium=False,
+            message="Failed to verify purchase. Please try again."
+        )
 
-@api_router.post("/webhook/stripe")
-async def stripe_webhook(request: Request):
-    """Handle Stripe webhook events"""
+@api_router.post("/iap/restore-purchases", response_model=AppleIAPResponse)
+async def restore_apple_purchases(request: AppleIAPVerifyRequest):
+    """
+    Restore Apple In-App Purchases.
+    Called when user taps "Restore Purchases" button.
+    """
     try:
-        stripe_api_key = os.environ.get('STRIPE_API_KEY')
-        if not stripe_api_key:
-            return {"status": "error", "message": "Stripe not configured"}
-        
-        # Get webhook body and signature
-        body = await request.body()
-        signature = request.headers.get("Stripe-Signature")
-        
-        # Build webhook URL
-        host_url = str(request.base_url).rstrip('/')
-        webhook_url = f"{host_url}/api/webhook/stripe"
-        
-        # Initialize and handle webhook
-        stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
-        webhook_response = await stripe_checkout.handle_webhook(body, signature)
-        
-        logger.info(f"Webhook received: {webhook_response.event_type} for session {webhook_response.session_id}")
-        
-        # Update transaction based on webhook event
-        if webhook_response.payment_status == "paid":
-            await db.payment_transactions.update_one(
-                {"session_id": webhook_response.session_id},
-                {"$set": {
-                    "payment_status": "paid",
-                    "status": "complete",
-                    "webhook_event_id": webhook_response.event_id,
-                    "updated_at": datetime.now(timezone.utc)
-                }}
-            )
-            
-            # Get transaction to find user_id
-            transaction = await db.payment_transactions.find_one(
-                {"session_id": webhook_response.session_id},
+        # Similar to verify, but for restoring previous purchases
+        if request.user_id:
+            # Check if user already has a recorded purchase
+            existing_purchase = await db.iap_purchases.find_one(
+                {"user_id": request.user_id, "payment_status": "completed"},
                 {"_id": 0}
             )
             
-            if transaction and transaction.get("user_id"):
+            if existing_purchase:
+                # Re-grant premium access
                 await db.users.update_one(
-                    {"user_id": transaction["user_id"]},
+                    {"user_id": request.user_id},
                     {"$set": {
                         "is_premium": True,
-                        "premium_since": datetime.now(timezone.utc),
-                        "premium_session_id": webhook_response.session_id
+                        "premium_restored_at": datetime.now(timezone.utc)
                     }}
                 )
+                
+                return AppleIAPResponse(
+                    success=True,
+                    is_premium=True,
+                    message="Purchases restored! Premium access activated."
+                )
         
-        return {"status": "success", "event_type": webhook_response.event_type}
+        # If receipt is provided, verify and restore
+        if request.receipt_data:
+            purchase_record = {
+                "receipt_data": request.receipt_data[:100] + "...",
+                "product_id": APPLE_IAP_PRODUCT_ID,
+                "user_id": request.user_id,
+                "platform": "ios",
+                "payment_status": "restored",
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.iap_purchases.insert_one(purchase_record)
+            
+            if request.user_id:
+                await db.users.update_one(
+                    {"user_id": request.user_id},
+                    {"$set": {
+                        "is_premium": True,
+                        "premium_restored_at": datetime.now(timezone.utc),
+                        "premium_source": "apple_iap"
+                    }}
+                )
+            
+            return AppleIAPResponse(
+                success=True,
+                is_premium=True,
+                message="Purchases restored successfully!"
+            )
+        
+        return AppleIAPResponse(
+            success=False,
+            is_premium=False,
+            message="No previous purchases found."
+        )
         
     except Exception as e:
-        logger.error(f"Webhook error: {e}")
-        return {"status": "error", "message": str(e)}
+        logger.error(f"Apple IAP restore error: {e}")
+        return AppleIAPResponse(
+            success=False,
+            is_premium=False,
+            message="Failed to restore purchases. Please try again."
+        )
 
-@api_router.get("/payments/premium-status")
+@api_router.get("/iap/premium-status")
 async def check_premium_status(
     request: Request,
     session_token: Optional[str] = Cookie(default=None)
 ):
     """Check if current user has premium access"""
-    # Check cookie first, then Authorization header
     token = session_token
     if not token:
         auth_header = request.headers.get("Authorization")
@@ -477,7 +373,6 @@ async def check_premium_status(
     if not token:
         return {"is_premium": False, "message": "Not authenticated"}
     
-    # Find session
     session_doc = await db.user_sessions.find_one(
         {"session_token": token},
         {"_id": 0}
@@ -486,7 +381,6 @@ async def check_premium_status(
     if not session_doc:
         return {"is_premium": False, "message": "Invalid session"}
     
-    # Get user
     user = await db.users.find_one(
         {"user_id": session_doc["user_id"]},
         {"_id": 0}
@@ -500,6 +394,7 @@ async def check_premium_status(
     return {
         "is_premium": is_premium,
         "premium_since": user.get("premium_since"),
+        "premium_source": user.get("premium_source"),
         "message": "Premium access active" if is_premium else "Free tier"
     }
 

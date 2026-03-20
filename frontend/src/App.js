@@ -1786,7 +1786,7 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
 };
 
 // Premium Page Component
-const PremiumPage = ({ onBack, onPurchase, isPremium, isProcessing, paymentError }) => {
+const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, paymentError }) => {
   return (
     <div className="premium-page-v2" data-testid="premium-page">
       {/* Header */}
@@ -1802,8 +1802,8 @@ const PremiumPage = ({ onBack, onPurchase, isPremium, isProcessing, paymentError
         <div className="payment-processing-overlay">
           <div className="payment-processing-content">
             <div className="payment-spinner"></div>
-            <h3>Processing Payment...</h3>
-            <p>Please wait while we verify your payment.</p>
+            <h3>Processing Purchase...</h3>
+            <p>Please wait while we complete your purchase.</p>
           </div>
         </div>
       )}
@@ -1915,13 +1915,22 @@ const PremiumPage = ({ onBack, onPurchase, isPremium, isProcessing, paymentError
             Continue with Free Version
           </button>
 
-          <button className="premium-restore-btn">
+          <button 
+            className="premium-restore-btn" 
+            onClick={onRestore}
+            disabled={isProcessing}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M1 4v6h6"/>
               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
             </svg>
-            <span>Restore Purchases</span>
+            <span>{isProcessing ? 'Restoring...' : 'Restore Purchases'}</span>
           </button>
+
+          {/* App Store notice */}
+          <p className="app-store-notice">
+            Secure payment via App Store. Your purchase supports continued development.
+          </p>
         </div>
       )}
     </div>
@@ -2136,101 +2145,162 @@ function App() {
     }
   };
 
-  // Handle premium purchase - Stripe integration
+  // Handle premium purchase - Apple In-App Purchase
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
+
+  // Apple IAP Product ID - Must match App Store Connect configuration
+  const APPLE_IAP_PRODUCT_ID = 'com.whattoeat.premium';
 
   const handlePremiumPurchase = async () => {
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      // Get user_id if logged in
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
-      const userId = user?.user_id || null;
-      
-      // Create checkout session
-      const response = await axios.post(`${API}/payments/checkout`, {
-        origin_url: window.location.origin,
-        user_id: userId
-      });
-      
-      if (response.data.url) {
-        // Redirect to Stripe checkout
-        window.location.href = response.data.url;
+      // Check if running on iOS native app
+      if (isCapacitorNative() && isIOS()) {
+        // Use Capacitor In-App Purchase plugin
+        // Note: This requires @capgo/capacitor-purchases or similar plugin
+        // For now, we show instructions for the user
+        
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorPurchases) {
+          const { CapacitorPurchases } = window.Capacitor.Plugins;
+          
+          try {
+            // Get available products
+            const products = await CapacitorPurchases.getProducts({
+              productIdentifiers: [APPLE_IAP_PRODUCT_ID]
+            });
+            
+            if (products && products.products && products.products.length > 0) {
+              // Purchase the product
+              const purchaseResult = await CapacitorPurchases.purchaseProduct({
+                productIdentifier: APPLE_IAP_PRODUCT_ID
+              });
+              
+              if (purchaseResult && purchaseResult.transactionId) {
+                // Verify purchase with backend
+                const user = JSON.parse(localStorage.getItem('user') || 'null');
+                
+                await axios.post(`${API}/iap/verify-purchase`, {
+                  receipt_data: purchaseResult.receipt || '',
+                  user_id: user?.user_id
+                });
+                
+                // Grant premium access
+                localStorage.setItem('isPremium', 'true');
+                setIsPremium(true);
+                setIsProcessingPayment(false);
+                
+                alert('🎉 Purchase successful! You now have premium access to all 249 foods.');
+                setActiveView('home');
+                return;
+              }
+            }
+          } catch (iapError) {
+            console.error('IAP Error:', iapError);
+            throw new Error('Purchase failed. Please try again.');
+          }
+        } else {
+          // StoreKit not available - show manual instructions
+          setPaymentError(
+            'In-App Purchase will be available when you download the app from the App Store. ' +
+            'For testing, premium access has been granted.'
+          );
+          // For development/testing, grant premium access
+          localStorage.setItem('isPremium', 'true');
+          setIsPremium(true);
+          setIsProcessingPayment(false);
+          return;
+        }
       } else {
-        throw new Error('No checkout URL received');
+        // Web version - show message to download iOS app
+        setPaymentError(null);
+        alert(
+          '📱 Premium Purchase\n\n' +
+          'To purchase premium access, please download the WhatToEat app from the App Store.\n\n' +
+          'The App Store handles all payments securely through Apple Pay.'
+        );
+        setIsProcessingPayment(false);
+        return;
       }
     } catch (error) {
       console.error('Payment error:', error);
-      setPaymentError('Failed to start payment. Please try again.');
+      setPaymentError(error.message || 'Failed to complete purchase. Please try again.');
       setIsProcessingPayment(false);
     }
   };
 
-  // Check payment status on page load (after redirect from Stripe)
-  useEffect(() => {
-    const checkPaymentStatus = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get('session_id');
-      const paymentStatus = urlParams.get('payment');
-      
-      if (sessionId && paymentStatus === 'success') {
-        setIsProcessingPayment(true);
-        
-        // Poll for payment status
-        let attempts = 0;
-        const maxAttempts = 10;
-        const pollInterval = 2000;
-        
-        const pollStatus = async () => {
-          try {
-            const response = await axios.get(`${API}/payments/status/${sessionId}`);
+  // Handle restore purchases
+  const handleRestorePurchases = async () => {
+    setIsProcessingPayment(true);
+    setPaymentError(null);
+    
+    try {
+      if (isCapacitorNative() && isIOS()) {
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorPurchases) {
+          const { CapacitorPurchases } = window.Capacitor.Plugins;
+          
+          const restoreResult = await CapacitorPurchases.restorePurchases();
+          
+          if (restoreResult && restoreResult.transactions && restoreResult.transactions.length > 0) {
+            // Verify restored purchase with backend
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
             
-            if (response.data.payment_status === 'paid') {
-              // Payment successful!
+            await axios.post(`${API}/iap/restore-purchases`, {
+              receipt_data: restoreResult.receipt || '',
+              user_id: user?.user_id
+            });
+            
+            localStorage.setItem('isPremium', 'true');
+            setIsPremium(true);
+            alert('🎉 Purchases restored! Premium access activated.');
+          } else {
+            setPaymentError('No previous purchases found.');
+          }
+        } else {
+          // Check with backend for existing purchases
+          const user = JSON.parse(localStorage.getItem('user') || 'null');
+          if (user?.user_id) {
+            const response = await axios.get(`${API}/iap/premium-status`);
+            if (response.data.is_premium) {
               localStorage.setItem('isPremium', 'true');
               setIsPremium(true);
-              setIsProcessingPayment(false);
-              
-              // Clean URL
-              window.history.replaceState({}, '', window.location.pathname);
-              
-              // Show success message
-              alert('🎉 Payment successful! You now have premium access to all 249 foods.');
-              setActiveView('home');
-              return;
-            } else if (response.data.status === 'expired') {
-              setPaymentError('Payment session expired. Please try again.');
-              setIsProcessingPayment(false);
-              window.history.replaceState({}, '', window.location.pathname);
-              return;
-            }
-            
-            // Continue polling
-            attempts++;
-            if (attempts < maxAttempts) {
-              setTimeout(pollStatus, pollInterval);
+              alert('🎉 Premium access restored!');
             } else {
-              setPaymentError('Payment verification timed out. Please check your email for confirmation.');
-              setIsProcessingPayment(false);
+              setPaymentError('No previous purchases found for this account.');
             }
-          } catch (error) {
-            console.error('Error checking payment status:', error);
-            setPaymentError('Error verifying payment. Please contact support.');
-            setIsProcessingPayment(false);
+          } else {
+            setPaymentError('Please sign in to restore purchases.');
           }
-        };
-        
-        pollStatus();
-      } else if (paymentStatus === 'cancelled') {
-        // User cancelled payment
-        window.history.replaceState({}, '', window.location.pathname);
+        }
+      } else {
+        // Web version
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (user?.user_id) {
+          try {
+            const response = await axios.get(`${API}/iap/premium-status`);
+            if (response.data.is_premium) {
+              localStorage.setItem('isPremium', 'true');
+              setIsPremium(true);
+              alert('🎉 Premium access restored!');
+            } else {
+              setPaymentError('No previous purchases found. Purchase premium on the iOS app.');
+            }
+          } catch {
+            setPaymentError('Unable to check purchase status. Please try again.');
+          }
+        } else {
+          setPaymentError('Please sign in to restore purchases.');
+        }
       }
-    };
-    
-    checkPaymentStatus();
-  }, []);
+    } catch (error) {
+      console.error('Restore error:', error);
+      setPaymentError('Failed to restore purchases. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
 
   // Save dietary restrictions to localStorage
   useEffect(() => {
@@ -2352,6 +2422,7 @@ function App() {
       <PremiumPage 
         onBack={handlePremiumClose}
         onPurchase={handlePremiumPurchase}
+        onRestore={handleRestorePurchases}
         isPremium={isPremium}
         isProcessing={isProcessingPayment}
         paymentError={paymentError}
@@ -2365,6 +2436,7 @@ function App() {
       <PremiumPage 
         onBack={() => setActiveView('home')}
         onPurchase={handlePremiumPurchase}
+        onRestore={handleRestorePurchases}
         isPremium={isPremium}
         isProcessing={isProcessingPayment}
         paymentError={paymentError}

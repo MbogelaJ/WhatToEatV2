@@ -4240,3 +4240,13 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* App Store Notice */
+.app-store-notice {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 1rem;
+  padding: 0 1rem;
+  line-height: 1.4;
+}
