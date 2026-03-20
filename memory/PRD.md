@@ -158,48 +158,50 @@ Native iOS payment via App Store:
 19. ✅ Simplified navigation (4 tabs: Home, FAQ, Topics, About)
 
 ## What's MOCKED
-- None - all implemented features are functional
+- Frontend Apple IAP purchase flow on web - shows alert directing users to iOS app for actual purchase
+- Real IAP only works on iOS native app with Capacitor plugin
 
 ## Next Action Items (Priority Order)
 1. **P0 CRITICAL**: Refactor App.js monolith (3000+ lines) into proper component structure
    - Directory structure already scaffolded: `/components`, `/utils`, `/data`
    - This is blocking future development velocity
 2. **P1**: Implement "Favorites" feature for bookmarking foods
-3. **P2**: Add search bar for FAQ page
+3. **P1**: Test Apple IAP on actual iOS device with sandbox account
 
-## Completed Features
-- Apple In-App Purchase integration
-- Medical disclaimer footer with sources
-- Dynamic teaser messages for locked foods
-- Freemium classification (86% premium, 14% free)
-- Share functionality (Web Share API + clipboard + social sharing menu)
-- Daily Tips with "Read more" expansion
-- Topics page with premium lock
-- FAQ page with premium lock
-- Food category icons/symbols
-- Health condition topics (Gestational Diabetes, Preeclampsia)
-- Personalized Daily Tips based on dietary restrictions
-- Age + Pregnancy Stage display on home page
-- Consistent stacked header (W logo, WhatToEat, tagline) across all pages
-- Back arrow navigation on FAQ, Topics, About pages
-- Copyright updated to © 2026 PenX Technologies
+## Completed Features (March 20, 2026)
+- ✅ **Bottom Navigation Fix** - Added 30px offset to keep nav visible above "Made with Emergent" badge
+- ✅ Apple In-App Purchase integration (backend complete, frontend ready for native iOS)
+- ✅ Medical disclaimer footer with sources
+- ✅ Dynamic teaser messages for locked foods
+- ✅ Freemium classification (86% premium, 14% free)
+- ✅ Share functionality (Web Share API + clipboard + social sharing menu)
+- ✅ Daily Tips with "Read more" expansion
+- ✅ Topics page with premium lock
+- ✅ FAQ page with search bar and premium lock
+- ✅ Food category icons/symbols
+- ✅ Health condition topics (Gestational Diabetes, Preeclampsia)
+- ✅ Personalized Daily Tips based on dietary restrictions
+- ✅ Age + Pregnancy Stage display on home page
+- ✅ Consistent stacked header (W logo, WhatToEat, tagline) across all pages
+- ✅ Back arrow navigation on FAQ, Topics, About pages
+- ✅ Copyright updated to © 2026 PenX Technologies
 
 ## Refactoring Status (March 2026)
 - Created `/src/utils/` module with constants and helpers
 - Created `/src/data/` module with FAQ and daily tips data
 - Created component directory structure for future extraction
-- App.js still contains all components (~2900 lines)
+- App.js still contains all components (~3000 lines)
 - See `/app/REFACTOR_PLAN.md` for detailed refactoring roadmap
 
-## Next Action Items
-1. **Payment/Billing**: Set up Apple In-App Purchase for production
-2. **Device Testing**: Test usability on various iPhone and iPad devices
-3. **Continue Refactoring**: Incrementally extract components from App.js
+## iOS App Production Checklist
+1. **Payment/Billing**: Configure Apple In-App Purchase product in App Store Connect (com.whattoeat.premium, $1.99)
+2. **Plugin Installation**: For native iOS build, install `@capgo/native-purchases` plugin
+3. **Device Testing**: Test with sandbox account on actual iOS device
+4. **App Review**: Submit app with IAP for Apple review
 
 ## Future Tasks
 - **P2**: Add food images
-- **P2**: Add FAQ page search
-- **P3**: Implement Favorites feature
+- **P3**: Implement more detailed food nutritional data
 
 ## Key Files
 - `/app/frontend/src/App.js` - Main React component (~2900 lines)
