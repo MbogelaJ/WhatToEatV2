@@ -1218,15 +1218,15 @@ body {
 }
 
 .faq-title-section h1 {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .faq-title-section p {
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .faq-disclaimer-banner {

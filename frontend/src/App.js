@@ -1220,22 +1220,6 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
 
   return (
     <div className="page-view" data-testid="faq-view">
-      <header className="app-header home-header-v2">
-        <div className="header-content-v2">
-          <div 
-            className="header-logo-v2 clickable" 
-            onClick={onBack}
-            role="button"
-            tabIndex={0}
-            title="Go to Home"
-          >
-            <div className="logo-icon-v2">W</div>
-            <span className="logo-text-v2">WhatToEat</span>
-            <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
-          </div>
-        </div>
-      </header>
-
       <div className="page-content">
         <div className="faq-title-section">
           <h1>Most Asked Pregnancy Food Questions</h1>
@@ -2711,6 +2695,30 @@ function App() {
   if (activeView === 'faq') {
     return (
       <div className="app" data-testid="food-search-app">
+        <header className="app-header home-header-v2">
+          <div className="header-content-v2">
+            <div 
+              className="header-logo-v2 clickable"
+              onClick={() => setActiveView('home')}
+              role="button"
+              tabIndex={0}
+              title="Go to Home"
+            >
+              <div className="logo-icon-v2">W</div>
+              <span className="logo-text-v2">WhatToEat</span>
+              <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
+            </div>
+            <div className="header-actions-v2">
+              <button className="header-action-btn" onClick={handleLogout} data-testid="logout-btn" title="Logout">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </header>
         <FAQView 
           onBack={() => setActiveView('home')} 
           onNavigateToFood={handleNavigateToFood}
@@ -2739,6 +2747,15 @@ function App() {
               <div className="logo-icon-v2">W</div>
               <span className="logo-text-v2">WhatToEat</span>
               <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
+            </div>
+            <div className="header-actions-v2">
+              <button className="header-action-btn" onClick={handleLogout} data-testid="logout-btn" title="Logout">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </button>
             </div>
           </div>
         </header>
@@ -2769,6 +2786,15 @@ function App() {
               <div className="logo-icon-v2">W</div>
               <span className="logo-text-v2">WhatToEat</span>
               <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
+            </div>
+            <div className="header-actions-v2">
+              <button className="header-action-btn" onClick={handleLogout} data-testid="logout-btn" title="Logout">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </button>
             </div>
           </div>
         </header>
