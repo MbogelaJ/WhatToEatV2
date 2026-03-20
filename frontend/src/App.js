@@ -1220,19 +1220,21 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
 
   return (
     <div className="page-view" data-testid="faq-view">
-      <div className="faq-header">
-        <div 
-          className="faq-header-left clickable" 
-          onClick={onBack}
-          role="button"
-          tabIndex={0}
-          title="Go to Home"
-        >
-          <div className="logo-icon-v2">W</div>
-          <span className="logo-text-v2">WhatToEat</span>
-          <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
+      <header className="app-header home-header-v2">
+        <div className="header-content-v2">
+          <div 
+            className="header-logo-v2 clickable" 
+            onClick={onBack}
+            role="button"
+            tabIndex={0}
+            title="Go to Home"
+          >
+            <div className="logo-icon-v2">W</div>
+            <span className="logo-text-v2">WhatToEat</span>
+            <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
+          </div>
         </div>
-      </div>
+      </header>
 
       <div className="page-content">
         <div className="faq-title-section">
@@ -1515,20 +1517,6 @@ const TopicsView = ({ onBack, onNavigateHome, isPremium, onNavigateToPremium }) 
 const AboutView = ({ onBack }) => {
   return (
     <div className="page-view" data-testid="about-view">
-      <div className="page-header stacked-header">
-        <div 
-          className="logo clickable stacked"
-          onClick={onBack}
-          role="button"
-          tabIndex={0}
-          title="Go to Home"
-        >
-          <div className="logo-icon">W</div>
-          <h1>WhatToEat</h1>
-          <span className="logo-tagline">Pregnancy Nutrition Guide</span>
-        </div>
-      </div>
-
       <div className="page-content">
         <div className="about-section">
           <p className="version" style={{textAlign: 'center', marginBottom: '1rem'}}>Version 1.0.0</p>
@@ -2739,18 +2727,18 @@ function App() {
   if (activeView === 'topics') {
     return (
       <div className="app" data-testid="food-search-app">
-        <header className="app-header compact stacked-header">
-          <div className="header-content stacked">
+        <header className="app-header home-header-v2">
+          <div className="header-content-v2">
             <div 
-              className="logo clickable stacked"
+              className="header-logo-v2 clickable"
               onClick={() => setActiveView('home')}
               role="button"
               tabIndex={0}
               title="Go to Home"
             >
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-              <span className="logo-tagline">Pregnancy Nutrition Guide</span>
+              <div className="logo-icon-v2">W</div>
+              <span className="logo-text-v2">WhatToEat</span>
+              <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
             </div>
           </div>
         </header>
@@ -2769,6 +2757,21 @@ function App() {
   if (activeView === 'about') {
     return (
       <div className="app" data-testid="food-search-app">
+        <header className="app-header home-header-v2">
+          <div className="header-content-v2">
+            <div 
+              className="header-logo-v2 clickable"
+              onClick={() => setActiveView('home')}
+              role="button"
+              tabIndex={0}
+              title="Go to Home"
+            >
+              <div className="logo-icon-v2">W</div>
+              <span className="logo-text-v2">WhatToEat</span>
+              <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
+            </div>
+          </div>
+        </header>
         <AboutView onBack={() => setActiveView('home')} />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
