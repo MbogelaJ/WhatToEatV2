@@ -752,6 +752,8 @@ const FoodCard = ({ food, onClick, onNavigateToPremium, dietaryRestrictions = []
 const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
   const [showFAQs, setShowFAQs] = useState(true);
   const [expandedFAQ, setExpandedFAQ] = useState(null);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   
   if (!food) return null;
   
@@ -759,9 +761,114 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
   const dietaryConcerns = checkDietaryConcerns(food, dietaryRestrictions);
   const relatedFAQs = getRelatedFAQs(food.name);
 
+  // Share data
+  const shareTitle = `${food.name} - Pregnancy Food Safety`;
+  const shareText = `Is ${food.name} safe during pregnancy? ${food.safety_label || safetyConfig.label}. Check out WhatToEat for pregnancy nutrition guidance!`;
+  const shareUrl = window.location.href;
+
+  // Share handlers
+  const handleShare = async () => {
+    try {
+      if (navigator.share && navigator.canShare) {
+        const shareData = { title: shareTitle, text: shareText, url: shareUrl };
+        if (navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          return;
+        }
+      }
+    } catch (error) {
+      console.log('Native share not available');
+    }
+    // Show custom share menu
+    setShowShareMenu(true);
+  };
+
+  const handleCopyLink = async () => {
+    const fullText = `${shareTitle}\n\n${shareText}\n\n${shareUrl}`;
+    try {
+      await navigator.clipboard.writeText(fullText);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch {
+      prompt('Copy this text to share:', fullText);
+    }
+  };
+
+  const shareToWhatsApp = () => {
+    const text = encodeURIComponent(`${shareTitle}\n\n${shareText}\n\n${shareUrl}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+    setShowShareMenu(false);
+  };
+
+  const shareToTwitter = () => {
+    const text = encodeURIComponent(`${shareText}`);
+    const url = encodeURIComponent(shareUrl);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+    setShowShareMenu(false);
+  };
+
+  const shareToFacebook = () => {
+    const url = encodeURIComponent(shareUrl);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+    setShowShareMenu(false);
+  };
+
+  const shareToEmail = () => {
+    const subject = encodeURIComponent(shareTitle);
+    const body = encodeURIComponent(`${shareText}\n\n${shareUrl}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    setShowShareMenu(false);
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose} data-testid="food-detail-modal">
       <div className="modal-content-detail" onClick={e => e.stopPropagation()}>
+        
+        {/* Share Menu Modal */}
+        {showShareMenu && (
+          <div className="share-menu-overlay" onClick={() => setShowShareMenu(false)}>
+            <div className="share-menu" onClick={e => e.stopPropagation()}>
+              <div className="share-menu-header">
+                <h3>Share "{food.name}"</h3>
+                <button className="share-menu-close" onClick={() => setShowShareMenu(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="share-menu-options">
+                <button className="share-option whatsapp" onClick={shareToWhatsApp}>
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="#25D366">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  <span>WhatsApp</span>
+                </button>
+                <button className="share-option twitter" onClick={shareToTwitter}>
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="#000">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  <span>X (Twitter)</span>
+                </button>
+                <button className="share-option facebook" onClick={shareToFacebook}>
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="#1877F2">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  <span>Facebook</span>
+                </button>
+                <button className="share-option email" onClick={shareToEmail}>
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="#EA4335">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                  </svg>
+                  <span>Email</span>
+                </button>
+                <button className="share-option copy" onClick={handleCopyLink}>
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="#666">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                  </svg>
+                  <span>{copySuccess ? 'Copied!' : 'Copy Link'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Header Bar */}
         <div className="modal-header-bar">
@@ -772,33 +879,7 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
           <button 
             className="share-button" 
             data-testid="share-btn"
-            onClick={async () => {
-              const shareData = {
-                title: `${food.name} - Pregnancy Food Safety`,
-                text: `Is ${food.name} safe during pregnancy? ${food.safety_label || safetyConfig.label}. ${food.benefits_summary || ''}`,
-                url: window.location.href
-              };
-              
-              try {
-                if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                  // Native Web Share API (works on mobile and some desktop browsers)
-                  await navigator.share(shareData);
-                } else {
-                  // Fallback: Copy to clipboard and show options
-                  const shareText = `${shareData.title}\n\n${shareData.text}\n\nLearn more: ${shareData.url}`;
-                  
-                  if (navigator.clipboard) {
-                    await navigator.clipboard.writeText(shareText);
-                    alert('Link copied to clipboard! You can now paste and share on your preferred platform.');
-                  } else {
-                    // Final fallback: prompt with text
-                    prompt('Copy this to share:', shareText);
-                  }
-                }
-              } catch (error) {
-                console.log('Share cancelled or failed:', error);
-              }
-            }}
+            onClick={handleShare}
           >
             <Share2 size={18} />
             <span>Share</span>
