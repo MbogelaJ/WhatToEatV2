@@ -747,7 +747,7 @@ const FoodCard = ({ food, onClick, onNavigateToPremium, dietaryRestrictions = []
 };
 
 // Food Detail Modal - Matching your design
-const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
+const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [], openedFrom = null }) => {
   const [showFAQs, setShowFAQs] = useState(true);
   const [expandedFAQ, setExpandedFAQ] = useState(null);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -758,6 +758,9 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
   const safetyConfig = SAFETY_CONFIG[food.safety] || SAFETY_CONFIG.SAFE;
   const dietaryConcerns = checkDietaryConcerns(food, dietaryRestrictions);
   const relatedFAQs = getRelatedFAQs(food.name);
+
+  // Determine back button text based on where modal was opened from
+  const backButtonText = openedFrom === 'faq' ? 'Back to FAQ' : 'Back to Home';
 
   // Share data
   const shareTitle = `${food.name} - Pregnancy Food Safety`;
@@ -872,7 +875,7 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
         <div className="modal-header-bar">
           <button className="back-button" onClick={onClose} data-testid="back-to-home-btn">
             <ArrowLeft size={20} />
-            <span>Back to Home</span>
+            <span>{backButtonText}</span>
           </button>
           <button 
             className="share-button" 
@@ -2323,6 +2326,7 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
+  const [foodOpenedFrom, setFoodOpenedFrom] = useState(null); // Track where food modal was opened from
   const [activeView, setActiveView] = useState('home');
   
   // Auth state
@@ -2655,11 +2659,18 @@ function App() {
 
   // Handle navigation from FAQ to Food
   const handleNavigateToFood = (food) => {
-    setActiveView('home');
-    // Small delay to ensure view has changed before opening modal
-    setTimeout(() => {
-      setSelectedFood(food);
-    }, 100);
+    // Track that we came from FAQ
+    setFoodOpenedFrom('faq');
+    setSelectedFood(food);
+  };
+
+  // Handle closing food modal - return to where we came from
+  const handleCloseFoodModal = () => {
+    if (foodOpenedFrom === 'faq') {
+      setActiveView('faq');
+    }
+    setSelectedFood(null);
+    setFoodOpenedFrom(null);
   };
 
   // Auth Callback - handle OAuth redirect FIRST before any other routing
@@ -2774,6 +2785,16 @@ function App() {
           onNavigateToPremium={() => setActiveView('premium')}
         />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
+        
+        {/* Modal for food detail when opened from FAQ */}
+        {selectedFood && (
+          <FoodDetailModal 
+            food={selectedFood} 
+            onClose={handleCloseFoodModal}
+            dietaryRestrictions={dietaryRestrictions}
+            openedFrom={foodOpenedFrom}
+          />
+        )}
       </div>
     );
   }
@@ -3016,8 +3037,9 @@ function App() {
       {selectedFood && (
         <FoodDetailModal 
           food={selectedFood} 
-          onClose={() => setSelectedFood(null)}
+          onClose={handleCloseFoodModal}
           dietaryRestrictions={dietaryRestrictions}
+          openedFrom={foodOpenedFrom}
         />
       )}
 
