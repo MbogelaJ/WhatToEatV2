@@ -1116,11 +1116,39 @@ const SafetyFilter = ({ selectedSafety, onSelect }) => {
 };
 
 // FAQ View Component with Premium Feature
-const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremium }) => {
+const FAQView = ({ onBack, onNavigateToFood, onNavigateToCategory, foods, isPremium, onNavigateToPremium }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Food categories that map to home page filters
+  const categoryMapping = {
+    'vegetables': 'Vegetables',
+    'vegetable': 'Vegetables',
+    'fruits': 'Fruits',
+    'fruit': 'Fruits',
+    'dairy': 'Dairy',
+    'proteins': 'Proteins',
+    'protein': 'Proteins',
+    'meat': 'Proteins',
+    'meats': 'Proteins',
+    'fish': 'Fish & Seafood',
+    'seafood': 'Fish & Seafood',
+    'grains': 'Grains',
+    'grain': 'Grains',
+    'beverages': 'Beverages',
+    'beverage': 'Beverages',
+    'drinks': 'Beverages',
+    'nuts': 'Nuts & Seeds',
+    'seeds': 'Nuts & Seeds',
+    'condiments': 'Condiments',
+    'desserts': 'Desserts & Sweets',
+    'sweets': 'Desserts & Sweets',
+    'legumes': 'Legumes',
+    'herbs': 'Herbs & Spices',
+    'spices': 'Herbs & Spices'
+  };
   
   // Mapping of tags to actual food names in database
   const tagToFoodName = {
@@ -1187,11 +1215,25 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
     });
   };
   
-  // Handle food tag click
+  // Handle food tag click - either navigate to food or category
   const handleFoodTagClick = (tag) => {
+    const normalizedTag = tag.toLowerCase().trim();
+    
+    // Check if it's a category first
+    const mappedCategory = categoryMapping[normalizedTag];
+    if (mappedCategory && onNavigateToCategory) {
+      onNavigateToCategory(mappedCategory);
+      return;
+    }
+    
+    // Otherwise, try to find the specific food
     const food = findFoodByTag(tag);
     if (food && onNavigateToFood) {
       onNavigateToFood(food);
+    } else if (onNavigateToCategory) {
+      // If no specific food found, try to match as a category search
+      // This handles cases like "cheese" which could be a category-like search
+      onNavigateToCategory(tag);
     }
   };
   
@@ -2951,6 +2993,12 @@ function App() {
         <FAQView 
           onBack={() => setActiveView('home')} 
           onNavigateToFood={handleNavigateToFood}
+          onNavigateToCategory={(category) => {
+            // Navigate to home page with the category selected or as search query
+            setSelectedCategory(category);
+            setSearchQuery(category.toLowerCase());
+            setActiveView('home');
+          }}
           foods={foods}
           isPremium={isPremium}
           onNavigateToPremium={() => setActiveView('premium')}

@@ -49,7 +49,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 100px; /* Extra space for bottom nav + Made with Emergent badge */
+  padding-bottom: 80px; /* Space for bottom nav */
 }
 
 /* Header */
@@ -1087,6 +1087,8 @@ body {
   justify-content: space-around;
   align-items: center;
   padding: 0.5rem 0;
+  padding-bottom: 40px; /* Extend background to cover gap to bottom of screen */
+  margin-bottom: -40px; /* Pull it back up visually */
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   z-index: 900;
