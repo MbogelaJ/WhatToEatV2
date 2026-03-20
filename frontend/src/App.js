@@ -6,7 +6,7 @@ import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, Ch
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Capacitor detection and Apple Sign-In helper
+// Capacitor detection for native app
 const isCapacitorNative = () => {
   return typeof window !== 'undefined' && 
          window.Capacitor && 
@@ -14,6 +14,7 @@ const isCapacitorNative = () => {
          window.Capacitor.isNativePlatform();
 };
 
+// iOS platform detection
 const isIOS = () => {
   return isCapacitorNative() && window.Capacitor.getPlatform() === 'ios';
 };
@@ -21,23 +22,20 @@ const isIOS = () => {
 // Apple Sign-In handler for native iOS
 const handleNativeAppleSignIn = async () => {
   try {
-    // Check if SignInWithApple plugin is available
     if (!window.Capacitor?.Plugins?.SignInWithApple) {
       throw new Error('SignInWithApple plugin not available');
     }
     
     const SignInWithApple = window.Capacitor.Plugins.SignInWithApple;
     
-    // Request authorization
     const response = await SignInWithApple.authorize({
       clientId: 'com.whattoeat.penx.app',
-      redirectURI: '', // Not needed for native
+      redirectURI: '',
       scopes: 'email name',
       state: 'state' + Date.now(),
       nonce: 'nonce' + Date.now()
     });
     
-    // Extract user data from Apple's response
     const user = {
       user_id: `apple_${response.response.user}`,
       email: response.response.email || `private.${response.response.user}@privaterelay.appleid.com`,

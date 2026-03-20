@@ -172,23 +172,44 @@ Native iOS payment via App Store:
 - Medical disclaimer footer with sources
 - Dynamic teaser messages for locked foods
 - Freemium classification (86% premium, 14% free)
-- Share functionality (Web Share API + clipboard)
+- Share functionality (Web Share API + clipboard + social sharing menu)
 - Daily Tips with "Read more" expansion
 - Topics page with premium lock
 - FAQ page with premium lock
 - Food category icons/symbols
 - Health condition topics (Gestational Diabetes, Preeclampsia)
+- Personalized Daily Tips based on dietary restrictions
+- Age + Pregnancy Stage display on home page
+- Consistent stacked header (W logo, WhatToEat, tagline) across all pages
+- Back arrow navigation on FAQ, Topics, About pages
+- Copyright updated to © 2026 PenX Technologies
+
+## Refactoring Status (March 2026)
+- Created `/src/utils/` module with constants and helpers
+- Created `/src/data/` module with FAQ and daily tips data
+- Created component directory structure for future extraction
+- App.js still contains all components (~2900 lines)
+- See `/app/REFACTOR_PLAN.md` for detailed refactoring roadmap
+
+## Next Action Items
+1. **Payment/Billing**: Set up Apple In-App Purchase for production
+2. **Device Testing**: Test usability on various iPhone and iPad devices
+3. **Continue Refactoring**: Incrementally extract components from App.js
 
 ## Future Tasks
 - **P2**: Add food images
 - **P2**: Add FAQ page search
+- **P3**: Implement Favorites feature
 
 ## Key Files
-- `/app/frontend/src/App.js` - Main React component
-- `/app/frontend/src/App.css` - All styles
+- `/app/frontend/src/App.js` - Main React component (~2900 lines)
+- `/app/frontend/src/App.css` - All styles (~4700 lines)
+- `/app/frontend/src/utils/` - Constants and helper functions
+- `/app/frontend/src/data/` - FAQ and daily tips data
 - `/app/backend/server.py` - FastAPI backend with auth & IAP endpoints
 - `/app/APPLE_SIGNIN_SETUP.md` - Apple Sign-In setup instructions
 - `/app/APPLE_IAP_SETUP.md` - Apple In-App Purchase setup instructions
+- `/app/REFACTOR_PLAN.md` - Detailed refactoring roadmap
 
 ## iOS App Setup Required
 To enable Apple Sign-In on the iOS app:
@@ -196,3 +217,4 @@ To enable Apple Sign-In on the iOS app:
 2. Run: `npx cap sync ios`
 3. Open Xcode and add "Sign in with Apple" capability
 4. See `/app/APPLE_SIGNIN_SETUP.md` for detailed instructions
+
