@@ -3,6 +3,9 @@ import "@/App.css";
 import axios from "axios";
 import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock, Star, Sparkles, Shield, Heart, Lightbulb, Crown } from "lucide-react";
 
+// Import static foods data for offline/production use
+import { STATIC_FOODS_DATA } from './data/staticFoods';
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
@@ -2846,31 +2849,52 @@ function App() {
     const loadFoods = async () => {
       setLoading(true);
       try {
-        // Fetch all foods (may need multiple pages)
-        let allFoods = [];
-        let page = 1;
-        let hasMore = true;
-        
-        while (hasMore) {
-          const response = await axios.get(`${API}/foods/all?page=${page}&page_size=250`);
-          const pageFoods = response.data.foods || [];
-          allFoods = [...allFoods, ...pageFoods];
+        // First, try to fetch from API (works in dev/preview)
+        if (API && BACKEND_URL) {
+          let allFoods = [];
+          let page = 1;
+          let hasMore = true;
           
-          // Check if there are more pages
-          const total = response.data.total || 0;
-          hasMore = allFoods.length < total && pageFoods.length > 0;
-          page++;
+          while (hasMore) {
+            const response = await axios.get(`${API}/foods/all?page=${page}&page_size=250`, {
+              timeout: 5000 // 5 second timeout
+            });
+            const pageFoods = response.data.foods || [];
+            allFoods = [...allFoods, ...pageFoods];
+            
+            // Check if there are more pages
+            const total = response.data.total || 0;
+            hasMore = allFoods.length < total && pageFoods.length > 0;
+            page++;
+          }
+          
+          if (allFoods.length > 0) {
+            setFoods(allFoods);
+            const uniqueCategories = [...new Set(
+              allFoods.map(food => food.category).filter(Boolean)
+            )].sort();
+            setCategories(uniqueCategories);
+            setLoading(false);
+            return;
+          }
         }
         
-        setFoods(allFoods);
-        
+        // Fallback to static data (for production iOS/Android builds)
+        console.log('Using static foods data (API unavailable or returned empty)');
+        setFoods(STATIC_FOODS_DATA);
         const uniqueCategories = [...new Set(
-          allFoods.map(food => food.category).filter(Boolean)
+          STATIC_FOODS_DATA.map(food => food.category).filter(Boolean)
         )].sort();
         setCategories(uniqueCategories);
+        
       } catch (e) {
-        console.error("Failed to load foods:", e);
-        setFoods([]);
+        console.error("API failed, using static data:", e.message);
+        // Use static data as fallback
+        setFoods(STATIC_FOODS_DATA);
+        const uniqueCategories = [...new Set(
+          STATIC_FOODS_DATA.map(food => food.category).filter(Boolean)
+        )].sort();
+        setCategories(uniqueCategories);
       } finally {
         setLoading(false);
       }
