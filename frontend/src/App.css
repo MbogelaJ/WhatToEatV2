@@ -2049,6 +2049,35 @@ body {
   padding-bottom: 70px; /* Space for Made with Emergent badge */
   overflow-y: auto;
   box-sizing: border-box;
+  position: relative;
+}
+
+.onboarding-back-arrow {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #22a06b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.onboarding-back-arrow:hover {
+  background: #f0fdf4;
+  transform: scale(1.05);
+}
+
+.onboarding-back-arrow:active {
+  transform: scale(0.95);
 }
 
 .onboarding-header {
@@ -2242,6 +2271,16 @@ body {
   font-size: 0.75rem;
   color: var(--text-muted);
   margin-top: 1rem;
+}
+
+.auth-help-note {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin: 0.75rem 0 0;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-radius: 6px;
 }
 
 .onboarding-content {

@@ -1899,6 +1899,16 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
 
   return (
     <div className="onboarding-page" data-testid="create-account-page">
+      {/* Back button at top for easy navigation */}
+      <button 
+        className="onboarding-back-arrow" 
+        onClick={onBack}
+        data-testid="create-account-top-back"
+        aria-label="Go back"
+      >
+        <ChevronLeft size={24} />
+      </button>
+      
       <div className="onboarding-header">
         <div className="onboarding-logo">
           <span>W</span>
@@ -1981,6 +1991,10 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
           </svg>
           <span>{isLoading ? 'Signing in...' : 'Sign in with Google'}</span>
         </button>
+
+        <p className="auth-help-note">
+          Use swipe back or the ← button above to return if needed
+        </p>
 
         <p className="security-note">Your data is stored securely</p>
       </div>
