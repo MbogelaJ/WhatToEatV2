@@ -222,7 +222,7 @@ async def logout(
 
 # ==================== APPLE IN-APP PURCHASE SUPPORT ====================
 # Apple IAP Configuration
-APPLE_IAP_PRODUCT_ID = "com.whattoeat.premium"
+APPLE_IAP_PRODUCT_ID = "com.whattoeat.penx.premium"
 APPLE_SHARED_SECRET = os.environ.get("APPLE_SHARED_SECRET", "")  # Set in production
 
 # Apple Receipt Verification URLs
