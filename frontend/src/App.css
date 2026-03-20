@@ -2212,6 +2212,24 @@ body {
   background: #f9fafb;
 }
 
+.social-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.social-btn .loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .security-note {
   text-align: center;
   font-size: 0.75rem;
