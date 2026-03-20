@@ -2696,14 +2696,11 @@ function App() {
     return (
       <div className="app" data-testid="food-search-app">
         <header className="app-header home-header-v2">
-          <div className="header-content-v2">
-            <div 
-              className="header-logo-v2 clickable"
-              onClick={() => setActiveView('home')}
-              role="button"
-              tabIndex={0}
-              title="Go to Home"
-            >
+          <div className="header-content-v2 with-back">
+            <button className="header-back-btn" onClick={() => setActiveView('home')} title="Back to Home">
+              <ArrowLeft size={22} />
+            </button>
+            <div className="header-logo-v2">
               <div className="logo-icon-v2">W</div>
               <span className="logo-text-v2">WhatToEat</span>
               <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
@@ -2736,14 +2733,11 @@ function App() {
     return (
       <div className="app" data-testid="food-search-app">
         <header className="app-header home-header-v2">
-          <div className="header-content-v2">
-            <div 
-              className="header-logo-v2 clickable"
-              onClick={() => setActiveView('home')}
-              role="button"
-              tabIndex={0}
-              title="Go to Home"
-            >
+          <div className="header-content-v2 with-back">
+            <button className="header-back-btn" onClick={() => setActiveView('home')} title="Back to Home">
+              <ArrowLeft size={22} />
+            </button>
+            <div className="header-logo-v2">
               <div className="logo-icon-v2">W</div>
               <span className="logo-text-v2">WhatToEat</span>
               <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
@@ -2775,14 +2769,11 @@ function App() {
     return (
       <div className="app" data-testid="food-search-app">
         <header className="app-header home-header-v2">
-          <div className="header-content-v2">
-            <div 
-              className="header-logo-v2 clickable"
-              onClick={() => setActiveView('home')}
-              role="button"
-              tabIndex={0}
-              title="Go to Home"
-            >
+          <div className="header-content-v2 with-back">
+            <button className="header-back-btn" onClick={() => setActiveView('home')} title="Back to Home">
+              <ArrowLeft size={22} />
+            </button>
+            <div className="header-logo-v2">
               <div className="logo-icon-v2">W</div>
               <span className="logo-text-v2">WhatToEat</span>
               <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>

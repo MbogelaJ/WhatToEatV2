@@ -3688,6 +3688,30 @@ body {
   gap: 0.5rem;
 }
 
+.header-back-btn {
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  background: none;
+  border: none;
+  color: #22a06b;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.header-back-btn:hover {
+  background: rgba(34, 160, 107, 0.1);
+}
+
+.header-content-v2.with-back {
+  padding: 0 2.5rem;
+}
+
 .header-action-btn {
   width: 40px;
   height: 40px;
