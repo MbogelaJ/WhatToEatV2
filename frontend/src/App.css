@@ -49,7 +49,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 70px;
+  padding-bottom: 100px; /* Extra space for bottom nav + Made with Emergent badge */
 }
 
 /* Header */
@@ -1080,7 +1080,7 @@ body {
 /* ===== BOTTOM NAVIGATION ===== */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
+  bottom: 30px; /* Offset to stay above "Made with Emergent" badge */
   left: 0;
   right: 0;
   display: flex;
