@@ -1025,36 +1025,26 @@ const SafetyFilter = ({ selectedSafety, onSelect }) => {
 };
 
 // Settings View Component
-const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack, currentUser, onLogout }) => {
-  const [localRestrictions, setLocalRestrictions] = useState(dietaryRestrictions);
-
-  const toggleRestriction = (id) => {
-    if (localRestrictions.includes(id)) {
-      setLocalRestrictions(localRestrictions.filter(r => r !== id));
-    } else {
-      setLocalRestrictions([...localRestrictions, id]);
-    }
-  };
-
-  const handleSave = () => {
-    onUpdateRestrictions(localRestrictions);
-    onBack();
-  };
+// Profile View Component - Simple profile without dietary settings (handled in onboarding)
+const ProfileView = ({ onBack, currentUser, onLogout, isPremium, onNavigateToPremium }) => {
+  const userAge = localStorage.getItem('userAge');
+  const userTrimester = localStorage.getItem('userTrimester');
+  const dietaryRestrictions = JSON.parse(localStorage.getItem('dietaryRestrictions') || '[]');
 
   return (
-    <div className="settings-view" data-testid="settings-view">
+    <div className="settings-view" data-testid="profile-view">
       <div className="settings-header">
-        <button className="back-button" onClick={onBack} data-testid="settings-back-btn">
+        <button className="back-button" onClick={onBack} data-testid="profile-back-btn">
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
-        <h2>Settings</h2>
+        <h2>Profile</h2>
         <div style={{width: '80px'}}></div>
       </div>
 
       <div className="settings-content">
         {/* User Profile Section */}
-        {currentUser && (
+        {currentUser ? (
           <div className="settings-section user-profile-section">
             <div className="settings-section-header">
               <User size={20} />
@@ -1079,61 +1069,80 @@ const SettingsView = ({ dietaryRestrictions, onUpdateRestrictions, onBack, curre
               Sign Out
             </button>
           </div>
+        ) : (
+          <div className="settings-section user-profile-section">
+            <div className="settings-section-header">
+              <User size={20} />
+              <h3>Account</h3>
+            </div>
+            <p className="settings-description">You're using the app as a guest.</p>
+          </div>
         )}
 
+        {/* Pregnancy Info Section */}
         <div className="settings-section">
           <div className="settings-section-header">
-            <Utensils size={20} />
-            <h3>Dietary Restrictions</h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <h3>Your Pregnancy</h3>
           </div>
-          <p className="settings-description">
-            Select your dietary restrictions to see personalized alerts on foods that may not be suitable for you.
-          </p>
-
-          <div className="dietary-options">
-            {DIETARY_RESTRICTIONS.map((restriction) => (
-              <label 
-                key={restriction.id} 
-                className={`dietary-option ${localRestrictions.includes(restriction.id) ? 'selected' : ''}`}
-                data-testid={`dietary-option-${restriction.id}`}
-              >
-                <div className="dietary-option-content">
-                  <span className="dietary-option-label">{restriction.label}</span>
-                  <span className="dietary-option-description">{restriction.description}</span>
-                </div>
-                <div className={`dietary-checkbox ${localRestrictions.includes(restriction.id) ? 'checked' : ''}`}>
-                  {localRestrictions.includes(restriction.id) && <Check size={14} />}
-                </div>
-                <input
-                  type="checkbox"
-                  checked={localRestrictions.includes(restriction.id)}
-                  onChange={() => toggleRestriction(restriction.id)}
-                  style={{display: 'none'}}
-                />
-              </label>
-            ))}
+          <div className="pregnancy-info-card">
+            <div className="pregnancy-info-item">
+              <span className="info-label">Age</span>
+              <span className="info-value">{userAge || 'Not set'} years</span>
+            </div>
+            <div className="pregnancy-info-item">
+              <span className="info-label">Stage</span>
+              <span className="info-value">{userTrimester || 'Not set'}</span>
+            </div>
           </div>
         </div>
 
-        <button className="save-settings-btn" onClick={handleSave} data-testid="save-settings-btn">
-          Save Preferences
-        </button>
-
-        {localRestrictions.length > 0 && (
-          <div className="active-restrictions">
-            <h4>Active Restrictions:</h4>
+        {/* Dietary Considerations - View Only */}
+        {dietaryRestrictions.length > 0 && (
+          <div className="settings-section">
+            <div className="settings-section-header">
+              <Utensils size={20} />
+              <h3>Dietary Considerations</h3>
+            </div>
+            <p className="settings-description">Your personalized food alerts are based on these:</p>
             <div className="restriction-tags">
-              {localRestrictions.map(id => {
+              {dietaryRestrictions.map(id => {
                 const restriction = DIETARY_RESTRICTIONS.find(r => r.id === id);
-                return (
+                return restriction ? (
                   <span key={id} className="restriction-tag">
-                    {restriction?.label}
+                    {restriction.label}
                   </span>
-                );
+                ) : null;
               })}
             </div>
           </div>
         )}
+
+        {/* Premium Status */}
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <h3>Premium Status</h3>
+          </div>
+          {isPremium ? (
+            <div className="premium-status-card active">
+              <span className="premium-badge-large">✓ Premium Active</span>
+              <p>You have full access to all 249 food guides.</p>
+            </div>
+          ) : (
+            <div className="premium-status-card">
+              <p>Unlock all food safety details with Premium.</p>
+              <button className="upgrade-premium-btn" onClick={onNavigateToPremium}>
+                Upgrade to Premium
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2164,6 +2173,31 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
             {isProcessing ? 'Processing...' : 'Get Premium for $1.99'}
           </button>
 
+          {/* Payment Methods */}
+          <div className="payment-methods">
+            <span className="payment-label">Pay securely with</span>
+            <div className="payment-icons">
+              {/* Apple Pay */}
+              <div className="payment-icon apple-pay" title="Apple Pay">
+                <svg viewBox="0 0 50 20" width="50" height="20">
+                  <path fill="currentColor" d="M9.6 4.1c-.6.7-1.5 1.2-2.4 1.1-.1-.9.3-1.9.8-2.5.6-.7 1.4-1.1 2.3-1.1.1.9-.3 1.8-.7 2.5zm.7 1.3c-1.3-.1-2.4.7-3 .7-.6 0-1.5-.7-2.5-.7-1.3 0-2.5.8-3.1 2-.7 1.2-.6 3.3.5 4.9.4.6.9 1.4 1.6 1.4.6 0 .9-.4 1.8-.4.9 0 1.1.4 1.8.4.7 0 1.1-.6 1.5-1.2.5-.7.7-1.4.7-1.4 0 0-1.4-.5-1.4-2.1 0-1.4 1.1-2 1.2-2.1-.7-1-1.7-1.5-2.1-1.5zM21.9 1.5c2.6 0 4.4 1.8 4.4 4.4 0 2.6-1.9 4.4-4.5 4.4h-2.9v4.5h-2.1V1.5h5.1zm-3 7h2.4c1.8 0 2.8-1 2.8-2.6 0-1.6-1-2.6-2.8-2.6h-2.4v5.2zm9.4 5.6c0-1.5 1.2-2.4 3.2-2.5l2.4-.1v-.7c0-1-.7-1.6-1.8-1.6-1 0-1.7.5-1.8 1.3h-1.9c.1-1.7 1.6-3 3.8-3 2.3 0 3.7 1.2 3.7 3.1v6.5h-1.9v-1.6h0c-.6 1.1-1.7 1.7-3 1.7-1.8 0-3.1-1.1-3.1-2.7l.4-.4zm5.6-.8v-.7l-2.1.1c-1.1.1-1.7.5-1.7 1.3 0 .7.6 1.2 1.6 1.2 1.2 0 2.2-.8 2.2-1.9zM38 17.2c-.5 1.5-1.4 2-3 2-.3 0-.9 0-1.1-.1v-1.7c.2 0 .6.1.8.1.8 0 1.2-.3 1.5-1.2l.2-.5-3.4-9.1h2.2l2.3 7h0l2.3-7h2.1L38 17.2z"/>
+                </svg>
+              </div>
+              {/* Google Pay */}
+              <div className="payment-icon google-pay" title="Google Pay">
+                <svg viewBox="0 0 50 20" width="50" height="20">
+                  <path fill="#4285F4" d="M23.7 10.2v3.5h-1.1V6h2.9c.7 0 1.3.2 1.8.7.5.5.7 1 .7 1.7 0 .7-.2 1.3-.7 1.7-.5.5-1.1.7-1.8.7h-1.8zm0-3.2v2.2h1.8c.4 0 .8-.1 1-.4.3-.3.4-.6.4-1s-.1-.7-.4-1c-.3-.3-.6-.4-1-.4h-1.8z"/>
+                  <path fill="#34A853" d="M32 8.7c.8 0 1.4.2 1.9.7.5.5.7 1.1.7 1.9v3.5h-1v-.8h0c-.4.7-1 1-1.8 1-.7 0-1.2-.2-1.7-.6-.4-.4-.6-.9-.6-1.5 0-.6.2-1.1.7-1.5.4-.4 1-.5 1.8-.5.7 0 1.2.1 1.6.4v-.3c0-.4-.2-.8-.5-1-.3-.3-.7-.4-1.1-.4-.6 0-1.1.3-1.4.8l-1-.6c.5-.8 1.3-1.1 2.4-1.1zm-1.5 4.4c0 .3.1.5.4.7.2.2.5.3.9.3.5 0 .9-.2 1.3-.5.4-.4.5-.8.5-1.2-.3-.3-.8-.4-1.4-.4-.5 0-.9.1-1.2.3-.3.2-.5.5-.5.8z"/>
+                  <path fill="#FBBC04" d="M39.9 8.9l-3.6 8.2h-1.1l1.3-2.9-2.4-5.3h1.2l1.7 4h0l1.7-4h1.2z"/>
+                  <path fill="#EA4335" d="M17.4 10.1c0-.4 0-.7-.1-1.1h-4.4v2h2.5c-.1.6-.4 1.1-.9 1.4v1.2h1.4c.9-.8 1.5-2 1.5-3.5z"/>
+                  <path fill="#4285F4" d="M12.9 14.8c1.2 0 2.3-.4 3-1.1l-1.4-1.2c-.4.3-1 .5-1.6.5-1.2 0-2.3-.8-2.6-2h-1.5v1.2c.8 1.5 2.3 2.6 4.1 2.6z"/>
+                  <path fill="#34A853" d="M10.3 11c-.1-.4-.2-.7-.2-1.1 0-.4.1-.8.2-1.1V7.6H8.8C8.4 8.4 8.2 9.2 8.2 10s.2 1.6.6 2.4l1.5-1.4z"/>
+                  <path fill="#FBBC04" d="M12.9 6.9c.7 0 1.3.2 1.8.7l1.3-1.3c-.8-.8-1.9-1.2-3.1-1.2-1.8 0-3.3 1-4.1 2.5l1.5 1.2c.3-1.2 1.4-1.9 2.6-1.9z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
           <button className="premium-free-btn" onClick={onBack}>
             Continue with Free Version
           </button>
@@ -2190,23 +2224,62 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
   );
 };
 
-// Daily Tip Component
-const DailyTip = () => {
+// Daily Tip Component - Personalized based on dietary restrictions
+const DailyTip = ({ dietaryRestrictions = [] }) => {
   const [tip, setTip] = useState(null);
   const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  // Personalized tips based on dietary restrictions
+  const PERSONALIZED_TIPS = {
+    'vegetarian': {
+      tip: "As a vegetarian, focus on iron-rich plant foods like lentils, spinach, and fortified cereals.",
+      icon: "🥬",
+      fullContent: "Vegetarian diets can provide all nutrients needed during pregnancy. Key nutrients to focus on: Iron (beans, lentils, tofu, spinach - pair with vitamin C), Protein (eggs, dairy, legumes, nuts), B12 (eggs, dairy, fortified foods), Zinc (whole grains, nuts, seeds). Consider a prenatal vitamin with B12 and iron."
+    },
+    'vegan': {
+      tip: "Vegan moms: Ensure you're getting B12, iron, and omega-3s from fortified foods or supplements.",
+      icon: "🌱",
+      fullContent: "A vegan pregnancy requires careful planning. Critical nutrients: B12 (MUST supplement - no reliable plant sources), Iron (legumes, fortified cereals, leafy greens), Calcium (fortified plant milks, tofu, almonds), Omega-3 DHA (algae-based supplements), Zinc (beans, nuts, whole grains). Work with a dietitian to ensure all needs are met."
+    },
+    'gluten-free': {
+      tip: "Going gluten-free? Choose naturally gluten-free grains like quinoa, rice, and certified oats.",
+      icon: "🌾",
+      fullContent: "Maintaining a gluten-free diet during pregnancy: Focus on naturally gluten-free whole grains (rice, quinoa, buckwheat, certified oats), Read labels carefully - gluten hides in many products, Choose gluten-free fortified cereals for iron and B vitamins, Ensure adequate fiber from fruits, vegetables, and legumes."
+    },
+    'dairy-free': {
+      tip: "Without dairy, get calcium from fortified plant milks, leafy greens, and canned fish with bones.",
+      icon: "🥛",
+      fullContent: "Getting enough calcium without dairy (need 1000mg daily): Fortified plant milks and juices (check labels - not all are fortified), Calcium-set tofu, Canned sardines/salmon with bones, Leafy greens (bok choy, kale, broccoli), Almonds and almond butter. Vitamin D helps absorption - get sunshine or supplement."
+    },
+    'nut-allergy': {
+      tip: "With a nut allergy, get healthy fats from seeds, avocados, olive oil, and fatty fish.",
+      icon: "🥜",
+      fullContent: "Healthy fats without nuts: Seeds (sunflower, pumpkin, chia, flax) provide similar nutrients, Avocados and olive oil for monounsaturated fats, Fatty fish (salmon, sardines) for omega-3s, Sunflower seed butter as a nut butter alternative. Always carry your EpiPen and inform your healthcare team."
+    }
+  };
+
   useEffect(() => {
-    // Get tip based on day of year for consistency
-    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-    const tipIndex = dayOfYear % DAILY_TIPS.length;
-    setTip(DAILY_TIPS[tipIndex]);
-  }, []);
+    // Check if user has dietary restrictions that warrant a personalized tip
+    const personalizedTip = dietaryRestrictions.find(r => PERSONALIZED_TIPS[r]);
+    
+    if (personalizedTip && Math.random() < 0.5) { // 50% chance to show personalized tip
+      setTip({
+        ...PERSONALIZED_TIPS[personalizedTip],
+        isPersonalized: true
+      });
+    } else {
+      // Get regular tip based on day of year
+      const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+      const tipIndex = dayOfYear % DAILY_TIPS.length;
+      setTip(DAILY_TIPS[tipIndex]);
+    }
+  }, [dietaryRestrictions]);
 
   if (!tip || dismissed) return null;
 
   return (
-    <div className={`daily-tip-v2 ${expanded ? 'expanded' : ''}`} data-testid="daily-tip">
+    <div className={`daily-tip-v2 ${expanded ? 'expanded' : ''} ${tip.isPersonalized ? 'personalized' : ''}`} data-testid="daily-tip">
       <button className="tip-dismiss" onClick={() => setDismissed(true)}>
         <X size={16} />
       </button>
@@ -2214,7 +2287,9 @@ const DailyTip = () => {
         <Lightbulb size={24} />
       </div>
       <div className="tip-content-v2">
-        <span className="tip-label">DAILY TIP</span>
+        <span className="tip-label">
+          {tip.isPersonalized ? '✨ PERSONALIZED TIP' : 'DAILY TIP'}
+        </span>
         <p className="tip-text">{tip.tip}</p>
         
         {expanded && tip.fullContent && (
@@ -2277,10 +2352,10 @@ const BottomNav = ({ activeView, onChangeView }) => {
       <button 
         className={`nav-item ${activeView === 'settings' ? 'active' : ''}`}
         onClick={() => onChangeView('settings')}
-        data-testid="nav-settings"
+        data-testid="nav-profile"
       >
-        <Settings size={20} />
-        <span>Settings</span>
+        <User size={20} />
+        <span>Profile</span>
       </button>
     </nav>
   );
@@ -2713,24 +2788,30 @@ function App() {
     );
   }
 
-  // Render Settings View
+  // Render Profile View (formerly Settings)
   if (activeView === 'settings') {
     return (
       <div className="app" data-testid="food-search-app">
         <header className="app-header compact">
           <div className="header-content">
-            <div className="logo">
+            <div 
+              className="logo clickable"
+              onClick={() => setActiveView('home')}
+              role="button"
+              tabIndex={0}
+              title="Go to Home"
+            >
               <div className="logo-icon">W</div>
               <h1>WhatToEat</h1>
             </div>
           </div>
         </header>
-        <SettingsView 
-          dietaryRestrictions={dietaryRestrictions}
-          onUpdateRestrictions={setDietaryRestrictions}
+        <ProfileView 
           onBack={() => setActiveView('home')}
           currentUser={currentUser}
           onLogout={handleLogout}
+          isPremium={isPremium}
+          onNavigateToPremium={() => setActiveView('premium')}
         />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
@@ -2849,8 +2930,8 @@ function App() {
           <p><span className="edu-label">Educational Information:</span> This content is for general reference only and does not constitute medical advice. Consult a healthcare professional for personalized guidance.</p>
         </div>
 
-        {/* Daily Tip */}
-        <DailyTip />
+        {/* Daily Tip - Personalized based on dietary restrictions */}
+        <DailyTip dietaryRestrictions={dietaryRestrictions} />
 
         {/* Trimester Section */}
         {trimester && trimesterInfo[trimester] && (
