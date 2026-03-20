@@ -450,7 +450,7 @@ const ALL_FAQS = [
     isPremium: true
   },
   {
-    id: 'prenatal-vitamins',
+    id: 'prenatal-vitamins-detailed',
     question: "Do I need prenatal vitamins, and when should I start?",
     answer: "YES - prenatal vitamins are strongly recommended. START: Ideally 1-3 months before conception, but start as soon as you know you're pregnant. KEY NUTRIENTS IN PRENATALS: Folic acid (400-800mcg) - critical for preventing neural tube defects in first 28 days. Iron - prevents anemia. Calcium - bones. DHA - brain development. Vitamin D, B vitamins, iodine. FOOD ISN'T ENOUGH: Even with perfect diet, it's hard to get adequate folic acid and iron. Prenatal vitamins are an insurance policy. TIPS: Take with food if nauseous. If you can't tolerate pills, try gummies (check they contain iron). Continue through breastfeeding.",
     category: 'nutrition',
@@ -1210,18 +1210,17 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
     // Category filter
     const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
     
-    // Search filter
+    // Search filter - only search in question and foodTags (not answer)
     if (!searchQuery.trim()) return matchesCategory;
     
     const query = searchQuery.toLowerCase();
     const matchesSearch = 
       faq.question.toLowerCase().includes(query) ||
-      faq.answer.toLowerCase().includes(query) ||
       (faq.foodTags && faq.foodTags.some(tag => tag.toLowerCase().includes(query)));
     
     return matchesCategory && matchesSearch;
   }).sort((a, b) => {
-    // Sort to prioritize matches in question and foodTags over answer-only matches
+    // Sort to prioritize matches in question over tag-only matches
     if (!searchQuery.trim()) return 0;
     
     const query = searchQuery.toLowerCase();
@@ -1231,7 +1230,7 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
     const bInQuestion = b.question.toLowerCase().includes(query);
     const bInTags = b.foodTags && b.foodTags.some(tag => tag.toLowerCase().includes(query));
     
-    // Priority: question match > tag match > answer-only match
+    // Priority: question match > tag match
     const aScore = (aInQuestion ? 2 : 0) + (aInTags ? 1 : 0);
     const bScore = (bInQuestion ? 2 : 0) + (bInTags ? 1 : 0);
     
