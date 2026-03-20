@@ -1230,10 +1230,8 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
         >
           <div className="logo-icon-v2">W</div>
           <span className="logo-text-v2">WhatToEat</span>
+          <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
         </div>
-        <button className="header-action-btn" data-testid="faq-profile-btn">
-          <User size={22} />
-        </button>
       </div>
 
       <div className="page-content">
@@ -1517,23 +1515,23 @@ const TopicsView = ({ onBack, onNavigateHome, isPremium, onNavigateToPremium }) 
 const AboutView = ({ onBack }) => {
   return (
     <div className="page-view" data-testid="about-view">
-      <div className="page-header">
-        <button className="back-button" onClick={onBack} data-testid="about-back-btn">
-          <ArrowLeft size={20} />
-          <span>Back</span>
-        </button>
-        <h2>About</h2>
-        <div style={{width: '80px'}}></div>
+      <div className="page-header stacked-header">
+        <div 
+          className="logo clickable stacked"
+          onClick={onBack}
+          role="button"
+          tabIndex={0}
+          title="Go to Home"
+        >
+          <div className="logo-icon">W</div>
+          <h1>WhatToEat</h1>
+          <span className="logo-tagline">Pregnancy Nutrition Guide</span>
+        </div>
       </div>
 
       <div className="page-content">
-        <div className="about-hero">
-          <div className="about-logo">
-            <div className="logo-icon large">W</div>
-          </div>
-          <h1>WhatToEat</h1>
-          <p className="about-tagline">Pregnancy Nutrition Guide</p>
-          <p className="version">Version 1.0.0</p>
+        <div className="about-section">
+          <p className="version" style={{textAlign: 'center', marginBottom: '1rem'}}>Version 1.0.0</p>
         </div>
 
         <div className="about-section">
@@ -2741,10 +2739,10 @@ function App() {
   if (activeView === 'topics') {
     return (
       <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
+        <header className="app-header compact stacked-header">
+          <div className="header-content stacked">
             <div 
-              className="logo clickable"
+              className="logo clickable stacked"
               onClick={() => setActiveView('home')}
               role="button"
               tabIndex={0}
@@ -2752,6 +2750,7 @@ function App() {
             >
               <div className="logo-icon">W</div>
               <h1>WhatToEat</h1>
+              <span className="logo-tagline">Pregnancy Nutrition Guide</span>
             </div>
           </div>
         </header>
@@ -2804,6 +2803,7 @@ function App() {
           >
             <div className="logo-icon-v2">W</div>
             <span className="logo-text-v2">WhatToEat</span>
+            <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
           </div>
           <div className="header-actions-v2">
             <button className="header-action-btn" onClick={handleLogout} data-testid="logout-btn" title="Logout">
@@ -2819,11 +2819,6 @@ function App() {
 
       {/* Main */}
       <main className="app-main home-main-v3">
-        {/* Title Section */}
-        <div className="home-title-section">
-          <h1 className="home-main-title">Pregnancy Nutrition Guide</h1>
-          <p className="home-subtitle">Educational reference information about foods during pregnancy</p>
-        </div>
 
         {/* Educational Information Banner */}
         <div className="educational-info-banner">
