@@ -1586,7 +1586,7 @@ const AboutView = ({ onBack }) => {
 
         <div className="about-footer">
           <p>Made with ❤️ for expectant mothers</p>
-          <p className="copyright">(c) 2026 PenX Technologies. All Rights Reserved.</p>
+          <p className="copyright">© 2026 PenX Technologies. All Rights Reserved.</p>
         </div>
       </div>
     </div>
@@ -1648,7 +1648,7 @@ const DisclaimerPage = ({ onAccept }) => {
           <p>By continuing, you acknowledge that you have read and understood this disclaimer, and agree that this app is for educational purposes only.</p>
         </div>
 
-        <p className="disclaimer-copyright">(c) 2026 PenX Technologies. All Rights Reserved.</p>
+        <p className="disclaimer-copyright">© 2026 PenX Technologies. All Rights Reserved.</p>
       </div>
 
       {/* Button */}
