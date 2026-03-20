@@ -680,7 +680,7 @@ const getCategoryIcon = (category) => {
 };
 
 // Food Card Component (for grid)
-const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = false }) => {
+const FoodCard = ({ food, onClick, onNavigateToPremium, dietaryRestrictions = [], isPremiumUser = false }) => {
   const safetyConfig = SAFETY_CONFIG[food.safety] || SAFETY_CONFIG.SAFE;
   const showLock = food.is_premium && !isPremiumUser;
   
@@ -702,12 +702,21 @@ const FoodCard = ({ food, onClick, dietaryRestrictions = [], isPremiumUser = fal
         return 'Unlock nutrition facts & preparation tips';
     }
   };
+
+  // Handle click - if locked, go to premium page; otherwise open food detail
+  const handleClick = () => {
+    if (showLock && onNavigateToPremium) {
+      onNavigateToPremium();
+    } else {
+      onClick(food);
+    }
+  };
   
   return (
     <div 
       data-testid={`food-card-${food.id}`}
       className={`food-list-item ${showLock ? 'premium-locked' : ''}`}
-      onClick={() => onClick(food)}
+      onClick={handleClick}
     >
       <div className="food-list-icon">
         <span>{categoryIcon}</span>
@@ -2824,6 +2833,7 @@ function App() {
                     key={food.id} 
                     food={food} 
                     onClick={setSelectedFood}
+                    onNavigateToPremium={() => setActiveView('premium')}
                     dietaryRestrictions={dietaryRestrictions}
                     isPremiumUser={isPremium}
                   />
