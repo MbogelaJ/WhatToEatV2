@@ -1220,6 +1220,22 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
       (faq.foodTags && faq.foodTags.some(tag => tag.toLowerCase().includes(query)));
     
     return matchesCategory && matchesSearch;
+  }).sort((a, b) => {
+    // Sort to prioritize matches in question and foodTags over answer-only matches
+    if (!searchQuery.trim()) return 0;
+    
+    const query = searchQuery.toLowerCase();
+    
+    const aInQuestion = a.question.toLowerCase().includes(query);
+    const aInTags = a.foodTags && a.foodTags.some(tag => tag.toLowerCase().includes(query));
+    const bInQuestion = b.question.toLowerCase().includes(query);
+    const bInTags = b.foodTags && b.foodTags.some(tag => tag.toLowerCase().includes(query));
+    
+    // Priority: question match > tag match > answer-only match
+    const aScore = (aInQuestion ? 2 : 0) + (aInTags ? 1 : 0);
+    const bScore = (bInQuestion ? 2 : 0) + (bInTags ? 1 : 0);
+    
+    return bScore - aScore;
   });
 
   const handleFAQClick = (index, faq) => {
