@@ -156,28 +156,23 @@ Native iOS payment via App Store:
 16. ✅ Food category icons/symbols (🍎 fruits, 🐟 fish, 🥛 dairy, etc.)
 
 ## What's MOCKED
-1. Email/Password authentication - UI only
+- None - all implemented features are functional
 
 ## Next Action Items (Priority Order)
-1. **P0 IN PROGRESS**: Refactor App.js monolith - component files created, need to integrate
-2. **P1**: Implement email/password authentication
-3. **P1**: Implement "Favorites" feature for bookmarking foods
+1. **P1**: Implement "Favorites" feature for bookmarking foods
+2. **P1**: Continue App.js refactor for maintainability
 
 ## Completed Features
-- Stripe payment integration for premium subscription ($1.99)
-- Medical disclaimer footer with WHO, FDA, CDC, ACOG, NHS sources
+- Apple In-App Purchase integration
+- Medical disclaimer footer with sources
 - Dynamic teaser messages for locked foods
 - Freemium classification (86% premium, 14% free)
-- Component files created for refactor:
-  - /app/frontend/src/components/SafetyBadge.jsx
-  - /app/frontend/src/components/FoodCard.jsx
-  - /app/frontend/src/components/CategoryFilter.jsx
-  - /app/frontend/src/components/SafetyFilter.jsx
-  - /app/frontend/src/components/BottomNav.jsx
-  - /app/frontend/src/components/DailyTip.jsx
-  - /app/frontend/src/utils/constants.js
-  - /app/frontend/src/utils/helpers.js
-  - /app/frontend/src/data/dailyTips.js
+- Share functionality (Web Share API + clipboard)
+- Daily Tips with "Read more" expansion
+- Topics page with premium lock
+- FAQ page with premium lock
+- Food category icons/symbols
+- Health condition topics (Gestational Diabetes, Preeclampsia)
 
 ## Future Tasks
 - **P2**: Add food images
