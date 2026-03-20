@@ -559,10 +559,17 @@ const ALL_FAQS = [
 // Helper function to get FAQs related to a food
 const getRelatedFAQs = (foodName) => {
   const normalizedName = foodName.toLowerCase().replace(/\s+/g, '-');
+  const foodWords = normalizedName.split('-');
+  
   return ALL_FAQS.filter(faq => 
-    faq.foodTags.some(tag => 
-      normalizedName.includes(tag) || tag.includes(normalizedName.split('-')[0])
-    )
+    faq.foodTags.some(tag => {
+      const normalizedTag = tag.toLowerCase();
+      // Exact match or the food name exactly matches a tag
+      // Avoid partial matches like "water" matching "watermelon"
+      return foodWords.includes(normalizedTag) || 
+             normalizedTag === normalizedName ||
+             faq.foodTags.map(t => t.toLowerCase()).includes(normalizedName);
+    })
   );
 };
 
