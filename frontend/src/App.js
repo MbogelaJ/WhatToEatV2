@@ -1024,130 +1024,6 @@ const SafetyFilter = ({ selectedSafety, onSelect }) => {
   );
 };
 
-// Settings View Component
-// Profile View Component - Simple profile without dietary settings (handled in onboarding)
-const ProfileView = ({ onBack, currentUser, onLogout, isPremium, onNavigateToPremium }) => {
-  const userAge = localStorage.getItem('userAge');
-  const userTrimester = localStorage.getItem('userTrimester');
-  const dietaryRestrictions = JSON.parse(localStorage.getItem('dietaryRestrictions') || '[]');
-
-  return (
-    <div className="settings-view" data-testid="profile-view">
-      <div className="settings-header">
-        <button className="back-button" onClick={onBack} data-testid="profile-back-btn">
-          <ArrowLeft size={20} />
-          <span>Back</span>
-        </button>
-        <h2>Profile</h2>
-        <div style={{width: '80px'}}></div>
-      </div>
-
-      <div className="settings-content">
-        {/* User Profile Section */}
-        {currentUser ? (
-          <div className="settings-section user-profile-section">
-            <div className="settings-section-header">
-              <User size={20} />
-              <h3>Your Account</h3>
-            </div>
-            <div className="user-profile-card">
-              {currentUser.picture && (
-                <img src={currentUser.picture} alt={currentUser.name} className="user-avatar" />
-              )}
-              <div className="user-info">
-                <span className="user-name">{currentUser.name}</span>
-                <span className="user-email">{currentUser.email}</span>
-                <span className="user-provider">Signed in with {currentUser.auth_provider === 'google' ? 'Google' : currentUser.auth_provider}</span>
-              </div>
-            </div>
-            <button className="logout-btn" onClick={onLogout} data-testid="logout-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              Sign Out
-            </button>
-          </div>
-        ) : (
-          <div className="settings-section user-profile-section">
-            <div className="settings-section-header">
-              <User size={20} />
-              <h3>Account</h3>
-            </div>
-            <p className="settings-description">You're using the app as a guest.</p>
-          </div>
-        )}
-
-        {/* Pregnancy Info Section */}
-        <div className="settings-section">
-          <div className="settings-section-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-            <h3>Your Pregnancy</h3>
-          </div>
-          <div className="pregnancy-info-card">
-            <div className="pregnancy-info-item">
-              <span className="info-label">Age</span>
-              <span className="info-value">{userAge || 'Not set'} years</span>
-            </div>
-            <div className="pregnancy-info-item">
-              <span className="info-label">Stage</span>
-              <span className="info-value">{userTrimester || 'Not set'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Dietary Considerations - View Only */}
-        {dietaryRestrictions.length > 0 && (
-          <div className="settings-section">
-            <div className="settings-section-header">
-              <Utensils size={20} />
-              <h3>Dietary Considerations</h3>
-            </div>
-            <p className="settings-description">Your personalized food alerts are based on these:</p>
-            <div className="restriction-tags">
-              {dietaryRestrictions.map(id => {
-                const restriction = DIETARY_RESTRICTIONS.find(r => r.id === id);
-                return restriction ? (
-                  <span key={id} className="restriction-tag">
-                    {restriction.label}
-                  </span>
-                ) : null;
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Premium Status */}
-        <div className="settings-section">
-          <div className="settings-section-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            <h3>Premium Status</h3>
-          </div>
-          {isPremium ? (
-            <div className="premium-status-card active">
-              <span className="premium-badge-large">✓ Premium Active</span>
-              <p>You have full access to all 249 food guides.</p>
-            </div>
-          ) : (
-            <div className="premium-status-card">
-              <p>Unlock all food safety details with Premium.</p>
-              <button className="upgrade-premium-btn" onClick={onNavigateToPremium}>
-                Upgrade to Premium
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // FAQ View Component with Premium Feature
 const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremium }) => {
   const [openIndex, setOpenIndex] = useState(null);
@@ -1622,7 +1498,7 @@ const AboutView = ({ onBack }) => {
 
         <div className="about-footer">
           <p>Made with ❤️ for expectant mothers</p>
-          <p className="copyright">© PenX Technologies. All Rights Reserved.</p>
+          <p className="copyright">(c) 2026 PenX Technologies. All Rights Reserved.</p>
         </div>
       </div>
     </div>
@@ -1684,7 +1560,7 @@ const DisclaimerPage = ({ onAccept }) => {
           <p>By continuing, you acknowledge that you have read and understood this disclaimer, and agree that this app is for educational purposes only.</p>
         </div>
 
-        <p className="disclaimer-copyright">© PenX Technologies. All Rights Reserved.</p>
+        <p className="disclaimer-copyright">(c) 2026 PenX Technologies. All Rights Reserved.</p>
       </div>
 
       {/* Button */}
@@ -2349,14 +2225,6 @@ const BottomNav = ({ activeView, onChangeView }) => {
         <Info size={20} />
         <span>About</span>
       </button>
-      <button 
-        className={`nav-item ${activeView === 'settings' ? 'active' : ''}`}
-        onClick={() => onChangeView('settings')}
-        data-testid="nav-profile"
-      >
-        <User size={20} />
-        <span>Profile</span>
-      </button>
     </nav>
   );
 };
@@ -2788,36 +2656,6 @@ function App() {
     );
   }
 
-  // Render Profile View (formerly Settings)
-  if (activeView === 'settings') {
-    return (
-      <div className="app" data-testid="food-search-app">
-        <header className="app-header compact">
-          <div className="header-content">
-            <div 
-              className="logo clickable"
-              onClick={() => setActiveView('home')}
-              role="button"
-              tabIndex={0}
-              title="Go to Home"
-            >
-              <div className="logo-icon">W</div>
-              <h1>WhatToEat</h1>
-            </div>
-          </div>
-        </header>
-        <ProfileView 
-          onBack={() => setActiveView('home')}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-          isPremium={isPremium}
-          onNavigateToPremium={() => setActiveView('premium')}
-        />
-        <BottomNav activeView={activeView} onChangeView={setActiveView} />
-      </div>
-    );
-  }
-
   // Render FAQ View
   if (activeView === 'faq') {
     return (
@@ -2910,9 +2748,6 @@ function App() {
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
             </button>
-            <button className="header-action-btn" onClick={() => setActiveView('settings')} data-testid="profile-btn" title="Profile">
-              <User size={22} />
-            </button>
           </div>
         </div>
       </header>
@@ -2933,13 +2768,19 @@ function App() {
         {/* Daily Tip - Personalized based on dietary restrictions */}
         <DailyTip dietaryRestrictions={dietaryRestrictions} />
 
-        {/* Trimester Section */}
-        {trimester && trimesterInfo[trimester] && (
+        {/* Trimester Section - Now shows Age and Pregnancy Stage */}
+        {(userAge || trimester) && (
           <div className="trimester-card" data-testid="trimester-card">
             <Sparkles size={22} className="trimester-sparkle" />
             <div className="trimester-card-content">
-              <span className="trimester-card-title">{trimesterInfo[trimester].label}</span>
-              <span className="trimester-card-focus">Focus on: {trimesterInfo[trimester].focus}</span>
+              <span className="trimester-card-title">
+                {userAge && `Age ${userAge}`}
+                {userAge && trimester && trimesterInfo[trimester] && ', '}
+                {trimester && trimesterInfo[trimester] && trimesterInfo[trimester].label}
+              </span>
+              {trimester && trimesterInfo[trimester] && (
+                <span className="trimester-card-focus">Focus on: {trimesterInfo[trimester].focus}</span>
+              )}
             </div>
           </div>
         )}

@@ -11,11 +11,16 @@ Build a pregnancy nutrition app called "WhatToEat" that helps pregnant users und
 
 ## App Flow (Updated March 2026)
 1. **Disclaimer Page** - Medical disclaimer with WHO, CDC, ACOG, FDA sources
-2. **Create Account Page** - Email/password + Apple/Google social login
+2. **Create Account Page** - Apple/Google social login only (no email/password)
 3. **Age and Pregnancy Stage Page** - Age range + Trimester selection
 4. **Dietary Considerations Page** - 2-column grid of dietary restrictions
-5. **Premium Page** - One-time purchase US$1.99 offer
-6. **Home Page** - Educational banner, Daily tip, Trimester info, Food search
+5. **Premium Page** - One-time purchase US$1.99 offer (Apple In-App Purchase)
+6. **Home Page** - Educational banner, Daily tip, Age + Trimester info, Food search
+
+## Navigation (Simplified - March 2026)
+- **Bottom Nav**: Home | FAQ | Topics | About (4 tabs only)
+- **Profile page removed** - App kept simple to minimize data collection
+- **Copyright**: (c) 2026 PenX Technologies. All Rights Reserved.
 
 ## Features Implemented
 
@@ -43,18 +48,12 @@ Five-step onboarding with progress dots and Back/Continue navigation
 - `GET /api/auth/me` - Get current authenticated user
 - `POST /api/auth/logout` - Logout and clear session
 
-### 3. User Profile in Settings ✅
-- Shows user avatar, name, email
-- "Signed in with Google/Apple" indicator
-- Sign Out button
-
-### 4. Home Page ✅
-- Header with back/close/profile buttons
+### 3. Home Page ✅
+- Header with WhatToEat logo (clickable to home) and logout button
 - Educational Information banner (blue)
-- Daily Tip (yellow) with source citation
-- Trimester banner based on user selection
+- Personalized Daily Tip (yellow) based on dietary restrictions
+- **Age + Trimester card** - Shows "Age X, [Trimester]" with focus nutrients
 - Search bar, category filters, safety filters
-- Personalized View toggle
 - Food count display
 
 ### 5. Food Search & Filtering ✅
@@ -142,7 +141,7 @@ Native iOS payment via App Store:
 2. ✅ Apple Sign-In (on iOS native app)
 3. ✅ User logout
 4. ✅ Session management
-5. ✅ Complete onboarding flow
+5. ✅ Complete onboarding flow (5 steps)
 6. ✅ Food search and filtering
 7. ✅ Apple In-App Purchase integration ($1.99)
 8. ✅ Medical disclaimer on all food details
@@ -154,13 +153,19 @@ Native iOS payment via App Store:
 14. ✅ FAQ page with premium lock (4 free, rest premium)
 15. ✅ Health condition topics (Gestational Diabetes, Preeclampsia)
 16. ✅ Food category icons/symbols (🍎 fruits, 🐟 fish, 🥛 dairy, etc.)
+17. ✅ Personalized Daily Tips (based on dietary restrictions from onboarding)
+18. ✅ Age + Trimester display on home page
+19. ✅ Simplified navigation (4 tabs: Home, FAQ, Topics, About)
 
 ## What's MOCKED
 - None - all implemented features are functional
 
 ## Next Action Items (Priority Order)
-1. **P1**: Implement "Favorites" feature for bookmarking foods
-2. **P1**: Continue App.js refactor for maintainability
+1. **P0 CRITICAL**: Refactor App.js monolith (3000+ lines) into proper component structure
+   - Directory structure already scaffolded: `/components`, `/utils`, `/data`
+   - This is blocking future development velocity
+2. **P1**: Implement "Favorites" feature for bookmarking foods
+3. **P2**: Add search bar for FAQ page
 
 ## Completed Features
 - Apple In-App Purchase integration
