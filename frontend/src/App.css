@@ -84,6 +84,7 @@ body {
   padding: 1rem;
   background: white;
   border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
 }
 
 .logo {
@@ -1175,6 +1176,7 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
+  overflow: hidden;
 }
 
 .page-header {
@@ -1184,6 +1186,7 @@ body {
   padding: 1rem;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .page-header h2 {
