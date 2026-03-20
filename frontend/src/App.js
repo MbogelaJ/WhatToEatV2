@@ -1246,7 +1246,13 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
   return (
     <div className="page-view" data-testid="faq-view">
       <div className="faq-header">
-        <div className="faq-header-left">
+        <div 
+          className="faq-header-left clickable" 
+          onClick={onBack}
+          role="button"
+          tabIndex={0}
+          title="Go to Home"
+        >
           <div className="logo-icon-v2">W</div>
           <span className="logo-text-v2">WhatToEat</span>
         </div>
@@ -2030,10 +2036,18 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
     <div className="premium-page-v2" data-testid="premium-page">
       {/* Header */}
       <div className="premium-page-header">
-        <div className="premium-logo">
-          <span>W</span>
+        <div 
+          className="premium-logo-wrapper clickable" 
+          onClick={onBack}
+          role="button"
+          tabIndex={0}
+          title="Go to Home"
+        >
+          <div className="premium-logo">
+            <span>W</span>
+          </div>
+          <h1>WhatToEat</h1>
         </div>
-        <h1>WhatToEat</h1>
       </div>
 
       {/* Processing Payment Overlay */}
@@ -2745,7 +2759,13 @@ function App() {
       <div className="app" data-testid="food-search-app">
         <header className="app-header compact">
           <div className="header-content">
-            <div className="logo">
+            <div 
+              className="logo clickable"
+              onClick={() => setActiveView('home')}
+              role="button"
+              tabIndex={0}
+              title="Go to Home"
+            >
               <div className="logo-icon">W</div>
               <h1>WhatToEat</h1>
             </div>
@@ -2790,7 +2810,14 @@ function App() {
       {/* Header */}
       <header className="app-header home-header-v2">
         <div className="header-content-v2">
-          <div className="header-logo-v2">
+          <div 
+            className="header-logo-v2 clickable" 
+            onClick={() => setActiveView('home')}
+            data-testid="home-logo"
+            role="button"
+            tabIndex={0}
+            title="Go to Home"
+          >
             <div className="logo-icon-v2">W</div>
             <span className="logo-text-v2">WhatToEat</span>
           </div>

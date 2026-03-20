@@ -4428,3 +4428,51 @@ body {
   display: flex;
   align-items: flex-start;
 }
+
+/* Clickable Logo Styles */
+.header-logo-v2.clickable,
+.faq-header-left.clickable,
+.premium-logo-wrapper.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-logo-v2.clickable:hover,
+.faq-header-left.clickable:hover,
+.premium-logo-wrapper.clickable:hover {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.header-logo-v2.clickable:active,
+.faq-header-left.clickable:active,
+.premium-logo-wrapper.clickable:active {
+  transform: scale(0.95);
+}
+
+/* Premium Logo Wrapper */
+.premium-logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.premium-logo-wrapper h1 {
+  margin: 0;
+}
+
+/* Generic Logo Clickable */
+.logo.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logo.clickable:hover {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.logo.clickable:active {
+  transform: scale(0.95);
+}
