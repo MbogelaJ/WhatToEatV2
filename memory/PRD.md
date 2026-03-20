@@ -139,6 +139,11 @@ Native iOS payment via App Store:
 8. ✅ Medical disclaimer on all food details
 9. ✅ Dynamic teaser messages for locked foods
 10. ✅ Restore purchases functionality
+11. ✅ Share button (Web Share API + clipboard fallback)
+12. ✅ Daily Tip "Read more" expansion
+13. ✅ Topics page with premium lock (6 premium, 2 free)
+14. ✅ FAQ page with premium lock (4 free, rest premium)
+15. ✅ New health condition topics (Gestational Diabetes, Preeclampsia)
 
 ## What's MOCKED
 1. Email/Password authentication - UI only

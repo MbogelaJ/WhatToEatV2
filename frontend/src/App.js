@@ -140,21 +140,81 @@ const AuthCallback = ({ onAuthSuccess, onAuthError }) => {
 
 // Daily tips for pregnancy nutrition
 const DAILY_TIPS = [
-  { tip: "Stay hydrated! Aim for 8-10 glasses of water daily during pregnancy.", icon: "💧" },
-  { tip: "Folate is crucial in the first trimester. Eat leafy greens like spinach and kale.", icon: "🥬" },
-  { tip: "Protein helps baby grow. Include eggs, lean meat, or legumes in every meal.", icon: "🥚" },
-  { tip: "Calcium builds strong bones. Greek yogurt is an excellent source!", icon: "🦴" },
-  { tip: "Omega-3s support brain development. Enjoy salmon 2-3 times per week.", icon: "🐟" },
-  { tip: "Iron prevents anemia. Pair iron-rich foods with vitamin C for better absorption.", icon: "💪" },
-  { tip: "Small, frequent meals can help with morning sickness and heartburn.", icon: "🍽️" },
-  { tip: "Ginger tea is a natural remedy for pregnancy nausea.", icon: "🫚" },
-  { tip: "Fiber prevents constipation. Include whole grains, fruits, and vegetables.", icon: "🌾" },
-  { tip: "Limit caffeine to 200mg daily - about one cup of coffee.", icon: "☕" },
-  { tip: "Wash all fruits and vegetables thoroughly before eating.", icon: "🍎" },
-  { tip: "Vitamin D helps calcium absorption. Get some safe sun exposure!", icon: "☀️" },
-  { tip: "Avoid raw fish and undercooked meat to prevent foodborne illness.", icon: "⚠️" },
-  { tip: "Nuts and seeds are great snacks - rich in healthy fats and protein.", icon: "🥜" },
-  { tip: "Listen to your body's hunger cues, but remember you're not eating for two adults!", icon: "🤰" }
+  { 
+    tip: "Stay hydrated! Aim for 8-10 glasses of water daily during pregnancy.", 
+    icon: "💧",
+    fullContent: "Proper hydration during pregnancy is essential. Water helps form amniotic fluid, carry nutrients to your baby, helps with digestion, and prevents common pregnancy issues like constipation, hemorrhoids, and UTIs. Signs of dehydration include dark urine, dizziness, and headaches. If plain water is boring, try adding lemon, cucumber, or fresh fruit. Herbal teas (like ginger or peppermint) can also count toward your daily intake."
+  },
+  { 
+    tip: "Folate is crucial in the first trimester. Eat leafy greens like spinach and kale.", 
+    icon: "🥬",
+    fullContent: "Folate (vitamin B9) is essential for preventing neural tube defects in your baby's brain and spine. You need 600-800 mcg daily during pregnancy. Best food sources include: spinach, kale, broccoli, asparagus, Brussels sprouts, lentils, chickpeas, fortified cereals, and citrus fruits. Most prenatal vitamins contain folic acid (synthetic folate), but eating folate-rich foods provides additional benefits."
+  },
+  { 
+    tip: "Protein helps baby grow. Include eggs, lean meat, or legumes in every meal.", 
+    icon: "🥚",
+    fullContent: "Protein is the building block for your baby's growth. Aim for 75-100 grams daily during pregnancy. Good sources include: eggs (fully cooked), lean chicken and turkey, fish (low-mercury varieties), beans and lentils, Greek yogurt, nuts and seeds, and tofu. Protein also helps maintain your muscle mass and supports your growing blood supply."
+  },
+  { 
+    tip: "Calcium builds strong bones. Greek yogurt is an excellent source!", 
+    icon: "🦴",
+    fullContent: "You need 1,000mg of calcium daily during pregnancy for your baby's bone, teeth, heart, muscle, and nerve development. If you don't get enough calcium, your body will take it from your bones. Best sources: dairy products (milk, cheese, yogurt), fortified plant milks, sardines with bones, almonds, leafy greens, and fortified orange juice. Vitamin D helps calcium absorption."
+  },
+  { 
+    tip: "Omega-3s support brain development. Enjoy salmon 2-3 times per week.", 
+    icon: "🐟",
+    fullContent: "DHA and EPA (omega-3 fatty acids) are crucial for your baby's brain and eye development. Safe fish options include: salmon, sardines, herring, and anchovies. Aim for 8-12 oz of low-mercury fish weekly. If you don't eat fish, consider a DHA supplement. Plant sources like walnuts, chia seeds, and flaxseeds provide ALA, which your body partially converts to DHA."
+  },
+  { 
+    tip: "Iron prevents anemia. Pair iron-rich foods with vitamin C for better absorption.", 
+    icon: "💪",
+    fullContent: "Your blood volume increases 50% during pregnancy, making iron essential. You need 27mg daily. Heme iron (from meat) absorbs best: lean beef, chicken, turkey. Plant iron sources: spinach, beans, fortified cereals. Pair with vitamin C (citrus, bell peppers, tomatoes) to boost absorption. Avoid calcium and coffee with iron-rich meals as they block absorption."
+  },
+  { 
+    tip: "Small, frequent meals can help with morning sickness and heartburn.", 
+    icon: "🍽️",
+    fullContent: "Eating 5-6 small meals instead of 3 large ones helps manage nausea, heartburn, and blood sugar. Keep crackers by your bed for morning sickness. Avoid lying down right after eating. Foods to try: bland carbs (crackers, toast), ginger (tea, candies), cold foods (less smell), and protein snacks. Avoid spicy, fatty, and acidic foods if heartburn is an issue."
+  },
+  { 
+    tip: "Ginger tea is a natural remedy for pregnancy nausea.", 
+    icon: "🫚",
+    fullContent: "Ginger is one of the safest and most effective natural remedies for morning sickness. Try: fresh ginger tea, ginger candies, ginger ale (real ginger), or ginger capsules. Limit to 1-2 grams of ginger daily. Other nausea helpers include: peppermint, lemon, vitamin B6, and acupressure wristbands. If nausea is severe, consult your healthcare provider."
+  },
+  { 
+    tip: "Fiber prevents constipation. Include whole grains, fruits, and vegetables.", 
+    icon: "🌾",
+    fullContent: "Constipation is common during pregnancy due to hormonal changes and iron supplements. Aim for 25-30 grams of fiber daily. Good sources: whole grain bread and pasta, oatmeal, brown rice, fruits (especially prunes, pears, apples), vegetables, beans, and lentils. Increase water intake as you increase fiber. Light exercise also helps keep things moving."
+  },
+  { 
+    tip: "Limit caffeine to 200mg daily - about one cup of coffee.", 
+    icon: "☕",
+    fullContent: "High caffeine intake is linked to miscarriage risk and low birth weight. Stick to under 200mg daily. Caffeine amounts: 8oz brewed coffee (95-200mg), 8oz black tea (47mg), 8oz green tea (30-50mg), 12oz cola (34mg), 1oz dark chocolate (20mg). Remember caffeine is also in energy drinks, some medications, and chocolate. Decaf still has 2-15mg."
+  },
+  { 
+    tip: "Wash all fruits and vegetables thoroughly before eating.", 
+    icon: "🍎",
+    fullContent: "Washing produce removes dirt, bacteria, and pesticide residues. Rinse under running water for at least 30 seconds. Use a brush for firm produce like melons and potatoes. Don't use soap - it's not more effective and leaves residue. Cut away any damaged areas. Even if you'll peel it, wash first (bacteria transfers when cutting). Rewash pre-packaged salads."
+  },
+  { 
+    tip: "Vitamin D helps calcium absorption. Get some safe sun exposure!", 
+    icon: "☀️",
+    fullContent: "Vitamin D is crucial for calcium absorption and your baby's bone development. You need 600 IU daily. Sources: 10-15 minutes of sunlight on arms/face, fortified milk and orange juice, fatty fish (salmon, sardines), egg yolks, and supplements. Many women need supplementation as food sources are limited. Have your levels checked if concerned."
+  },
+  { 
+    tip: "Avoid raw fish and undercooked meat to prevent foodborne illness.", 
+    icon: "⚠️",
+    fullContent: "Foodborne illnesses are more dangerous during pregnancy and can harm your baby. Avoid: raw sushi/sashimi, raw oysters, rare/medium meat, raw eggs (cookie dough, homemade mayo), unpasteurized dairy and juice. Cook meat to proper temperatures: poultry 165°F, ground meat 160°F, whole cuts 145°F. Use a food thermometer to be sure."
+  },
+  { 
+    tip: "Nuts and seeds are great snacks - rich in healthy fats and protein.", 
+    icon: "🥜",
+    fullContent: "Nuts and seeds provide protein, healthy fats, fiber, and important minerals. Good choices: almonds (calcium), walnuts (omega-3s), pumpkin seeds (iron, zinc), sunflower seeds (vitamin E), chia seeds (fiber, omega-3s). Eat unsalted varieties when possible. Note: if you have nut allergies, avoid. There's no evidence that eating nuts during pregnancy causes allergies in babies."
+  },
+  { 
+    tip: "Listen to your body's hunger cues, but remember you're not eating for two adults!", 
+    icon: "🤰",
+    fullContent: "Calorie needs only increase by about 340-450 calories in 2nd/3rd trimester - not double! Focus on nutrient-dense foods rather than quantity. Normal weight gain: 25-35 lbs total. Eat when hungry, stop when satisfied. Cravings are normal but try to balance treats with nutritious foods. If you're constantly hungry, ensure you're getting enough protein and fiber."
+  }
 ];
 
 // Safety badge config
@@ -180,34 +240,41 @@ const DIETARY_RESTRICTIONS = [
 
 // Comprehensive FAQ data with food tags and premium status
 const ALL_FAQS = [
-  // ==================== FREE QUESTIONS (Sample answers available) ====================
+  // ==================== FREE QUESTIONS (4 Basic/Obvious Questions) ====================
   {
-    id: 'salmon-safe',
-    question: "Is salmon safe during pregnancy?",
-    answer: "Yes! Salmon is one of the best fish choices during pregnancy. It's low in mercury and high in omega-3 fatty acids (DHA and EPA) which are crucial for baby's brain and eye development. Aim for 2-3 servings per week. Always cook to 145°F/63°C - no raw salmon or sushi during pregnancy.",
-    category: 'seafood',
-    foodTags: ['salmon'],
+    id: 'water-hydration',
+    question: "How much water should I drink during pregnancy?",
+    answer: "Aim for 8-10 glasses (about 2.3 liters) of water daily during pregnancy. Proper hydration helps form amniotic fluid, carry nutrients to your baby, aids digestion, and prevents constipation. Signs you need more water: dark urine, dizziness, dry mouth. If plain water is boring, add lemon or cucumber slices.",
+    category: 'nutrition',
+    foodTags: ['water'],
     isPremium: false
   },
   {
-    id: 'yogurt-safe',
-    question: "Is yogurt safe during pregnancy?",
-    answer: "Yes! Pasteurized yogurt is excellent during pregnancy. It provides calcium, protein, and probiotics for gut health. Greek yogurt has even more protein. Choose plain varieties and add your own fruit to avoid excess sugar. Always check that it's made from pasteurized milk.",
-    category: 'dairy',
-    foodTags: ['yogurt'],
+    id: 'fruits-vegetables-safe',
+    question: "Are fruits and vegetables safe during pregnancy?",
+    answer: "Yes! Fruits and vegetables are essential during pregnancy, providing vitamins, minerals, and fiber. Just wash them thoroughly under running water before eating to remove bacteria and pesticide residue. Cut away any bruised or damaged areas. Enjoy a variety of colorful produce daily.",
+    category: 'produce',
+    foodTags: ['vegetables', 'fruits'],
     isPremium: false
   },
   {
-    id: 'shrimp-safe',
-    question: "Is shrimp safe during pregnancy?",
-    answer: "Yes! Shrimp is safe and nutritious during pregnancy when thoroughly cooked. It's low in mercury, high in protein, and provides iodine for thyroid health. Cook until pink and opaque. Avoid raw shrimp, shrimp cocktail with raw shrimp, or ceviche.",
-    category: 'seafood',
-    foodTags: ['shrimp'],
+    id: 'cooked-meat-safe',
+    question: "Is well-cooked meat safe to eat during pregnancy?",
+    answer: "Yes! Well-cooked meat is safe and nutritious during pregnancy. Always cook meat to proper internal temperatures: chicken/poultry to 165°F (74°C), ground meat to 160°F (71°C), whole cuts like steak to 145°F (63°C). Avoid pink or red meat, and use a food thermometer to be sure.",
+    category: 'proteins',
+    foodTags: ['chicken', 'beef', 'meat'],
+    isPremium: false
+  },
+  {
+    id: 'prenatal-vitamins',
+    question: "Should I take prenatal vitamins?",
+    answer: "Yes! Prenatal vitamins are recommended for all pregnant women. They ensure you get adequate folic acid (prevents birth defects), iron (prevents anemia), calcium (for baby's bones), and DHA (for brain development). Start taking them as soon as you're trying to conceive or find out you're pregnant. Ask your healthcare provider for recommendations.",
+    category: 'nutrition',
+    foodTags: [],
     isPremium: false
   },
 
-  // ==================== PREMIUM QUESTIONS (Locked) ====================
-  // Top Questions
+  // ==================== PREMIUM QUESTIONS (All detailed/specific questions) ====================
   {
     id: 'foods-avoid-completely',
     question: "What foods should I avoid completely during pregnancy?",
@@ -638,7 +705,37 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [] }) => {
             <ArrowLeft size={20} />
             <span>Back to Home</span>
           </button>
-          <button className="share-button" data-testid="share-btn">
+          <button 
+            className="share-button" 
+            data-testid="share-btn"
+            onClick={async () => {
+              const shareData = {
+                title: `${food.name} - Pregnancy Food Safety`,
+                text: `Is ${food.name} safe during pregnancy? ${food.safety_label || safetyConfig.label}. ${food.benefits_summary || ''}`,
+                url: window.location.href
+              };
+              
+              try {
+                if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                  // Native Web Share API (works on mobile and some desktop browsers)
+                  await navigator.share(shareData);
+                } else {
+                  // Fallback: Copy to clipboard and show options
+                  const shareText = `${shareData.title}\n\n${shareData.text}\n\nLearn more: ${shareData.url}`;
+                  
+                  if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(shareText);
+                    alert('Link copied to clipboard! You can now paste and share on your preferred platform.');
+                  } else {
+                    // Final fallback: prompt with text
+                    prompt('Copy this to share:', shareText);
+                  }
+                }
+              } catch (error) {
+                console.log('Share cancelled or failed:', error);
+              }
+            }}
+          >
             <Share2 size={18} />
             <span>Share</span>
           </button>
@@ -1215,45 +1312,95 @@ const FAQView = ({ onBack, onNavigateToFood, foods, isPremium, onNavigateToPremi
 };
 
 // Topics View Component
-const TopicsView = ({ onBack, onNavigateHome }) => {
+const TopicsView = ({ onBack, onNavigateHome, isPremium, onNavigateToPremium }) => {
+  const [expandedTopic, setExpandedTopic] = useState(null);
+  
   const topics = [
     {
       title: "First Trimester Nutrition",
       icon: "🌱",
       description: "Essential nutrients for early pregnancy development",
-      tips: ["Focus on folate-rich foods like leafy greens", "Stay hydrated to combat morning sickness", "Eat small, frequent meals", "Prioritize protein for baby's cell growth"]
+      tips: ["Focus on folate-rich foods like leafy greens", "Stay hydrated to combat morning sickness", "Eat small, frequent meals", "Prioritize protein for baby's cell growth"],
+      isPremium: false  // FREE - First topic available to all
     },
     {
       title: "Foods to Avoid",
       icon: "⚠️",
       description: "Important restrictions during pregnancy",
-      tips: ["Raw or undercooked meats and eggs", "High-mercury fish (shark, swordfish)", "Unpasteurized dairy products", "Alcohol - no safe amount established", "Excessive caffeine (limit to 200mg/day)"]
+      tips: ["Raw or undercooked meats and eggs", "High-mercury fish (shark, swordfish)", "Unpasteurized dairy products", "Alcohol - no safe amount established", "Excessive caffeine (limit to 200mg/day)"],
+      isPremium: true  // PREMIUM
     },
     {
       title: "Managing Morning Sickness",
       icon: "🍋",
       description: "Foods that may help ease nausea",
-      tips: ["Ginger tea or ginger candies", "Plain crackers before getting up", "Cold foods may be more tolerable", "Avoid strong-smelling foods", "Eat small portions frequently"]
+      tips: ["Ginger tea or ginger candies", "Plain crackers before getting up", "Cold foods may be more tolerable", "Avoid strong-smelling foods", "Eat small portions frequently"],
+      isPremium: true  // PREMIUM
     },
     {
       title: "Iron & Preventing Anemia",
       icon: "💪",
       description: "Building healthy blood for you and baby",
-      tips: ["Red meat is the best iron source", "Pair plant iron with vitamin C", "Cook in cast iron when possible", "Avoid calcium with iron-rich meals", "Consider iron-fortified cereals"]
+      tips: ["Red meat is the best iron source", "Pair plant iron with vitamin C", "Cook in cast iron when possible", "Avoid calcium with iron-rich meals", "Consider iron-fortified cereals"],
+      isPremium: true  // PREMIUM
+    },
+    {
+      title: "Gestational Diabetes Nutrition",
+      icon: "🩺",
+      description: "Managing blood sugar through diet during pregnancy",
+      tips: [
+        "Choose complex carbs over simple sugars",
+        "Pair carbs with protein and healthy fats",
+        "Eat smaller, more frequent meals",
+        "Monitor portion sizes of starchy foods",
+        "Include fiber-rich vegetables at every meal",
+        "Limit fruit juice and sugary drinks",
+        "Choose whole grains over refined grains"
+      ],
+      isPremium: false  // FREE - Important health condition
+    },
+    {
+      title: "Preeclampsia & Nutrition",
+      icon: "❤️",
+      description: "Dietary factors for blood pressure management",
+      tips: [
+        "Adequate calcium intake (1000mg daily)",
+        "Foods rich in potassium (bananas, potatoes)",
+        "Limit sodium/salt intake",
+        "Include magnesium-rich foods (nuts, seeds)",
+        "Stay well hydrated",
+        "Eat plenty of fruits and vegetables",
+        "Include lean protein at each meal"
+      ],
+      isPremium: true  // PREMIUM
     },
     {
       title: "Calcium & Bone Health",
       icon: "🦴",
       description: "Supporting baby's skeletal development",
-      tips: ["Dairy products are excellent sources", "Fortified plant milks work too", "Sardines with bones are calcium-rich", "Leafy greens provide some calcium", "Vitamin D helps calcium absorption"]
+      tips: ["Dairy products are excellent sources", "Fortified plant milks work too", "Sardines with bones are calcium-rich", "Leafy greens provide some calcium", "Vitamin D helps calcium absorption"],
+      isPremium: true  // PREMIUM
     },
     {
       title: "Third Trimester Focus",
       icon: "👶",
       description: "Preparing for delivery and breastfeeding",
-      tips: ["Omega-3s for brain development", "Dates may help with labor prep", "Keep protein intake high", "Stay hydrated for amniotic fluid", "Prepare freezer meals for postpartum"]
+      tips: ["Omega-3s for brain development", "Dates may help with labor prep", "Keep protein intake high", "Stay hydrated for amniotic fluid", "Prepare freezer meals for postpartum"],
+      isPremium: true  // PREMIUM
     }
   ];
+
+  const handleTopicClick = (index, topic) => {
+    if (topic.isPremium && !isPremium) {
+      // Show premium modal
+      if (onNavigateToPremium) {
+        onNavigateToPremium();
+      }
+      return;
+    }
+    // Toggle expanded state
+    setExpandedTopic(expandedTopic === index ? null : index);
+  };
 
   return (
     <div className="page-view" data-testid="topics-view">
@@ -1270,23 +1417,57 @@ const TopicsView = ({ onBack, onNavigateHome }) => {
         <p className="page-intro">Learn about pregnancy nutrition topics.</p>
         
         <div className="topics-grid">
-          {topics.map((topic, index) => (
-            <div key={index} className="topic-card" data-testid={`topic-card-${index}`}>
-              <div className="topic-header">
-                <span className="topic-icon">{topic.icon}</span>
-                <h3>{topic.title}</h3>
+          {topics.map((topic, index) => {
+            const isLocked = topic.isPremium && !isPremium;
+            const isExpanded = expandedTopic === index && !isLocked;
+            
+            return (
+              <div 
+                key={index} 
+                className={`topic-card ${isLocked ? 'locked' : ''} ${isExpanded ? 'expanded' : ''}`}
+                data-testid={`topic-card-${index}`}
+                onClick={() => handleTopicClick(index, topic)}
+              >
+                {isLocked && (
+                  <div className="topic-premium-badge">
+                    <Lock size={14} />
+                    <span>Premium</span>
+                  </div>
+                )}
+                <div className="topic-header">
+                  <span className="topic-icon">{topic.icon}</span>
+                  <h3>{topic.title}</h3>
+                </div>
+                <p className="topic-description">{topic.description}</p>
+                
+                {isLocked ? (
+                  <div className="topic-locked-content">
+                    <p className="topic-locked-message">Unlock premium to access this topic</p>
+                    <button className="topic-unlock-btn">
+                      <Lock size={14} />
+                      Unlock Premium
+                    </button>
+                  </div>
+                ) : (
+                  <ul className={`topic-tips ${isExpanded ? 'show' : ''}`}>
+                    {topic.tips.map((tip, tipIndex) => (
+                      <li key={tipIndex}>
+                        <Check size={14} className="tip-check" />
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                
+                {!isLocked && (
+                  <button className="topic-expand-btn">
+                    {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    {isExpanded ? 'Show less' : 'Show tips'}
+                  </button>
+                )}
               </div>
-              <p className="topic-description">{topic.description}</p>
-              <ul className="topic-tips">
-                {topic.tips.map((tip, tipIndex) => (
-                  <li key={tipIndex}>
-                    <Check size={14} className="tip-check" />
-                    <span>{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -1941,6 +2122,7 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
 const DailyTip = () => {
   const [tip, setTip] = useState(null);
   const [dismissed, setDismissed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     // Get tip based on day of year for consistency
@@ -1952,7 +2134,7 @@ const DailyTip = () => {
   if (!tip || dismissed) return null;
 
   return (
-    <div className="daily-tip-v2" data-testid="daily-tip">
+    <div className={`daily-tip-v2 ${expanded ? 'expanded' : ''}`} data-testid="daily-tip">
       <button className="tip-dismiss" onClick={() => setDismissed(true)}>
         <X size={16} />
       </button>
@@ -1962,8 +2144,23 @@ const DailyTip = () => {
       <div className="tip-content-v2">
         <span className="tip-label">DAILY TIP</span>
         <p className="tip-text">{tip.tip}</p>
+        
+        {expanded && tip.fullContent && (
+          <div className="tip-expanded-content">
+            <p>{tip.fullContent}</p>
+          </div>
+        )}
+        
         <p className="tip-source">(Source: CDC Nutrition During Pregnancy Guidelines)</p>
-        <button className="tip-readmore">Read more &gt;</button>
+        
+        {tip.fullContent && (
+          <button 
+            className="tip-readmore" 
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? '← Show less' : 'Read more →'}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -2499,6 +2696,8 @@ function App() {
         <TopicsView 
           onBack={() => setActiveView('home')}
           onNavigateHome={() => setActiveView('home')}
+          isPremium={isPremium}
+          onNavigateToPremium={() => setActiveView('premium')}
         />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
