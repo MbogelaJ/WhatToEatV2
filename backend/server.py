@@ -220,8 +220,13 @@ async def logout(
     return {"success": True, "message": "Logged out successfully"}
 
 # ==================== APPLE IN-APP PURCHASE SUPPORT ====================
-# Apple IAP Product ID - Configure this in App Store Connect
+# Apple IAP Configuration
 APPLE_IAP_PRODUCT_ID = "com.whattoeat.premium"
+APPLE_SHARED_SECRET = os.environ.get("APPLE_SHARED_SECRET", "")  # Set in production
+
+# Apple Receipt Verification URLs
+APPLE_SANDBOX_VERIFY_URL = "https://sandbox.itunes.apple.com/verifyReceipt"
+APPLE_PRODUCTION_VERIFY_URL = "https://buy.itunes.apple.com/verifyReceipt"
 
 class AppleIAPVerifyRequest(BaseModel):
     receipt_data: str  # Base64 encoded receipt from StoreKit
@@ -231,58 +236,139 @@ class AppleIAPResponse(BaseModel):
     success: bool
     is_premium: bool
     message: str
+    expires_date: Optional[str] = None
+
+async def verify_receipt_with_apple(receipt_data: str, use_sandbox: bool = False) -> dict:
+    """
+    Verify receipt with Apple's verification servers.
+    Returns the verification response from Apple.
+    """
+    verify_url = APPLE_SANDBOX_VERIFY_URL if use_sandbox else APPLE_PRODUCTION_VERIFY_URL
+    
+    payload = {
+        "receipt-data": receipt_data,
+        "password": APPLE_SHARED_SECRET,  # Required for auto-renewable subscriptions
+        "exclude-old-transactions": True
+    }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(verify_url, json=payload, timeout=30.0)
+            result = response.json()
+            
+            # Status 21007 means receipt is from sandbox, retry with sandbox URL
+            if result.get("status") == 21007 and not use_sandbox:
+                return await verify_receipt_with_apple(receipt_data, use_sandbox=True)
+            
+            return result
+    except Exception as e:
+        logger.error(f"Apple receipt verification request failed: {e}")
+        return {"status": -1, "error": str(e)}
+
+def is_valid_purchase(apple_response: dict, product_id: str) -> bool:
+    """
+    Check if the Apple response contains a valid purchase for our product.
+    """
+    if apple_response.get("status") != 0:
+        return False
+    
+    receipt = apple_response.get("receipt", {})
+    in_app = receipt.get("in_app", [])
+    
+    # Check for non-consumable purchases
+    for purchase in in_app:
+        if purchase.get("product_id") == product_id:
+            # For non-consumables, just check it exists
+            return True
+    
+    # Also check latest_receipt_info for subscriptions
+    latest_receipt_info = apple_response.get("latest_receipt_info", [])
+    for purchase in latest_receipt_info:
+        if purchase.get("product_id") == product_id:
+            return True
+    
+    return False
 
 @api_router.post("/iap/verify-purchase", response_model=AppleIAPResponse)
 async def verify_apple_purchase(request: AppleIAPVerifyRequest):
     """
-    Verify Apple In-App Purchase receipt.
-    Note: For production, you should verify the receipt with Apple's servers.
-    This endpoint records the purchase and grants premium access.
+    Verify Apple In-App Purchase receipt with Apple's servers.
+    Records the purchase and grants premium access upon successful verification.
     """
     try:
-        # In production, you would verify the receipt with Apple's verification endpoint:
-        # Sandbox: https://sandbox.itunes.apple.com/verifyReceipt
-        # Production: https://buy.itunes.apple.com/verifyReceipt
+        # Verify receipt with Apple
+        apple_response = await verify_receipt_with_apple(request.receipt_data)
         
-        # For now, we trust the client-side verification done by StoreKit
-        # and just record the purchase
+        # Check verification status
+        status = apple_response.get("status", -1)
         
-        # Create purchase record
-        purchase_record = {
-            "receipt_data": request.receipt_data[:100] + "...",  # Truncate for storage
-            "product_id": APPLE_IAP_PRODUCT_ID,
-            "user_id": request.user_id,
-            "platform": "ios",
-            "payment_status": "completed",
-            "created_at": datetime.now(timezone.utc)
-        }
-        await db.iap_purchases.insert_one(purchase_record)
+        # Status codes: https://developer.apple.com/documentation/appstorereceipts/status
+        if status == 0:
+            # Verify our product is in the receipt
+            if is_valid_purchase(apple_response, APPLE_IAP_PRODUCT_ID):
+                # Create purchase record
+                purchase_record = {
+                    "receipt_data_hash": hashlib.sha256(request.receipt_data.encode()).hexdigest(),
+                    "product_id": APPLE_IAP_PRODUCT_ID,
+                    "user_id": request.user_id,
+                    "platform": "ios",
+                    "payment_status": "completed",
+                    "apple_status": status,
+                    "verified_at": datetime.now(timezone.utc),
+                    "created_at": datetime.now(timezone.utc)
+                }
+                await db.iap_purchases.insert_one(purchase_record)
+                
+                # Update user's premium status
+                if request.user_id:
+                    await db.users.update_one(
+                        {"user_id": request.user_id},
+                        {"$set": {
+                            "is_premium": True,
+                            "premium_since": datetime.now(timezone.utc),
+                            "premium_source": "apple_iap"
+                        }}
+                    )
+                
+                logger.info(f"Apple IAP verified successfully for user: {request.user_id}")
+                
+                return AppleIAPResponse(
+                    success=True,
+                    is_premium=True,
+                    message="Purchase verified! You now have premium access to all foods."
+                )
+            else:
+                logger.warning(f"Product not found in receipt for user: {request.user_id}")
+                return AppleIAPResponse(
+                    success=False,
+                    is_premium=False,
+                    message="Product not found in receipt. Please contact support."
+                )
         
-        # Update user's premium status if user_id provided
-        if request.user_id:
-            await db.users.update_one(
-                {"user_id": request.user_id},
-                {"$set": {
-                    "is_premium": True,
-                    "premium_since": datetime.now(timezone.utc),
-                    "premium_source": "apple_iap"
-                }}
+        elif status == 21007:
+            # This shouldn't happen as we handle it in verify_receipt_with_apple
+            logger.info("Receipt is from sandbox environment")
+            return AppleIAPResponse(
+                success=False,
+                is_premium=False,
+                message="Please use the production App Store for purchases."
             )
         
-        logger.info(f"Apple IAP verified for user: {request.user_id}")
-        
-        return AppleIAPResponse(
-            success=True,
-            is_premium=True,
-            message="Purchase verified! You now have premium access."
-        )
+        else:
+            # Log the failed verification for debugging
+            logger.error(f"Apple receipt verification failed with status: {status}")
+            return AppleIAPResponse(
+                success=False,
+                is_premium=False,
+                message=f"Receipt verification failed (code: {status}). Please try again."
+            )
         
     except Exception as e:
         logger.error(f"Apple IAP verification error: {e}")
         return AppleIAPResponse(
             success=False,
             is_premium=False,
-            message="Failed to verify purchase. Please try again."
+            message="Failed to verify purchase. Please try again or contact support."
         )
 
 @api_router.post("/iap/restore-purchases", response_model=AppleIAPResponse)
