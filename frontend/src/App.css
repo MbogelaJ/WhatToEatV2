@@ -78,13 +78,13 @@ body {
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--accent-green);
+  width: 36px;
+  height: 36px;
+  background: #22a06b;
   color: white;
   font-weight: 700;
-  font-size: 1rem;
-  border-radius: var(--radius-sm);
+  font-size: 1.1rem;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1944,45 +1944,44 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: linear-gradient(180deg, #d1fae5 0%, #f0fdf4 15%, #f8fafc 30%);
+  background: #e8f5f0;
   padding: 0;
   overflow-y: auto;
 }
 
 .onboarding-header {
   width: 100%;
-  background: linear-gradient(180deg, #16a34a 0%, #22c55e 100%);
-  padding: 1.25rem 1rem 1rem;
+  background: transparent;
+  padding: 2rem 1rem 1.5rem;
   text-align: center;
-  border-radius: 0 0 1.5rem 1.5rem;
   flex-shrink: 0;
 }
 
 .onboarding-logo {
-  width: 48px;
-  height: 48px;
-  background: white;
-  border-radius: 10px;
+  width: 56px;
+  height: 56px;
+  background: #22a06b;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 0.5rem;
-  font-size: 1.25rem;
+  margin: 0 auto 0.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #16a34a;
+  color: white;
 }
 
 .onboarding-header h1 {
-  color: white;
-  font-size: 1.25rem;
+  color: #1a1a2e;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin: 0 0 0.15rem;
+  margin: 0 0 0.25rem;
 }
 
 .onboarding-header .onboarding-subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.8rem;
-  margin: 0 0 0.75rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
 }
 
 .onboarding-card {
@@ -3612,20 +3611,22 @@ body {
 
 .header-content-v2 {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
 .header-logo-v2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  justify-content: center;
 }
 
 .logo-icon-v2 {
   width: 36px;
   height: 36px;
-  background: #16a34a;
+  background: #22a06b;
   color: white;
   border-radius: 8px;
   display: flex;
@@ -3642,6 +3643,10 @@ body {
 }
 
 .header-actions-v2 {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 0.5rem;
