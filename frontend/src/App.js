@@ -1409,7 +1409,7 @@ const FAQView = ({ onBack, onNavigateToFood, onNavigateToCategory, onNavigateHom
             <Search size={18} className="faq-search-icon" />
             <input
               type="text"
-              placeholder="Search questions..."
+              placeholder=""
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -2052,7 +2052,7 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
           <label>Email</label>
           <input
             type="email"
-            placeholder="your@email.com"
+            placeholder=""
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="form-input"
@@ -2064,7 +2064,7 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
           <label>Password</label>
           <input
             type="password"
-            placeholder="••••••"
+            placeholder=""
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="form-input"
@@ -2269,7 +2269,7 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
               type="number"
               min="13"
               max="60"
-              placeholder="Enter your age"
+              placeholder=""
               value={userAge}
               onChange={handleAgeChange}
               className="age-input"
@@ -2760,9 +2760,16 @@ function App() {
   };
 
   const goToPreviousStep = () => {
-    const prevStep = Math.max(0, onboardingStep - 1);
-    localStorage.setItem('onboardingStep', prevStep.toString());
-    setOnboardingStep(prevStep);
+    if (onboardingStep === 1) {
+      // Going back from Create Account should show Disclaimer
+      setDisclaimerAccepted(false);
+      setOnboardingStep(0);
+      localStorage.setItem('onboardingStep', '0');
+    } else {
+      const prevStep = Math.max(1, onboardingStep - 1);
+      localStorage.setItem('onboardingStep', prevStep.toString());
+      setOnboardingStep(prevStep);
+    }
   };
 
   // Handle premium page close (skip premium)
@@ -3411,7 +3418,7 @@ function App() {
           <Search size={18} className="search-bar-icon" />
           <input
             type="text"
-            placeholder="Search foods..."
+            placeholder=""
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-bar-input"
