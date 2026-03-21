@@ -2455,7 +2455,7 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
           </button>
 
           <button className="premium-free-btn" onClick={onBack}>
-            Continue with Free Version
+            Continue to Home
           </button>
 
           <button 
@@ -3116,15 +3116,9 @@ function App() {
       <DisclaimerPage 
         onAccept={() => {
           setDisclaimerAccepted(true);
-          // If user has completed onboarding before, go to home
-          // Otherwise, continue with onboarding from step 1
-          if (onboardingStep >= 5) {
-            // Already completed onboarding, go to home
-          } else if (onboardingStep === 0) {
-            // First time user, go to step 1 (Create Account)
-            goToNextStep();
-          }
-          // For steps 1-4, stay at current step after disclaimer
+          // ALWAYS go to step 1 (Create Account) - no skipping for anyone
+          setOnboardingStep(1);
+          localStorage.setItem('onboardingStep', '1');
         }} 
       />
     );
@@ -3133,7 +3127,8 @@ function App() {
   // Onboarding Flow: Step 0 = Disclaimer (legacy - redirect to step 1)
   if (onboardingStep === 0) {
     // Move to Create Account page
-    goToNextStep();
+    setOnboardingStep(1);
+    localStorage.setItem('onboardingStep', '1');
     return null;
   }
 
