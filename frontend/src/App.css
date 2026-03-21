@@ -4926,3 +4926,53 @@ body {
 .daily-tip-v2.personalized .tip-icon-v2 {
   background: #8b5cf6;
 }
+
+/* Error Boundary Fallback */
+.error-boundary-fallback {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  padding: 2rem;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 320px;
+}
+
+.error-icon {
+  margin-bottom: 1.5rem;
+}
+
+.error-content h2 {
+  color: #1a1a2e;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.error-content p {
+  color: #718096;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.retry-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #22a06b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retry-button:hover {
+  background: #1a8a5a;
+}

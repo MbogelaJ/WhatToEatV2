@@ -1,7 +1,52 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Component } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock, Star, Sparkles, Shield, Heart, Lightbulb, Crown } from "lucide-react";
+import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock, Star, Sparkles, Shield, Heart, Lightbulb, Crown, RefreshCw } from "lucide-react";
+
+// Global Error Boundary for production stability
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // Log error silently in production
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error caught by boundary:', error, errorInfo);
+    }
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary-fallback">
+          <div className="error-content">
+            <div className="error-icon">
+              <AlertCircle size={48} color="#dc2626" />
+            </div>
+            <h2>Something went wrong</h2>
+            <p>The app encountered an unexpected error.</p>
+            <button onClick={this.handleRetry} className="retry-button">
+              <RefreshCw size={18} />
+              <span>Reload App</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Import static foods data for offline/production use
 // Using try-catch to handle potential import failures in native builds
@@ -9,14 +54,10 @@ let STATIC_FOODS_DATA = [];
 try {
   const staticFoodsModule = require('./data/staticFoods');
   STATIC_FOODS_DATA = staticFoodsModule.STATIC_FOODS_DATA || staticFoodsModule.default || [];
-  console.log('Static foods loaded via require:', STATIC_FOODS_DATA.length);
 } catch (e) {
-  console.error('Failed to load static foods:', e);
+  // Silent fail - static data not available
   STATIC_FOODS_DATA = [];
 }
-
-// Debug: Log static data availability at startup
-console.log('App starting, static foods available:', STATIC_FOODS_DATA?.length || 0);
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -800,7 +841,7 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [], openedFrom =
         }
       }
     } catch (error) {
-      console.log('Native share not available');
+      
     }
     // Show custom share menu
     setShowShareMenu(true);
@@ -1804,7 +1845,7 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
             const { Preferences } = await import('@capacitor/preferences');
             await Preferences.set({ key: 'auth_user', value: JSON.stringify(userData) });
           } catch (prefErr) {
-            console.log('Preferences save skipped:', prefErr);
+            
           }
 
           if (onAuthSuccess) {
@@ -1888,7 +1929,7 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
         const { Preferences } = await import('@capacitor/preferences');
         await Preferences.set({ key: 'auth_user', value: JSON.stringify(userData) });
       } catch (prefErr) {
-        console.log('Preferences save skipped:', prefErr);
+        
       }
 
       if (onAuthSuccess) {
@@ -2506,7 +2547,6 @@ function App() {
   const [foods, setFoods] = useState(() => {
     // Try to use static data immediately for native apps
     if (STATIC_FOODS_DATA && STATIC_FOODS_DATA.length > 0) {
-      console.log('Initializing with static foods:', STATIC_FOODS_DATA.length);
       return STATIC_FOODS_DATA;
     }
     return [];
@@ -2517,7 +2557,6 @@ function App() {
       const uniqueCategories = [...new Set(
         STATIC_FOODS_DATA.map(food => food.category).filter(Boolean)
       )].sort();
-      console.log('Initializing categories:', uniqueCategories.length);
       return uniqueCategories;
     }
     return [];
@@ -2593,7 +2632,7 @@ function App() {
           const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
           await GoogleAuth.signOut();
         } catch (googleErr) {
-          console.log('Google sign out skipped:', googleErr);
+          
         }
       }
 
@@ -2608,7 +2647,7 @@ function App() {
       const { Preferences } = await import('@capacitor/preferences');
       await Preferences.remove({ key: 'auth_user' });
     } catch (prefErr) {
-      console.log('Preferences clear skipped:', prefErr);
+      
     }
     
     // Clear local state regardless of API result
@@ -2864,7 +2903,7 @@ function App() {
               }
             }
           } catch (prefErr) {
-            console.log('Session restore from Preferences skipped:', prefErr);
+            
           }
         }
       } catch (err) {
@@ -2882,21 +2921,15 @@ function App() {
       // For native iOS/Android apps, always use static data (API won't work)
       const isNative = isCapacitorNative();
       
-      // Log for debugging
-      console.log('Loading foods...', { isNative, hasStaticData: STATIC_FOODS_DATA?.length > 0 });
-      
-      // If native app OR static data available and API not configured, use static data immediately
+      // If native app OR API not configured, use static data immediately
       if (isNative || !BACKEND_URL) {
-        console.log('Using static foods data for native app');
         if (STATIC_FOODS_DATA && STATIC_FOODS_DATA.length > 0) {
           setFoods(STATIC_FOODS_DATA);
           const uniqueCategories = [...new Set(
             STATIC_FOODS_DATA.map(food => food.category).filter(Boolean)
           )].sort();
           setCategories(uniqueCategories);
-          console.log('Loaded', STATIC_FOODS_DATA.length, 'foods from static data');
         } else {
-          console.error('Static foods data is empty!');
           setFoods([]);
         }
         setLoading(false);
@@ -2927,10 +2960,8 @@ function App() {
             allFoods.map(food => food.category).filter(Boolean)
           )].sort();
           setCategories(uniqueCategories);
-          console.log('Loaded', allFoods.length, 'foods from API');
         } else {
           // API returned empty, use static data
-          console.log('API returned empty, using static data');
           setFoods(STATIC_FOODS_DATA || []);
           const uniqueCategories = [...new Set(
             (STATIC_FOODS_DATA || []).map(food => food.category).filter(Boolean)
@@ -2938,7 +2969,7 @@ function App() {
           setCategories(uniqueCategories);
         }
       } catch (e) {
-        console.error("API failed, using static data:", e.message);
+        // API failed, use static data silently
         setFoods(STATIC_FOODS_DATA || []);
         const uniqueCategories = [...new Set(
           (STATIC_FOODS_DATA || []).map(food => food.category).filter(Boolean)
@@ -3362,4 +3393,11 @@ function App() {
   );
 }
 
-export default App;
+// Wrap App with ErrorBoundary for production stability
+const AppWithErrorBoundary = () => (
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
+
+export default AppWithErrorBoundary;
