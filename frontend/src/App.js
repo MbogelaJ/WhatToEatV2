@@ -2737,9 +2737,10 @@ function App() {
       // Ignore API errors - local logout already completed
     }
     
-    // Reset to onboarding
+    // Reset to Disclaimer page
     localStorage.setItem('onboardingStep', '0');
     setOnboardingStep(0);
+    setDisclaimerAccepted(false); // This will show Disclaimer page
   };
 
   // Persist user profile to localStorage
