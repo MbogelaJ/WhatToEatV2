@@ -3191,10 +3191,16 @@ function App() {
   }
 
   // Render Premium Page (from nav - after onboarding completed)
+  // Always navigate to Home when closing premium page (not back to previous view)
   if (activeView === 'premium') {
     return (
       <PremiumPage 
-        onBack={() => setActiveView('home')}
+        onBack={() => {
+          // Always go to home page, regardless of where user came from
+          setActiveView('home');
+          // Ensure no food modal is open
+          setSelectedFood(null);
+        }}
         onPurchase={handlePremiumPurchase}
         onRestore={handleRestorePurchases}
         isPremium={isPremium}
