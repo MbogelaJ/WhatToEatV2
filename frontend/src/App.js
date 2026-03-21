@@ -810,13 +810,16 @@ const FoodCard = ({ food, onClick, onNavigateToPremium, dietaryRestrictions = []
 };
 
 // Food Detail Modal - Matching your design
-const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [], openedFrom = null }) => {
+const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [], openedFrom = null, isPremiumUser = false, onNavigateToPremium }) => {
   const [showFAQs, setShowFAQs] = useState(true);
   const [expandedFAQ, setExpandedFAQ] = useState(null);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   
   if (!food) return null;
+  
+  // Check if this food requires premium access
+  const isLocked = food.is_premium && !isPremiumUser;
   
   const safetyConfig = SAFETY_CONFIG[food.safety] || SAFETY_CONFIG.SAFE;
   const dietaryConcerns = checkDietaryConcerns(food, dietaryRestrictions);
@@ -980,6 +983,43 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [], openedFrom =
           </div>
         )}
 
+        {/* Premium Lock Overlay - Show when content is premium but user is not subscribed */}
+        {isLocked && (
+          <div className="premium-lock-overlay" data-testid="premium-lock-overlay">
+            <div className="premium-lock-content">
+              <div className="premium-lock-icon">
+                <Lock size={48} />
+              </div>
+              <h2>Premium Content</h2>
+              <p>Get detailed nutrition facts, preparation tips, and safety information for {food.name}.</p>
+              <p className="premium-lock-teaser">
+                {food.safety === 'AVOID' 
+                  ? 'Learn exactly why this food should be avoided and safe alternatives.'
+                  : food.safety === 'LIMIT'
+                  ? 'Get portion guidance, timing tips, and safer alternatives.'
+                  : 'Unlock complete nutritional benefits and preparation guidance.'}
+              </p>
+              <button 
+                className="premium-unlock-btn"
+                onClick={() => {
+                  onClose();
+                  if (onNavigateToPremium) onNavigateToPremium();
+                }}
+                data-testid="unlock-premium-btn"
+              >
+                <Crown size={18} />
+                <span>Unlock for $1.99</span>
+              </button>
+              <button className="premium-close-btn" onClick={onClose}>
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Only show detailed content if NOT locked */}
+        {!isLocked && (
+          <>
         {/* Related FAQs Section */}
         {relatedFAQs.length > 0 && (
           <div className="info-card faq-card" data-testid="related-faqs-section">
@@ -1110,6 +1150,8 @@ const FoodDetailModal = ({ food, onClose, dietaryRestrictions = [], openedFrom =
             </p>
           </div>
         </div>
+          </>
+        )}
 
       </div>
     </div>
@@ -1802,10 +1844,25 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Email validation
+  const isValidEmail = (emailStr) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailStr);
+  };
+
   const handleContinue = () => {
-    if (email) {
-      localStorage.setItem('userEmail', email);
+    // Require valid email for manual sign-in
+    if (!email || !isValidEmail(email)) {
+      setError('Please enter a valid email address to continue');
+      return;
     }
+    if (!password || password.length < 6) {
+      setError('Please enter a password (at least 6 characters)');
+      return;
+    }
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('user', JSON.stringify({ email, auth_provider: 'email' }));
     onNext();
   };
 
@@ -2060,7 +2117,13 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
           <ChevronLeft size={18} />
           <span>Back</span>
         </button>
-        <button className="onboarding-btn primary" onClick={handleContinue} data-testid="create-account-next-btn">
+        <button 
+          className="onboarding-btn primary" 
+          onClick={handleContinue} 
+          disabled={!email || !password || password.length < 6}
+          data-testid="create-account-next-btn"
+          title={!email || !password ? 'Please enter email and password' : ''}
+        >
           <span>Continue</span>
           <ChevronRight size={18} />
         </button>
@@ -3396,6 +3459,8 @@ function App() {
           onClose={handleCloseFoodModal}
           dietaryRestrictions={dietaryRestrictions}
           openedFrom={foodOpenedFrom}
+          isPremiumUser={isPremium}
+          onNavigateToPremium={() => setActiveView('premium')}
         />
       )}
 

@@ -27,10 +27,17 @@ end
 post_install do |installer|
   assertDeploymentTarget(installer)
   
-  # Force iOS 15.0 deployment target for all pods
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
+      # Force iOS 15.0 deployment target for all pods
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      
+      # Suppress deprecated API warnings from third-party pods
+      config.build_settings['GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS'] = 'NO'
+      config.build_settings['CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS'] = 'NO'
+      
+      # Suppress auto-synthesis warnings
+      config.build_settings['CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS'] = 'NO'
     end
   end
 end

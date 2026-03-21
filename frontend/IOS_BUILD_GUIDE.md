@@ -156,16 +156,22 @@ pod install --repo-update
 ```
 
 ### Deployment Target Mismatch
-The Podfile includes a post_install hook that forces iOS 15.0:
+The Podfile includes a post_install hook that forces iOS 15.0 and suppresses deprecated API warnings:
 ```ruby
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      # Suppress deprecated API warnings from third-party pods
+      config.build_settings['GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS'] = 'NO'
+      config.build_settings['CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS'] = 'NO'
     end
   end
 end
 ```
+
+### Xcode Warnings
+Some warnings from third-party Capacitor plugins (WKProcessPool, SFAuthenticationSession deprecations) are system-level and cannot be fixed without plugin updates. The Podfile suppresses these warnings. Haptic pattern warnings are simulator-specific and won't appear on real devices.
 
 ### Blank Screen in Simulator
 1. Clean build folder: Cmd+Shift+K
