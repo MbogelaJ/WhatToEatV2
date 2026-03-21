@@ -2625,35 +2625,47 @@ function App() {
 
   // Handle logout - Clear all auth state including Capacitor storage
   const handleLogout = async () => {
-    try {
-      // Sign out from Google if on native platform
-      if (isCapacitorNative()) {
-        try {
-          const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-          await GoogleAuth.signOut();
-        } catch (googleErr) {
-          
-        }
-      }
-
-      // Call backend logout
-      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
-    } catch (e) {
-      console.error('Logout error:', e);
-    }
-    
-    // Clear Capacitor Preferences storage
-    try {
-      const { Preferences } = await import('@capacitor/preferences');
-      await Preferences.remove({ key: 'auth_user' });
-    } catch (prefErr) {
-      
-    }
-    
-    // Clear local state regardless of API result
+    // Clear local state FIRST (ensures logout completes even if plugins fail)
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
     setCurrentUser(null);
+    
+    // Only attempt native plugin signout if actually signed in via Google
+    if (isCapacitorNative()) {
+      try {
+        // Only try Google signout if user was authenticated via Google
+        const storedUser = localStorage.getItem('user');
+        const wasGoogleAuth = storedUser && JSON.parse(storedUser)?.auth_provider === 'google';
+        
+        if (wasGoogleAuth) {
+          const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+          // Wrap in try-catch as signOut can throw if not signed in
+          try {
+            await GoogleAuth.signOut();
+          } catch (signOutErr) {
+            // Ignore - user may not have been signed in via Google
+          }
+        }
+      } catch (importErr) {
+        // Plugin import failed - continue with logout
+      }
+      
+      // Clear Capacitor Preferences storage
+      try {
+        const { Preferences } = await import('@capacitor/preferences');
+        await Preferences.remove({ key: 'auth_user' });
+      } catch (prefErr) {
+        // Ignore - preferences may not exist
+      }
+    }
+
+    // Call backend logout (non-blocking)
+    try {
+      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
+    } catch (e) {
+      // Ignore API errors - local logout already completed
+    }
+    
     // Reset to onboarding
     localStorage.setItem('onboardingStep', '0');
     setOnboardingStep(0);
