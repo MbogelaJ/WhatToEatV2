@@ -5183,102 +5183,627 @@ body {
 /* ===== IPAD & TABLET RESPONSIVE STYLES ===== */
 
 /* Tablet Portrait (768px+) */
+/* ==================== TABLET/IPAD STYLES (768px+) ==================== */
 @media (min-width: 768px) {
-  /* Disclaimer Page */
+  /* === PAGE 1: DISCLAIMER PAGE === */
   .disclaimer-page-v2 {
-    padding: 3rem 2rem;
-    max-width: 600px;
-    margin: 0 auto;
+    padding: 2rem 2rem 60px;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  
+  .disclaimer-header {
+    padding: 1.5rem 1rem 1rem;
+  }
+  
+  .disclaimer-logo {
+    width: 72px;
+    height: 72px;
+    font-size: 2rem;
+    border-radius: 18px;
+    margin-bottom: 1rem;
   }
   
   .disclaimer-header h1 {
     font-size: 2.5rem;
+    margin-bottom: 0.5rem;
   }
   
   .disclaimer-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
+    margin-bottom: 1rem;
+  }
+  
+  .progress-dots {
+    gap: 0.6rem;
+  }
+  
+  .progress-dots .dot {
+    width: 12px;
+    height: 12px;
   }
   
   .disclaimer-card {
-    padding: 2.5rem;
+    max-width: 580px;
+    padding: 2rem 2.5rem;
+    margin: 0 auto;
+    border-radius: 16px;
   }
   
-  .disclaimer-card h2 {
-    font-size: 1.5rem;
+  .disclaimer-card-header {
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .notice-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  
+  .notice-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .disclaimer-card-header h2 {
+    font-size: 1.35rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .disclaimer-card-header p {
+    font-size: 0.9rem;
+  }
+  
+  .disclaimer-points {
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .disclaimer-point {
+    gap: 0.75rem;
+  }
+  
+  .disclaimer-point .point-icon {
+    width: 20px;
+    height: 20px;
   }
   
   .disclaimer-point p {
-    font-size: 1.1rem;
-    line-height: 1.7;
+    font-size: 1.05rem;
+    line-height: 1.5;
+  }
+  
+  .disclaimer-agreement {
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .disclaimer-agreement p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .disclaimer-copyright {
+    font-size: 0.85rem;
   }
   
   .disclaimer-btn {
-    font-size: 1.2rem;
-    padding: 1.25rem 2rem;
-    max-width: 400px;
-    margin: 0 auto;
+    max-width: 580px;
+    padding: 1.1rem 2rem;
+    font-size: 1.15rem;
+    border-radius: 12px;
+    margin: 0 auto 1rem;
   }
   
-  /* Onboarding Pages */
+  /* === PAGE 2: AUTH/SIGNUP PAGE === */
   .onboarding-page {
     padding: 2rem;
-    max-width: 600px;
-    margin: 0 auto;
+    padding-bottom: 80px;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  
+  .onboarding-header {
+    padding: 1.5rem 1rem 1rem;
+  }
+  
+  .onboarding-logo {
+    width: 72px;
+    height: 72px;
+    font-size: 2rem;
+    border-radius: 18px;
+    margin-bottom: 1rem;
+  }
+  
+  .onboarding-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .onboarding-header .header-subtitle {
+    font-size: 1.15rem;
   }
   
   .onboarding-card {
-    padding: 2.5rem;
+    max-width: 520px;
+    padding: 2rem 2.5rem;
+    margin: 0 auto;
+    border-radius: 16px;
+  }
+  
+  .onboarding-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .onboarding-card .card-subtitle {
+    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .form-group label {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-input {
+    font-size: 1.1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+  }
+  
+  .auth-link {
+    font-size: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .auth-divider {
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+  }
+  
+  .social-btn {
+    font-size: 1.1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .social-btn svg,
+  .social-btn img {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .onboarding-footer {
+    padding: 1.25rem 1rem;
+    gap: 1rem;
+  }
+  
+  .onboarding-btn {
+    max-width: 520px;
+    padding: 1.1rem 2rem;
+    font-size: 1.15rem;
+    border-radius: 12px;
+  }
+  
+  .back-btn {
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  /* === PAGE 3: ABOUT YOU (Age/Pregnancy Stage) === */
+  .selection-card {
+    max-width: 520px;
+    padding: 2rem 2.5rem;
+    margin: 0 auto;
+  }
+  
+  .age-input-container {
+    margin-bottom: 1.5rem;
+  }
+  
+  .age-input-container label {
+    font-size: 1.05rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .age-input-wrapper input {
+    font-size: 1.25rem;
+    padding: 1rem 1.25rem;
+    width: 140px;
+  }
+  
+  .age-input-wrapper span {
+    font-size: 1.1rem;
+  }
+  
+  .selection-label {
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
+  }
+  
+  .selection-grid {
+    gap: 0.85rem;
+  }
+  
+  .selection-option {
+    padding: 1.1rem 1.25rem;
+    font-size: 1.05rem;
+    border-radius: 10px;
+  }
+  
+  .selection-option.selected {
+    border-width: 2px;
+  }
+  
+  /* === PAGE 4: DIETARY PREFERENCES === */
+  .dietary-card {
+    max-width: 520px;
+    padding: 2rem 2.5rem;
+    margin: 0 auto;
+  }
+  
+  .dietary-intro {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  
+  .dietary-options {
+    gap: 0.75rem;
+    max-height: none;
+  }
+  
+  .dietary-option {
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    border-radius: 10px;
+  }
+  
+  .dietary-option .option-checkbox {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .dietary-option .option-info h4 {
+    font-size: 1.05rem;
+  }
+  
+  .dietary-option .option-info p {
+    font-size: 0.9rem;
+  }
+  
+  /* === PAGE 5: PREMIUM PAGE === */
+  .premium-page-v2 {
+    padding: 2rem 2rem 80px;
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+  
+  .premium-top-back-btn {
+    top: 1.5rem;
+    left: 1.5rem;
+    width: 44px;
+    height: 44px;
+  }
+  
+  .premium-page-v2 > *:not(.premium-top-back-btn) {
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .premium-page-header {
+    padding-top: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .premium-logo-wrapper .premium-logo {
+    width: 72px;
+    height: 72px;
+    font-size: 2rem;
+    border-radius: 18px;
+  }
+  
+  .premium-page-header h1 {
+    font-size: 2rem;
+    margin-top: 1rem;
+  }
+  
+  .premium-intro {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .premium-benefits {
+    padding: 1.75rem;
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+  }
+  
+  .premium-benefits h2 {
+    font-size: 1.15rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .premium-benefits-list {
+    gap: 1rem;
+  }
+  
+  .premium-benefit {
+    gap: 0.75rem;
+  }
+  
+  .premium-benefit svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .premium-benefit span {
+    font-size: 1.02rem;
+    line-height: 1.45;
+  }
+  
+  .premium-price-card {
+    padding: 1.75rem;
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+  }
+  
+  .premium-price-card .price-label {
+    font-size: 0.95rem;
+  }
+  
+  .premium-price-card .price {
+    font-size: 2.75rem;
+  }
+  
+  .premium-price-card .price-period {
+    font-size: 1.05rem;
+  }
+  
+  .premium-price-card .price-note {
+    font-size: 0.9rem;
+  }
+  
+  .premium-buy-btn {
+    padding: 1.1rem 2rem;
+    font-size: 1.15rem;
+    border-radius: 12px;
+  }
+  
+  .premium-free-btn {
+    padding: 1rem 2rem;
+    font-size: 1.05rem;
+  }
+  
+  .premium-restore-btn {
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .app-store-notice {
+    font-size: 0.9rem;
+  }
+}
+
+/* ==================== LARGE TABLET/IPAD PRO (1024px+) ==================== */
+@media (min-width: 1024px) {
+  /* === ALL ONBOARDING PAGES === */
+  .disclaimer-page-v2,
+  .onboarding-page {
+    gap: 2rem;
+  }
+  
+  .disclaimer-header,
+  .onboarding-header {
+    padding: 2rem 1rem 1.5rem;
+  }
+  
+  .disclaimer-logo,
+  .onboarding-logo {
+    width: 88px;
+    height: 88px;
+    font-size: 2.5rem;
+    border-radius: 22px;
+    margin-bottom: 1.25rem;
+  }
+  
+  .disclaimer-header h1,
+  .onboarding-header h1 {
+    font-size: 3rem;
+  }
+  
+  .disclaimer-subtitle,
+  .onboarding-header .header-subtitle {
+    font-size: 1.3rem;
+  }
+  
+  .progress-dots .dot {
+    width: 14px;
+    height: 14px;
+  }
+  
+  /* === DISCLAIMER CARD === */
+  .disclaimer-card {
+    max-width: 640px;
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
+  }
+  
+  .notice-icon {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .notice-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .disclaimer-card-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .disclaimer-card-header p {
+    font-size: 1rem;
+  }
+  
+  .disclaimer-points {
+    gap: 1.25rem;
+  }
+  
+  .disclaimer-point .point-icon {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .disclaimer-point p {
+    font-size: 1.15rem;
+    line-height: 1.55;
+  }
+  
+  .disclaimer-agreement {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .disclaimer-agreement p {
+    font-size: 1rem;
+  }
+  
+  .disclaimer-copyright {
+    font-size: 0.95rem;
+  }
+  
+  .disclaimer-btn {
+    max-width: 640px;
+    padding: 1.25rem 2.5rem;
+    font-size: 1.25rem;
+    border-radius: 14px;
+  }
+  
+  /* === ONBOARDING CARDS === */
+  .onboarding-card,
+  .selection-card,
+  .dietary-card {
+    max-width: 580px;
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
   }
   
   .onboarding-card h2 {
     font-size: 1.75rem;
   }
   
-  .onboarding-card p,
-  .card-subtitle {
+  .onboarding-card .card-subtitle {
+    font-size: 1.15rem;
+  }
+  
+  .form-group label {
     font-size: 1.1rem;
   }
   
   .form-input {
-    font-size: 1.1rem;
-    padding: 1rem 1.25rem;
-  }
-  
-  .form-group label {
-    font-size: 1rem;
+    font-size: 1.2rem;
+    padding: 1.1rem 1.5rem;
+    border-radius: 12px;
   }
   
   .social-btn {
-    font-size: 1.1rem;
-    padding: 1rem 1.5rem;
+    font-size: 1.2rem;
+    padding: 1.1rem 1.75rem;
+    border-radius: 12px;
   }
   
   .onboarding-btn {
-    font-size: 1.1rem;
-    padding: 1rem 1.5rem;
+    max-width: 580px;
+    padding: 1.25rem 2.5rem;
+    font-size: 1.25rem;
+    border-radius: 14px;
   }
   
-  /* Premium Page */
+  /* === SELECTION OPTIONS === */
+  .selection-option {
+    padding: 1.25rem 1.5rem;
+    font-size: 1.15rem;
+    border-radius: 12px;
+  }
+  
+  .age-input-wrapper input {
+    font-size: 1.35rem;
+    padding: 1.1rem 1.5rem;
+    width: 160px;
+  }
+  
+  /* === DIETARY OPTIONS === */
+  .dietary-option {
+    padding: 1.15rem 1.5rem;
+    font-size: 1.1rem;
+    border-radius: 12px;
+  }
+  
+  .dietary-option .option-checkbox {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .dietary-option .option-info h4 {
+    font-size: 1.15rem;
+  }
+  
+  .dietary-option .option-info p {
+    font-size: 1rem;
+  }
+  
+  /* === PREMIUM PAGE === */
   .premium-page-v2 {
-    padding: 2rem;
+    gap: 1.25rem;
   }
   
   .premium-page-v2 > *:not(.premium-top-back-btn) {
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 620px;
+  }
+  
+  .premium-top-back-btn {
+    top: 2rem;
+    left: 2rem;
+    width: 48px;
+    height: 48px;
+  }
+  
+  .premium-logo-wrapper .premium-logo {
+    width: 88px;
+    height: 88px;
+    font-size: 2.5rem;
+    border-radius: 22px;
   }
   
   .premium-page-header h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
   }
   
-  .premium-page-header p {
+  .premium-intro {
     font-size: 1.2rem;
   }
   
+  .premium-benefits {
+    padding: 2rem 2.5rem;
+    border-radius: 18px;
+  }
+  
   .premium-benefits h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+  }
+  
+  .premium-benefit svg {
+    width: 24px;
+    height: 24px;
   }
   
   .premium-benefit span {
@@ -5286,126 +5811,88 @@ body {
   }
   
   .premium-price-card {
-    padding: 2rem;
+    padding: 2rem 2.5rem;
+    border-radius: 18px;
   }
   
   .premium-price-card .price {
-    font-size: 3rem;
+    font-size: 3.25rem;
   }
   
-  .premium-purchase-btn,
+  .premium-price-card .price-period {
+    font-size: 1.15rem;
+  }
+  
+  .premium-buy-btn {
+    padding: 1.25rem 2.5rem;
+    font-size: 1.25rem;
+    border-radius: 14px;
+  }
+  
   .premium-free-btn {
-    font-size: 1.2rem;
-    padding: 1.25rem 2rem;
-  }
-  
-  /* Age/Pregnancy Selection Page */
-  .selection-grid {
-    gap: 1rem;
-  }
-  
-  .selection-option {
-    padding: 1.25rem;
-    font-size: 1.1rem;
-  }
-  
-  .selection-option .option-icon {
-    font-size: 2rem;
-  }
-  
-  /* Dietary Restrictions Page */
-  .dietary-options {
-    gap: 1rem;
-  }
-  
-  .dietary-option {
-    padding: 1.25rem;
-    font-size: 1.1rem;
-  }
-}
-
-/* Tablet Landscape & Desktop (1024px+) */
-@media (min-width: 1024px) {
-  /* Disclaimer Page */
-  .disclaimer-page-v2 {
-    padding: 4rem 2rem;
-    max-width: 700px;
-  }
-  
-  .disclaimer-header h1 {
-    font-size: 3rem;
-  }
-  
-  .disclaimer-logo {
-    width: 80px;
-    height: 80px;
-    font-size: 2.5rem;
-  }
-  
-  .disclaimer-card {
-    padding: 3rem;
-  }
-  
-  .disclaimer-point p {
-    font-size: 1.15rem;
-  }
-  
-  /* Onboarding Pages */
-  .onboarding-page {
-    padding: 3rem 2rem;
-    max-width: 700px;
-  }
-  
-  .onboarding-card {
-    padding: 3rem;
-  }
-  
-  .onboarding-card h2 {
-    font-size: 2rem;
-  }
-  
-  /* Premium Page */
-  .premium-page-v2 > *:not(.premium-top-back-btn) {
-    max-width: 700px;
-  }
-  
-  .premium-page-header .premium-logo {
-    width: 90px;
-    height: 90px;
-  }
-  
-  .premium-page-header h1 {
-    font-size: 2.5rem;
-  }
-  
-  .premium-benefits-list {
-    gap: 1.25rem;
-  }
-  
-  .premium-benefit {
+    padding: 1.1rem 2rem;
     font-size: 1.15rem;
   }
 }
 
-/* Large iPad Pro (1366px+) */
+/* ==================== EXTRA LARGE IPAD PRO LANDSCAPE (1366px+) ==================== */
 @media (min-width: 1366px) {
   .disclaimer-page-v2,
   .onboarding-page {
-    max-width: 800px;
-    padding: 4rem 3rem;
+    gap: 2.5rem;
   }
   
-  .disclaimer-header h1 {
+  .disclaimer-logo,
+  .onboarding-logo {
+    width: 100px;
+    height: 100px;
+    font-size: 3rem;
+    border-radius: 26px;
+  }
+  
+  .disclaimer-header h1,
+  .onboarding-header h1 {
     font-size: 3.5rem;
   }
   
   .disclaimer-card,
-  .onboarding-card {
-    padding: 3.5rem;
+  .onboarding-card,
+  .selection-card,
+  .dietary-card {
+    max-width: 700px;
+    padding: 3rem 3.5rem;
     border-radius: 24px;
   }
   
+  .disclaimer-btn,
+  .onboarding-btn {
+    max-width: 700px;
+    padding: 1.4rem 3rem;
+    font-size: 1.35rem;
+  }
+  
   .premium-page-v2 > *:not(.premium-top-back-btn) {
-    max-width: 800px;
+    max-width: 700px;
+  }
+  
+  .premium-logo-wrapper .premium-logo {
+    width: 100px;
+    height: 100px;
+    font-size: 3rem;
+  }
+  
+  .premium-page-header h1 {
+    font-size: 3rem;
+  }
+  
+  .premium-benefits,
+  .premium-price-card {
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
+  }
+  
+  .premium-buy-btn {
+    padding: 1.4rem 3rem;
+    font-size: 1.35rem;
   }
 }

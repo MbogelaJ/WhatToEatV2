@@ -16,7 +16,8 @@
     "contentInset": "automatic",
     "backgroundColor": "#e8f5f0",
     "preferredContentMode": "mobile",
-    "allowsLinkPreview": false
+    "allowsLinkPreview": false,
+    "scrollEnabled": true
   },
   "plugins": {
     "GoogleAuth": {
