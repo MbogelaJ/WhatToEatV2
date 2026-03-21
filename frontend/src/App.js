@@ -1221,7 +1221,7 @@ const SafetyFilter = ({ selectedSafety, onSelect }) => {
 };
 
 // FAQ View Component with Premium Feature
-const FAQView = ({ onBack, onNavigateToFood, onNavigateToCategory, foods, isPremium, onNavigateToPremium }) => {
+const FAQView = ({ onBack, onNavigateToFood, onNavigateToCategory, onNavigateHome, foods, isPremium, onNavigateToPremium }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -1698,7 +1698,7 @@ const TopicsView = ({ onBack, onNavigateHome, isPremium, onNavigateToPremium }) 
 };
 
 // About View Component
-const AboutView = ({ onBack }) => {
+const AboutView = ({ onBack, onNavigateHome }) => {
   return (
     <div className="page-view" data-testid="about-view">
       <div className="page-content">
@@ -3190,7 +3190,13 @@ function App() {
             <button className="header-back-btn" onClick={() => setActiveView('home')} title="Back to Home">
               <ArrowLeft size={22} />
             </button>
-            <div className="header-logo-v2">
+            <div 
+              className="header-logo-v2 clickable" 
+              onClick={() => setActiveView('home')}
+              data-testid="faq-header-logo"
+              role="button"
+              tabIndex={0}
+            >
               <div className="logo-icon-v2">W</div>
               <span className="logo-text-v2">WhatToEat</span>
               <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
@@ -3215,6 +3221,7 @@ function App() {
             setSearchQuery(category.toLowerCase());
             setActiveView('home');
           }}
+          onNavigateHome={() => setActiveView('home')}
           foods={foods}
           isPremium={isPremium}
           onNavigateToPremium={() => setActiveView('premium')}
@@ -3243,7 +3250,13 @@ function App() {
             <button className="header-back-btn" onClick={() => setActiveView('home')} title="Back to Home">
               <ArrowLeft size={22} />
             </button>
-            <div className="header-logo-v2">
+            <div 
+              className="header-logo-v2 clickable" 
+              onClick={() => setActiveView('home')}
+              data-testid="topics-header-logo"
+              role="button"
+              tabIndex={0}
+            >
               <div className="logo-icon-v2">W</div>
               <span className="logo-text-v2">WhatToEat</span>
               <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
@@ -3279,7 +3292,13 @@ function App() {
             <button className="header-back-btn" onClick={() => setActiveView('home')} title="Back to Home">
               <ArrowLeft size={22} />
             </button>
-            <div className="header-logo-v2">
+            <div 
+              className="header-logo-v2 clickable" 
+              onClick={() => setActiveView('home')}
+              data-testid="about-header-logo"
+              role="button"
+              tabIndex={0}
+            >
               <div className="logo-icon-v2">W</div>
               <span className="logo-text-v2">WhatToEat</span>
               <span className="logo-tagline-v2">Pregnancy Nutrition Guide</span>
@@ -3295,7 +3314,7 @@ function App() {
             </div>
           </div>
         </header>
-        <AboutView onBack={() => setActiveView('home')} />
+        <AboutView onBack={() => setActiveView('home')} onNavigateHome={() => setActiveView('home')} />
         <BottomNav activeView={activeView} onChangeView={setActiveView} />
       </div>
     );

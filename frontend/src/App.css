@@ -2845,24 +2845,24 @@ body {
   position: absolute;
   top: 1rem;
   left: 1rem;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border: 2px solid #16a34a;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
-  color: #374151;
+  z-index: 100;
+  color: #16a34a;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .premium-top-back-btn:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+  background: #16a34a;
+  color: white;
 }
 
 
