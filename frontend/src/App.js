@@ -2455,7 +2455,7 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
           </button>
 
           <button className="premium-free-btn" onClick={onBack}>
-            Continue to Home
+            Continue with Free Version
           </button>
 
           <button 
