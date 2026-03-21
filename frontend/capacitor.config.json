@@ -1,5 +1,5 @@
 {
-  "appId": "com.whattoeat.penx",
+  "appId": "com.whattoeat.penx.app",
   "appName": "WhatToEat",
   "webDir": "build",
   "bundledWebRuntime": false,
