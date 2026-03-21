@@ -8,11 +8,15 @@ Last Updated: March 21, 2026
 ## Quick Build Commands
 
 ```bash
-# 0. Pull latest code from GitHub
-git pull origin main
+# 0. Pull latest code from GitHub (conflict branch)
+git fetch origin
+git checkout conflict_190326_1735
+git pull origin conflict_190326_1735
+
 # OR if cloning fresh:
 # git clone https://github.com/YOUR_USERNAME/WhatToEatV2.git
 # cd WhatToEatV2
+# git checkout conflict_190326_1735
 
 # 1. Navigate to frontend
 cd frontend
@@ -44,9 +48,12 @@ open App.xcworkspace
 ```bash
 #!/bin/bash
 # WhatToEat iOS Build Script
+# Branch: conflict_190326_1735
 
-# Pull latest changes
-git pull origin main
+# Pull latest changes from conflict branch
+git fetch origin
+git checkout conflict_190326_1735
+git pull origin conflict_190326_1735
 
 # Navigate to frontend
 cd frontend
