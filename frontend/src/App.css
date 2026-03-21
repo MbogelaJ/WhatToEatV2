@@ -5187,409 +5187,423 @@ body {
 @media (min-width: 768px) {
   /* === PAGE 1: DISCLAIMER PAGE === */
   .disclaimer-page-v2 {
-    padding: 2rem 2rem 60px;
+    padding: 3rem 3rem 70px;
     justify-content: center;
-    gap: 1.5rem;
+    gap: 2rem;
   }
   
   .disclaimer-header {
-    padding: 1.5rem 1rem 1rem;
+    padding: 2rem 1rem 1.5rem;
   }
   
   .disclaimer-logo {
-    width: 72px;
-    height: 72px;
-    font-size: 2rem;
-    border-radius: 18px;
-    margin-bottom: 1rem;
-  }
-  
-  .disclaimer-header h1 {
+    width: 90px;
+    height: 90px;
     font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .disclaimer-subtitle {
-    font-size: 1.15rem;
-    margin-bottom: 1rem;
-  }
-  
-  .progress-dots {
-    gap: 0.6rem;
-  }
-  
-  .progress-dots .dot {
-    width: 12px;
-    height: 12px;
-  }
-  
-  .disclaimer-card {
-    max-width: 580px;
-    padding: 2rem 2.5rem;
-    margin: 0 auto;
-    border-radius: 16px;
-  }
-  
-  .disclaimer-card-header {
-    gap: 1rem;
+    border-radius: 22px;
     margin-bottom: 1.25rem;
   }
   
+  .disclaimer-header h1 {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .disclaimer-subtitle {
+    font-size: 1.4rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .progress-dots {
+    gap: 0.75rem;
+  }
+  
+  .progress-dots .dot {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .disclaimer-card {
+    max-width: 85%;
+    width: 700px;
+    padding: 2.5rem 3rem;
+    margin: 0 auto;
+    border-radius: 20px;
+  }
+  
+  .disclaimer-card-header {
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+  }
+  
   .notice-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
   }
   
   .notice-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .disclaimer-card-header h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0.35rem;
+  }
+  
+  .disclaimer-card-header p {
+    font-size: 1.1rem;
+  }
+  
+  .disclaimer-points {
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+  }
+  
+  .disclaimer-point {
+    gap: 1rem;
+  }
+  
+  .disclaimer-point .point-icon {
     width: 24px;
     height: 24px;
   }
   
-  .disclaimer-card-header h2 {
-    font-size: 1.35rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .disclaimer-card-header p {
-    font-size: 0.9rem;
-  }
-  
-  .disclaimer-points {
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-  }
-  
-  .disclaimer-point {
-    gap: 0.75rem;
-  }
-  
-  .disclaimer-point .point-icon {
-    width: 20px;
-    height: 20px;
-  }
-  
   .disclaimer-point p {
-    font-size: 1.05rem;
-    line-height: 1.5;
+    font-size: 1.25rem;
+    line-height: 1.6;
   }
   
   .disclaimer-agreement {
-    padding: 1rem 1.25rem;
-    margin-bottom: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
   }
   
   .disclaimer-agreement p {
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 1.1rem;
+    line-height: 1.55;
   }
   
   .disclaimer-copyright {
-    font-size: 0.85rem;
+    font-size: 1rem;
   }
   
   .disclaimer-btn {
-    max-width: 580px;
-    padding: 1.1rem 2rem;
-    font-size: 1.15rem;
-    border-radius: 12px;
-    margin: 0 auto 1rem;
+    max-width: 85%;
+    width: 700px;
+    padding: 1.35rem 2.5rem;
+    font-size: 1.4rem;
+    border-radius: 14px;
+    margin: 0 auto 1.5rem;
   }
   
   /* === PAGE 2: AUTH/SIGNUP PAGE === */
   .onboarding-page {
-    padding: 2rem;
-    padding-bottom: 80px;
+    padding: 3rem 3rem 80px;
     justify-content: center;
-    gap: 1.5rem;
+    gap: 2rem;
   }
   
   .onboarding-header {
-    padding: 1.5rem 1rem 1rem;
+    padding: 2rem 1rem 1.5rem;
   }
   
   .onboarding-logo {
-    width: 72px;
-    height: 72px;
-    font-size: 2rem;
-    border-radius: 18px;
-    margin-bottom: 1rem;
-  }
-  
-  .onboarding-header h1 {
+    width: 90px;
+    height: 90px;
     font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .onboarding-header .header-subtitle {
-    font-size: 1.15rem;
-  }
-  
-  .onboarding-card {
-    max-width: 520px;
-    padding: 2rem 2.5rem;
-    margin: 0 auto;
-    border-radius: 16px;
-  }
-  
-  .onboarding-card h2 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .onboarding-card .card-subtitle {
-    font-size: 1.05rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-group {
+    border-radius: 22px;
     margin-bottom: 1.25rem;
   }
   
+  .onboarding-header h1 {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .onboarding-header .header-subtitle {
+    font-size: 1.4rem;
+  }
+  
+  .onboarding-card {
+    max-width: 85%;
+    width: 650px;
+    padding: 2.5rem 3rem;
+    margin: 0 auto;
+    border-radius: 20px;
+  }
+  
+  .onboarding-card h2 {
+    font-size: 1.85rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .onboarding-card .card-subtitle {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
   .form-group label {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    margin-bottom: 0.65rem;
   }
   
   .form-input {
-    font-size: 1.1rem;
-    padding: 1rem 1.25rem;
-    border-radius: 10px;
+    font-size: 1.3rem;
+    padding: 1.15rem 1.5rem;
+    border-radius: 12px;
   }
   
   .auth-link {
-    font-size: 1rem;
-    margin: 1rem 0;
+    font-size: 1.15rem;
+    margin: 1.25rem 0;
   }
   
   .auth-divider {
-    margin: 1.5rem 0;
-    font-size: 0.95rem;
+    margin: 2rem 0;
+    font-size: 1.1rem;
   }
   
   .social-btn {
-    font-size: 1.1rem;
-    padding: 1rem 1.5rem;
-    border-radius: 10px;
-    margin-bottom: 0.75rem;
+    font-size: 1.3rem;
+    padding: 1.15rem 1.75rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
   }
   
   .social-btn svg,
   .social-btn img {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
   
   .onboarding-footer {
-    padding: 1.25rem 1rem;
-    gap: 1rem;
+    padding: 1.5rem 1rem;
+    gap: 1.25rem;
   }
   
   .onboarding-btn {
-    max-width: 520px;
-    padding: 1.1rem 2rem;
-    font-size: 1.15rem;
-    border-radius: 12px;
+    max-width: 85%;
+    width: 650px;
+    padding: 1.35rem 2.5rem;
+    font-size: 1.4rem;
+    border-radius: 14px;
   }
   
   .back-btn {
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
+    font-size: 1.15rem;
+    padding: 1rem 2rem;
   }
   
   /* === PAGE 3: ABOUT YOU (Age/Pregnancy Stage) === */
   .selection-card {
-    max-width: 520px;
-    padding: 2rem 2.5rem;
+    max-width: 85%;
+    width: 650px;
+    padding: 2.5rem 3rem;
     margin: 0 auto;
   }
   
   .age-input-container {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
   }
   
   .age-input-container label {
-    font-size: 1.05rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .age-input-wrapper input {
     font-size: 1.25rem;
-    padding: 1rem 1.25rem;
-    width: 140px;
-  }
-  
-  .age-input-wrapper span {
-    font-size: 1.1rem;
-  }
-  
-  .selection-label {
-    font-size: 1.05rem;
     margin-bottom: 1rem;
   }
   
+  .age-input-wrapper input {
+    font-size: 1.5rem;
+    padding: 1.15rem 1.5rem;
+    width: 180px;
+  }
+  
+  .age-input-wrapper span {
+    font-size: 1.3rem;
+  }
+  
+  .selection-label {
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  
   .selection-grid {
-    gap: 0.85rem;
+    gap: 1rem;
   }
   
   .selection-option {
-    padding: 1.1rem 1.25rem;
-    font-size: 1.05rem;
-    border-radius: 10px;
+    padding: 1.35rem 1.5rem;
+    font-size: 1.25rem;
+    border-radius: 12px;
   }
   
   .selection-option.selected {
-    border-width: 2px;
+    border-width: 3px;
+  }
+  
+  .selection-option .option-icon {
+    font-size: 1.75rem;
   }
   
   /* === PAGE 4: DIETARY PREFERENCES === */
   .dietary-card {
-    max-width: 520px;
-    padding: 2rem 2.5rem;
+    max-width: 85%;
+    width: 650px;
+    padding: 2.5rem 3rem;
     margin: 0 auto;
   }
   
+  .dietary-card h2 {
+    font-size: 1.75rem;
+  }
+  
   .dietary-intro {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-    line-height: 1.5;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    line-height: 1.55;
   }
   
   .dietary-options {
-    gap: 0.75rem;
+    gap: 1rem;
     max-height: none;
   }
   
   .dietary-option {
-    padding: 1rem 1.25rem;
-    font-size: 1rem;
-    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    font-size: 1.2rem;
+    border-radius: 12px;
   }
   
   .dietary-option .option-checkbox {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
   }
   
   .dietary-option .option-info h4 {
-    font-size: 1.05rem;
+    font-size: 1.25rem;
   }
   
   .dietary-option .option-info p {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
   }
   
   /* === PAGE 5: PREMIUM PAGE === */
   .premium-page-v2 {
-    padding: 2rem 2rem 80px;
-    justify-content: flex-start;
-    gap: 1rem;
+    padding: 3rem 3rem 80px;
+    justify-content: center;
+    gap: 1.75rem;
   }
   
   .premium-top-back-btn {
-    top: 1.5rem;
-    left: 1.5rem;
-    width: 44px;
-    height: 44px;
+    top: 2rem;
+    left: 2rem;
+    width: 52px;
+    height: 52px;
   }
   
   .premium-page-v2 > *:not(.premium-top-back-btn) {
-    max-width: 560px;
+    max-width: 85%;
+    width: 750px;
     margin-left: auto;
     margin-right: auto;
   }
   
   .premium-page-header {
-    padding-top: 2rem;
+    padding-top: 1rem;
     margin-bottom: 1rem;
   }
   
   .premium-logo-wrapper .premium-logo {
-    width: 72px;
-    height: 72px;
-    font-size: 2rem;
-    border-radius: 18px;
+    width: 100px;
+    height: 100px;
+    font-size: 2.75rem;
+    border-radius: 24px;
   }
   
   .premium-page-header h1 {
-    font-size: 2rem;
+    font-size: 3rem;
     margin-top: 1rem;
   }
   
   .premium-intro {
-    font-size: 1.1rem;
+    font-size: 1.45rem;
     margin-bottom: 1.5rem;
   }
   
   .premium-benefits {
-    padding: 1.75rem;
-    border-radius: 14px;
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
     margin-bottom: 1.25rem;
   }
   
   .premium-benefits h2 {
-    font-size: 1.15rem;
-    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
+    margin-bottom: 1.75rem;
   }
   
   .premium-benefits-list {
-    gap: 1rem;
+    gap: 1.5rem;
   }
   
   .premium-benefit {
-    gap: 0.75rem;
+    gap: 1rem;
   }
   
   .premium-benefit svg {
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
   }
   
   .premium-benefit span {
-    font-size: 1.02rem;
-    line-height: 1.45;
+    font-size: 1.2rem;
+    line-height: 1.5;
   }
   
   .premium-price-card {
-    padding: 1.75rem;
-    border-radius: 14px;
-    margin-bottom: 1.25rem;
+    padding: 2.25rem 2.5rem;
+    border-radius: 18px;
+    margin-bottom: 1.5rem;
   }
   
   .premium-price-card .price-label {
-    font-size: 0.95rem;
+    font-size: 1.1rem;
   }
   
   .premium-price-card .price {
-    font-size: 2.75rem;
+    font-size: 3.5rem;
   }
   
   .premium-price-card .price-period {
-    font-size: 1.05rem;
+    font-size: 1.25rem;
   }
   
   .premium-price-card .price-note {
-    font-size: 0.9rem;
-  }
-  
-  .premium-buy-btn {
-    padding: 1.1rem 2rem;
-    font-size: 1.15rem;
-    border-radius: 12px;
-  }
-  
-  .premium-free-btn {
-    padding: 1rem 2rem;
     font-size: 1.05rem;
   }
   
+  .premium-buy-btn {
+    padding: 1.35rem 2.5rem;
+    font-size: 1.4rem;
+    border-radius: 14px;
+  }
+  
+  .premium-free-btn {
+    padding: 1.25rem 2.5rem;
+    font-size: 1.25rem;
+  }
+  
   .premium-restore-btn {
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
+    font-size: 1.15rem;
+    padding: 1rem 2rem;
   }
   
   .app-store-notice {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
   }
 }
 
@@ -5598,240 +5612,334 @@ body {
   /* === ALL ONBOARDING PAGES === */
   .disclaimer-page-v2,
   .onboarding-page {
-    gap: 2rem;
+    padding: 4rem 4rem 80px;
+    gap: 2.5rem;
   }
   
   .disclaimer-header,
   .onboarding-header {
-    padding: 2rem 1rem 1.5rem;
+    padding: 2.5rem 1rem 2rem;
   }
   
   .disclaimer-logo,
   .onboarding-logo {
-    width: 88px;
-    height: 88px;
-    font-size: 2.5rem;
-    border-radius: 22px;
-    margin-bottom: 1.25rem;
+    width: 110px;
+    height: 110px;
+    font-size: 3rem;
+    border-radius: 28px;
+    margin-bottom: 1.5rem;
   }
   
   .disclaimer-header h1,
   .onboarding-header h1 {
-    font-size: 3rem;
+    font-size: 3.75rem;
   }
   
   .disclaimer-subtitle,
   .onboarding-header .header-subtitle {
-    font-size: 1.3rem;
+    font-size: 1.65rem;
+  }
+  
+  .progress-dots {
+    gap: 1rem;
   }
   
   .progress-dots .dot {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
   
   /* === DISCLAIMER CARD === */
   .disclaimer-card {
-    max-width: 640px;
-    padding: 2.5rem 3rem;
-    border-radius: 20px;
+    max-width: 90%;
+    width: 800px;
+    padding: 3rem 4rem;
+    border-radius: 24px;
+  }
+  
+  .disclaimer-card-header {
+    gap: 1.5rem;
+    margin-bottom: 2rem;
   }
   
   .notice-icon {
-    width: 56px;
-    height: 56px;
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
   }
   
   .notice-icon svg {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
   }
   
   .disclaimer-card-header h2 {
-    font-size: 1.5rem;
+    font-size: 1.9rem;
   }
   
   .disclaimer-card-header p {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
   
   .disclaimer-points {
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .disclaimer-point {
     gap: 1.25rem;
   }
   
   .disclaimer-point .point-icon {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
   }
   
   .disclaimer-point p {
-    font-size: 1.15rem;
-    line-height: 1.55;
+    font-size: 1.45rem;
+    line-height: 1.65;
   }
   
   .disclaimer-agreement {
-    padding: 1.25rem 1.5rem;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.25rem;
   }
   
   .disclaimer-agreement p {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
   
   .disclaimer-copyright {
-    font-size: 0.95rem;
+    font-size: 1.15rem;
   }
   
   .disclaimer-btn {
-    max-width: 640px;
-    padding: 1.25rem 2.5rem;
-    font-size: 1.25rem;
-    border-radius: 14px;
+    max-width: 90%;
+    width: 800px;
+    padding: 1.5rem 3rem;
+    font-size: 1.6rem;
+    border-radius: 16px;
   }
   
   /* === ONBOARDING CARDS === */
   .onboarding-card,
   .selection-card,
   .dietary-card {
-    max-width: 580px;
-    padding: 2.5rem 3rem;
-    border-radius: 20px;
+    max-width: 90%;
+    width: 750px;
+    padding: 3rem 4rem;
+    border-radius: 24px;
   }
   
   .onboarding-card h2 {
-    font-size: 1.75rem;
+    font-size: 2.2rem;
   }
   
   .onboarding-card .card-subtitle {
-    font-size: 1.15rem;
+    font-size: 1.45rem;
   }
   
   .form-group label {
-    font-size: 1.1rem;
+    font-size: 1.35rem;
   }
   
   .form-input {
-    font-size: 1.2rem;
-    padding: 1.1rem 1.5rem;
-    border-radius: 12px;
-  }
-  
-  .social-btn {
-    font-size: 1.2rem;
-    padding: 1.1rem 1.75rem;
-    border-radius: 12px;
-  }
-  
-  .onboarding-btn {
-    max-width: 580px;
-    padding: 1.25rem 2.5rem;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    padding: 1.35rem 1.75rem;
     border-radius: 14px;
   }
   
+  .auth-divider {
+    font-size: 1.25rem;
+    margin: 2.5rem 0;
+  }
+  
+  .social-btn {
+    font-size: 1.45rem;
+    padding: 1.35rem 2rem;
+    border-radius: 14px;
+  }
+  
+  .social-btn svg,
+  .social-btn img {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .onboarding-btn {
+    max-width: 90%;
+    width: 750px;
+    padding: 1.5rem 3rem;
+    font-size: 1.6rem;
+    border-radius: 16px;
+  }
+  
+  .back-btn {
+    font-size: 1.3rem;
+    padding: 1.15rem 2.5rem;
+  }
+  
   /* === SELECTION OPTIONS === */
+  .selection-label {
+    font-size: 1.45rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .selection-grid {
+    gap: 1.25rem;
+  }
+  
   .selection-option {
-    padding: 1.25rem 1.5rem;
-    font-size: 1.15rem;
-    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    font-size: 1.45rem;
+    border-radius: 14px;
+  }
+  
+  .selection-option .option-icon {
+    font-size: 2rem;
+  }
+  
+  .age-input-container label {
+    font-size: 1.4rem;
   }
   
   .age-input-wrapper input {
-    font-size: 1.35rem;
-    padding: 1.1rem 1.5rem;
-    width: 160px;
+    font-size: 1.75rem;
+    padding: 1.35rem 1.75rem;
+    width: 200px;
+  }
+  
+  .age-input-wrapper span {
+    font-size: 1.5rem;
   }
   
   /* === DIETARY OPTIONS === */
+  .dietary-card h2 {
+    font-size: 2rem;
+  }
+  
+  .dietary-intro {
+    font-size: 1.35rem;
+  }
+  
+  .dietary-options {
+    gap: 1.15rem;
+  }
+  
   .dietary-option {
-    padding: 1.15rem 1.5rem;
-    font-size: 1.1rem;
-    border-radius: 12px;
+    padding: 1.4rem 1.75rem;
+    font-size: 1.35rem;
+    border-radius: 14px;
   }
   
   .dietary-option .option-checkbox {
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
   }
   
   .dietary-option .option-info h4 {
-    font-size: 1.15rem;
+    font-size: 1.45rem;
   }
   
   .dietary-option .option-info p {
-    font-size: 1rem;
+    font-size: 1.2rem;
   }
   
   /* === PREMIUM PAGE === */
   .premium-page-v2 {
-    gap: 1.25rem;
+    padding: 4rem 4rem 80px;
+    justify-content: center;
+    gap: 2rem;
   }
   
   .premium-page-v2 > *:not(.premium-top-back-btn) {
-    max-width: 620px;
+    max-width: 90%;
+    width: 850px;
   }
   
   .premium-top-back-btn {
-    top: 2rem;
-    left: 2rem;
-    width: 48px;
-    height: 48px;
+    top: 2.5rem;
+    left: 2.5rem;
+    width: 56px;
+    height: 56px;
   }
   
   .premium-logo-wrapper .premium-logo {
-    width: 88px;
-    height: 88px;
-    font-size: 2.5rem;
-    border-radius: 22px;
+    width: 120px;
+    height: 120px;
+    font-size: 3.25rem;
+    border-radius: 30px;
   }
   
   .premium-page-header h1 {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
   }
   
   .premium-intro {
-    font-size: 1.2rem;
+    font-size: 1.65rem;
   }
   
   .premium-benefits {
-    padding: 2rem 2.5rem;
-    border-radius: 18px;
+    padding: 3rem 3.5rem;
+    border-radius: 24px;
   }
   
   .premium-benefits h2 {
-    font-size: 1.25rem;
+    font-size: 1.75rem;
+  }
+  
+  .premium-benefits-list {
+    gap: 1.75rem;
   }
   
   .premium-benefit svg {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
   }
   
   .premium-benefit span {
-    font-size: 1.1rem;
+    font-size: 1.5rem;
   }
   
   .premium-price-card {
-    padding: 2rem 2.5rem;
-    border-radius: 18px;
+    padding: 3rem 3.5rem;
+    border-radius: 24px;
+  }
+  
+  .premium-price-card .price-label {
+    font-size: 1.35rem;
   }
   
   .premium-price-card .price {
-    font-size: 3.25rem;
+    font-size: 4.75rem;
   }
   
   .premium-price-card .price-period {
-    font-size: 1.15rem;
+    font-size: 1.55rem;
+  }
+  
+  .premium-price-card .price-note {
+    font-size: 1.2rem;
   }
   
   .premium-buy-btn {
-    padding: 1.25rem 2.5rem;
-    font-size: 1.25rem;
-    border-radius: 14px;
+    padding: 1.5rem 3rem;
+    font-size: 1.6rem;
+    border-radius: 16px;
   }
   
   .premium-free-btn {
-    padding: 1.1rem 2rem;
-    font-size: 1.15rem;
+    padding: 1.35rem 3rem;
+    font-size: 1.45rem;
+  }
+  
+  .premium-restore-btn {
+    font-size: 1.3rem;
+    padding: 1.15rem 2.5rem;
+  }
+  
+  .app-store-notice {
+    font-size: 1.2rem;
   }
 }
 
@@ -5839,60 +5947,82 @@ body {
 @media (min-width: 1366px) {
   .disclaimer-page-v2,
   .onboarding-page {
-    gap: 2.5rem;
+    padding: 5rem 5rem 90px;
+    gap: 3rem;
   }
   
   .disclaimer-logo,
   .onboarding-logo {
-    width: 100px;
-    height: 100px;
-    font-size: 3rem;
-    border-radius: 26px;
+    width: 130px;
+    height: 130px;
+    font-size: 3.5rem;
+    border-radius: 32px;
   }
   
   .disclaimer-header h1,
   .onboarding-header h1 {
-    font-size: 3.5rem;
+    font-size: 4.25rem;
+  }
+  
+  .disclaimer-subtitle,
+  .onboarding-header .header-subtitle {
+    font-size: 1.85rem;
   }
   
   .disclaimer-card,
   .onboarding-card,
   .selection-card,
   .dietary-card {
-    max-width: 700px;
-    padding: 3rem 3.5rem;
-    border-radius: 24px;
+    max-width: 900px;
+    padding: 3.5rem 4.5rem;
+    border-radius: 28px;
+  }
+  
+  .disclaimer-card-header h2 {
+    font-size: 2.1rem;
+  }
+  
+  .disclaimer-point p {
+    font-size: 1.6rem;
   }
   
   .disclaimer-btn,
   .onboarding-btn {
-    max-width: 700px;
-    padding: 1.4rem 3rem;
-    font-size: 1.35rem;
+    max-width: 900px;
+    padding: 1.75rem 3.5rem;
+    font-size: 1.8rem;
+  }
+  
+  .premium-page-v2 {
+    padding: 5rem 5rem 90px;
   }
   
   .premium-page-v2 > *:not(.premium-top-back-btn) {
-    max-width: 700px;
+    max-width: 900px;
   }
   
   .premium-logo-wrapper .premium-logo {
-    width: 100px;
-    height: 100px;
-    font-size: 3rem;
+    width: 130px;
+    height: 130px;
+    font-size: 3.5rem;
   }
   
   .premium-page-header h1 {
-    font-size: 3rem;
+    font-size: 3.75rem;
   }
   
   .premium-benefits,
   .premium-price-card {
-    padding: 2.5rem 3rem;
-    border-radius: 20px;
+    padding: 3rem 3.5rem;
+    border-radius: 26px;
+  }
+  
+  .premium-price-card .price {
+    font-size: 5rem;
   }
   
   .premium-buy-btn {
-    padding: 1.4rem 3rem;
-    font-size: 1.35rem;
+    padding: 1.75rem 3.5rem;
+    font-size: 1.8rem;
   }
 }
