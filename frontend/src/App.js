@@ -2646,6 +2646,10 @@ function App() {
   
   // Onboarding flow: Disclaimer -> CreateAccount -> AgePregnancy -> DietaryConsiderations -> Premium -> Home
   // Step tracking: 0=Disclaimer, 1=CreateAccount, 2=AgePregnancy, 3=DietaryConsiderations, 4=Premium, 5=Home
+  
+  // Track if disclaimer was accepted THIS SESSION (not persisted)
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  
   const [onboardingStep, setOnboardingStep] = useState(() => {
     const step = localStorage.getItem('onboardingStep');
     return step ? parseInt(step, 10) : 0;
@@ -3105,9 +3109,32 @@ function App() {
     );
   }
 
-  // Onboarding Flow: Step 0 = Disclaimer
+  // ALWAYS show Disclaimer first on every app launch
+  // Must accept disclaimer before accessing ANY part of the app
+  if (!disclaimerAccepted) {
+    return (
+      <DisclaimerPage 
+        onAccept={() => {
+          setDisclaimerAccepted(true);
+          // If user has completed onboarding before, go to home
+          // Otherwise, continue with onboarding from step 1
+          if (onboardingStep >= 5) {
+            // Already completed onboarding, go to home
+          } else if (onboardingStep === 0) {
+            // First time user, go to step 1 (Create Account)
+            goToNextStep();
+          }
+          // For steps 1-4, stay at current step after disclaimer
+        }} 
+      />
+    );
+  }
+
+  // Onboarding Flow: Step 0 = Disclaimer (legacy - redirect to step 1)
   if (onboardingStep === 0) {
-    return <DisclaimerPage onAccept={goToNextStep} />;
+    // Move to Create Account page
+    goToNextStep();
+    return null;
   }
 
   // Onboarding Flow: Step 1 = Create Account
