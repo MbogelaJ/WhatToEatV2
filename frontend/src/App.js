@@ -2483,7 +2483,6 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
 // Daily Tip Component - Personalized based on dietary restrictions
 const DailyTip = ({ dietaryRestrictions = [] }) => {
   const [tip, setTip] = useState(null);
-  const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   // Personalized tips based on dietary restrictions
@@ -2532,13 +2531,10 @@ const DailyTip = ({ dietaryRestrictions = [] }) => {
     }
   }, [dietaryRestrictions]);
 
-  if (!tip || dismissed) return null;
+  if (!tip) return null;
 
   return (
     <div className={`daily-tip-v2 ${expanded ? 'expanded' : ''} ${tip.isPersonalized ? 'personalized' : ''}`} data-testid="daily-tip">
-      <button className="tip-dismiss" onClick={() => setDismissed(true)}>
-        <X size={16} />
-      </button>
       <div className="tip-icon-v2">
         <Lightbulb size={24} />
       </div>
