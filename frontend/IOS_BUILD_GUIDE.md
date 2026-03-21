@@ -8,8 +8,14 @@ Last Updated: March 21, 2026
 ## Quick Build Commands
 
 ```bash
+# 0. Pull latest code from GitHub
+git pull origin main
+# OR if cloning fresh:
+# git clone https://github.com/YOUR_USERNAME/WhatToEatV2.git
+# cd WhatToEatV2
+
 # 1. Navigate to frontend
-cd /frontend
+cd frontend
 
 # 2. Install dependencies (use legacy peer deps for compatibility)
 npm install --legacy-peer-deps
@@ -29,6 +35,40 @@ pod install
 
 # 7. Open in Xcode
 open App.xcworkspace
+```
+
+---
+
+## Full Build Script (Copy & Paste)
+
+```bash
+#!/bin/bash
+# WhatToEat iOS Build Script
+
+# Pull latest changes
+git pull origin main
+
+# Navigate to frontend
+cd frontend
+
+# Install dependencies
+npm install --legacy-peer-deps
+
+# Build React app
+npm run build
+
+# Sync with Capacitor
+npx cap sync ios
+
+# Install CocoaPods
+cd ios/App
+rm -rf Pods Podfile.lock
+pod install
+
+# Open Xcode
+open App.xcworkspace
+
+echo "✅ Build complete! Xcode should now be open."
 ```
 
 ---
