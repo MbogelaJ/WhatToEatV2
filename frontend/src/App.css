@@ -2837,7 +2837,34 @@ body {
   padding: 0;
   padding-bottom: 60px; /* Space for Made with Emergent badge */
   overflow-y: auto;
+  position: relative;
 }
+
+/* Premium Page Back Button */
+.premium-top-back-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  color: #374151;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.premium-top-back-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
 
 .premium-page-header {
   text-align: center;

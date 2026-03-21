@@ -2314,6 +2314,16 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
 const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, paymentError }) => {
   return (
     <div className="premium-page-v2" data-testid="premium-page">
+      {/* Back Button */}
+      <button 
+        className="premium-top-back-btn"
+        onClick={onBack}
+        data-testid="premium-back-btn"
+        aria-label="Go back"
+      >
+        <ChevronLeft size={24} />
+      </button>
+
       {/* Header */}
       <div className="premium-page-header">
         <div 
