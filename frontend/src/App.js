@@ -3068,10 +3068,18 @@ function App() {
     const matchesSafety = selectedSafety === '' || food.safety === selectedSafety;
     
     return matchesSearch && matchesCategory && matchesSafety;
+  }).sort((a, b) => {
+    // Sort alphabetically by name
+    return (a.name || '').localeCompare(b.name || '');
   });
 
   // Handle navigation from FAQ to Food
   const handleNavigateToFood = (food) => {
+    // If premium food and user is not premium, redirect to premium page
+    if (food.is_premium && !isPremium) {
+      setActiveView('premium');
+      return;
+    }
     // Track that we came from FAQ
     setFoodOpenedFrom('faq');
     setSelectedFood(food);
