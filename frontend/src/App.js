@@ -2843,14 +2843,11 @@ function App() {
             throw new Error('Purchase failed. Please try again.');
           }
         } else {
-          // StoreKit not available - show manual instructions
+          // StoreKit not available - show message only, DO NOT grant premium
           setPaymentError(
             'In-App Purchase will be available when you download the app from the App Store. ' +
-            'For testing, premium access has been granted.'
+            'Please try again after installing from the App Store.'
           );
-          // For development/testing, grant premium access
-          localStorage.setItem('isPremium', 'true');
-          setIsPremium(true);
           setIsProcessingPayment(false);
           return;
         }
