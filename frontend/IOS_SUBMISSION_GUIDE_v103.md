@@ -86,7 +86,7 @@ npx cap open ios
 ### C. Set Version for Submission
 1. Go to **General** tab
 2. Set **Version**: `1.0.3`
-3. Set **Build**: `10`
+3. Set **Build**: `13`
 
 ### D. Clean Build
 1. **Product → Clean Build Folder** (Shift + Cmd + K)
@@ -111,7 +111,7 @@ npx cap open ios
 Before submitting for review:
 
 - [ ] Version: 1.0.3
-- [ ] Build: 10
+- [ ] Build: 13
 - [ ] Screenshots uploaded for all sizes
 - [ ] App description complete
 - [ ] Privacy Policy URL added
