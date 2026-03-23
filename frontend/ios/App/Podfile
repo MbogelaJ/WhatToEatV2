@@ -17,6 +17,9 @@ def capacitor_pods
   pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
   pod 'CodetrixStudioCapacitorGoogleAuth', :path => '../../node_modules/@codetrix-studio/capacitor-google-auth'
+  
+  # Updated Google Sign-In with privacy manifest
+  pod 'GoogleSignIn', '~> 8.0'
 end
 
 target 'App' do

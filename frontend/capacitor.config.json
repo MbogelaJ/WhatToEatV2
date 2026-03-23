@@ -2,7 +2,6 @@
   "appId": "com.whattoeat.penx.app",
   "appName": "WhatToEat",
   "webDir": "build",
-  "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https",
     "iosScheme": "capacitor"
