@@ -2799,7 +2799,7 @@ function App() {
   const [paymentError, setPaymentError] = useState(null);
 
   // Apple IAP Product ID - Must match App Store Connect configuration
-  const APPLE_IAP_PRODUCT_ID = 'com.whattoeat.penx.premium';
+  const APPLE_IAP_PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
   const handlePremiumPurchase = async () => {
     setIsProcessingPayment(true);
