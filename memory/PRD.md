@@ -1,178 +1,146 @@
-# WhatToEat - Pregnancy Nutrition App PRD
+# WhatToEat - Pregnancy Nutrition App
 
-## Original Problem Statement
-Build a comprehensive, user-friendly mobile and web app that provides food safety information for pregnant individuals, targeting English-speaking international markets.
+## Product Overview
+A comprehensive, user-friendly mobile and web app that provides food safety information for pregnant individuals. The app classifies foods into safety categories (SAFE, LIMIT, AVOID) and operates fully offline.
 
-## Product Requirements
-- Classify all food items into safety labels: SAFE, LIMIT, and AVOID
-- Strict freemium access rule: AVOID (100% premium), LIMIT (~90% premium), SAFE (~85% premium)
-- Authentication: Google Sign-in and Apple Sign-in (Functional via Capacitor)
-- Payment: Apple In-App Purchase for the iOS app ($1.99 one-time)
-- UI/UX: Fully responsive, specific category filtering, Daily tips, App Store ready
+## Target Platforms
+- iOS (via Capacitor)
+- Android (via Capacitor)
+- Web (React)
 
-## Current Status: ✅ PRODUCTION READY (v1.0.0)
-Last Updated: March 21, 2026
+## Core Requirements
 
-## What's Been Implemented
+### Food Safety Classification
+- **SAFE**: Foods safe for pregnant individuals
+- **LIMIT**: Foods to consume in moderation (~90% premium)
+- **AVOID**: Foods to avoid during pregnancy (100% premium)
 
-### Core Features
-- ✅ 288 foods with safety classifications (SAFE, LIMIT, AVOID)
-- ✅ Freemium model: 39 free foods, 249 premium foods
-- ✅ Search functionality with instant results
-- ✅ Category filtering (13 categories)
-- ✅ Safety filtering (All, Safe, Limit, Avoid)
-- ✅ Daily personalized tips
-- ✅ FAQ section with search (4 free, 35+ premium)
-- ✅ Topics section (2 free, 6 premium)
-- ✅ About page
-- ✅ Foods sorted alphabetically A-Z
+### Freemium Access Model
+- AVOID category: 100% premium content
+- LIMIT category: ~90% premium content
+- SAFE category: ~85% premium content
 
 ### Authentication
-- ✅ Google Sign-In (native via Capacitor)
-- ✅ Apple Sign-In (native via Capacitor)
-- ✅ Email/Password authentication (requires valid input)
-- ✅ Session persistence
+- Google Sign-in (both platforms)
+- Apple Sign-in (iOS only)
 
-### iOS Native Features
-- ✅ Capacitor integration
-- ✅ Apple In-App Purchase (Product ID: com.whattoeat.penx.premium)
-- ✅ Offline data fallback (staticFoods.js with 288 foods)
-- ✅ Error boundary for crash recovery
-- ✅ Xcode warnings suppressed via Podfile
+### Payment
+- Apple In-App Purchase (iOS)
+- Google Play Billing (Android) - Future
 
-### Premium Gating
-- ✅ Premium foods redirect to Premium page
-- ✅ Premium FAQs show lock modal (answer hidden)
-- ✅ Premium Topics show "Unlock premium" (tips hidden)
-- ✅ Food detail modal shows lock overlay for premium items
+### Data Strategy
+- Fully offline-first using `staticFoods.js` (288 records)
+- No backend required for core functionality
 
-### Quality Improvements (March 21, 2026)
-- ✅ Auth bypass fix: Continue button disabled without valid email/password
-- ✅ Premium gating enforced across all content types
-- ✅ Xcode warnings suppressed via Podfile configuration
-- ✅ All tests passing (12/12 - 100% success rate)
+---
 
 ## Technical Architecture
 
-### Frontend
-- React.js with Create React App
-- Capacitor for iOS native wrapper
-- Shadcn/UI components
-
-### Backend
-- FastAPI (Python)
-- MongoDB for data storage
-
-### Component Structure (Refactoring in Progress)
 ```
-/src/
-├── components/
-│   ├── auth/
-│   ├── common/
-│   ├── food/
-│   │   ├── FoodCard.jsx
-│   ├── filters/
-│   │   ├── CategoryFilter.jsx
-│   │   ├── SafetyFilter.jsx
-│   ├── onboarding/
-│   │   ├── DisclaimerPage.jsx ✅ NEW
-│   │   └── index.js ✅ NEW
-│   ├── views/
-│   │   ├── AboutView.jsx ✅ NEW
-│   │   ├── TopicsView.jsx ✅ NEW
-│   │   └── index.js ✅ NEW
-│   ├── BottomNav.jsx
-│   ├── DailyTip.jsx
-│   └── index.js
-├── data/
-│   ├── staticFoods.js
-│   ├── faqs.js
-│   ├── dailyTips.js
-│   └── index.js
-├── utils/
-│   ├── constants.js
-│   ├── helpers.js
-│   └── index.js
-└── App.js (3488 lines → target: 800-1000 lines)
+/app/frontend/
+├── android/           # Capacitor Android project
+├── ios/               # Capacitor iOS project  
+├── src/
+│   ├── components/    
+│   ├── data/          # staticFoods.js, faqs.js
+│   ├── App.js         # Main app logic (monolithic - needs refactoring)
+│   └── App.css        
+├── capacitor.config.json
+├── IOS_SUBMISSION_GUIDE_v104.md
+├── ANDROID_BUILD_GUIDE.md
+└── package.json
 ```
 
-### App Configuration
-- Bundle ID: com.penx.whattoeat
-- IAP Product ID: com.whattoeat.penx.premium
-- iOS Minimum: 15.0
+### Key Dependencies
+- React.js (Frontend)
+- Capacitor 6.1.0 (Native wrapper)
+- @codetrix-studio/capacitor-google-auth (Google Sign-in)
+- @capacitor-community/apple-sign-in (iOS only)
 
-## Testing Status
-- All 12 core features tested and passing
-- Premium gating verified on foods, FAQs, and Topics
-- Auth validation working
-- Alphabetical sorting confirmed
-- See: `/app/test_reports/iteration_8.json`
+---
 
-## Prioritized Backlog
+## Implementation Status
 
-### P0 (Critical) - COMPLETED ✅
-- [x] Auth bypass prevention
-- [x] Premium content gating
-- [x] Xcode warning suppression
-- [x] All features tested
+### ✅ Completed (as of March 24, 2026)
 
-### P1 (High Priority) - IN PROGRESS
-- [x] Component extraction started (AboutView, TopicsView, DisclaimerPage)
-- [ ] Complete App.js refactoring
-- [ ] Favorites feature implementation
+**iOS App (v1.0.4)**
+- [x] Core app functionality
+- [x] Onboarding flow (5 pages)
+- [x] Food search and safety display
+- [x] FAQ/Topics section
+- [x] Disclaimer page
+- [x] iPad viewport optimization
+- [x] Privacy Manifests (ITMS-91061 fix)
+- [x] App Store submission ready
+- [x] Branch: `main`
 
-### P2 (Medium Priority)
-- [ ] Android build and testing
-- [ ] Analytics integration
-- [ ] Push notifications
+**Android App**
+- [x] Platform initialized
+- [x] Kotlin/Gradle configured
+- [x] Apple Sign-In removed (iOS-only plugin)
+- [x] Emulator test PASSED
+- [x] Branch: `WhatToEat-Android`
 
-### P3 (Low Priority)
-- [ ] Social sharing improvements
-- [ ] User feedback system
-- [ ] Multi-language support
+**Bug Fixes**
+- [x] "Continue with Free Version" navigation fix
+- [x] Disclaimer page CSS (no scroll)
+- [x] Apple Sign-In conditionally hidden on Android (`isIOS()` check)
 
-## Data Model
+### 🔵 In Progress / Next Up
 
-### Food Item
-```json
-{
-  "id": "apple-1",
-  "name": "Apple",
-  "category": "Fruits",
-  "safety": "SAFE",
-  "safety_label": "Generally Safe",
-  "nutritional_benefits": ["Vitamin C", "Fiber"],
-  "benefits_summary": "...",
-  "recommended_consumption": ["..."],
-  "preparation_tips": ["..."],
-  "precautions": ["..."],
-  "allergy_warning": null,
-  "is_premium": false
-}
-```
+1. **Generate Signed Release Bundle (P1)**
+   - Create `whattoeat-release.keystore`
+   - Configure signing in `build.gradle`
+   - Build `.aab` file
 
-### Premium Distribution
-- SAFE foods: ~85% premium (201 of 238)
-- LIMIT foods: ~90% premium (32 of 36)
-- AVOID foods: 100% premium (16 of 16)
-- **Total: 39 free, 249 premium**
+2. **Google Play Console Setup (P1)**
+   - Create developer account ($25)
+   - Configure app listing
+   - Upload bundle and submit
 
-## App Store Submission Checklist
-- [x] All features working
-- [x] Premium gating enforced
-- [x] Auth validation working
-- [x] Offline data working
-- [x] Xcode building without critical errors
-- [ ] App icons configured
-- [ ] Screenshots prepared
-- [ ] App Store Connect configured
-- [ ] Archive and upload
+### ⚪ Future/Backlog
 
-## Known Issues
-- None in functionality (all critical issues resolved)
+1. **Favorites Feature (P2)**
+   - Allow users to bookmark specific foods
 
-## Future Enhancement Ideas
-- Recipe suggestions based on safe foods
-- Pregnancy week tracker integration
-- Healthcare provider sharing feature
-- Community Q&A section
+2. **Analytics Integration (P3)**
+   - Basic telemetry for usage tracking
+
+3. **App.js Refactoring (P2)**
+   - Break down monolithic ~3500 line file
+   - See `/app/REFACTOR_PLAN.md`
+
+---
+
+## Branch Strategy
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | iOS production code (v1.0.4) |
+| `WhatToEat-Android` | Android-specific build |
+
+**Important:** Do NOT merge Android branch into main. Apple Sign-In plugin must remain for iOS but crashes Android.
+
+---
+
+## Key Files Reference
+
+| File | Purpose |
+|------|---------|
+| `/app/frontend/src/App.js` | Main app logic, contains `isIOS()` check |
+| `/app/frontend/capacitor.config.json` | Capacitor configuration |
+| `/app/frontend/android/capacitor.settings.gradle` | Android module includes |
+| `/app/frontend/android/app/capacitor.build.gradle` | Android dependencies |
+| `/app/frontend/android/remove-apple-signin.sh` | Helper script for cap sync |
+| `/app/frontend/ANDROID_BUILD_GUIDE.md` | Android build instructions |
+| `/app/frontend/IOS_SUBMISSION_GUIDE_v104.md` | iOS submission guide |
+
+---
+
+## Known Issues & Considerations
+
+1. **Apple Sign-In on Android**: The `@capacitor-community/apple-sign-in` plugin crashes Android. It has been removed from Android gradle files. UI button hidden via `isIOS()` check.
+
+2. **Capacitor Sync Warning**: Running `npx cap sync` will regenerate gradle files and re-add Apple Sign-In. Use `android/remove-apple-signin.sh` after syncing.
+
+3. **App.js Monolith**: ~3500 lines, technical debt. Refactoring blocked by deployment priorities.
