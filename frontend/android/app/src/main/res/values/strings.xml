@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">WhatToEat</string>
+    <string name="title_activity_main">WhatToEat</string>
+    <string name="package_name">com.whattoeat.penx.app</string>
+    <string name="custom_url_scheme">com.whattoeat.penx.app</string>
+</resources>

@@ -1,23 +1,43 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
 
 android {
-    namespace "com.penx.whattoeat"
-    compileSdkVersion 34
+    namespace "com.whattoeat.penx.app"
+    compileSdk rootProject.ext.compileSdkVersion
     
     defaultConfig {
-        applicationId "com.penx.whattoeat"
-        minSdkVersion 22
-        targetSdkVersion 34
+        applicationId "com.whattoeat.penx.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    
+    signingConfigs {
+        release {
+            // Configure for release signing
+            // Run: keytool -genkey -v -keystore whattoeat-release.keystore -alias whattoeat -keyalg RSA -keysize 2048 -validity 10000
+            // Then uncomment and configure:
+            // storeFile file("whattoeat-release.keystore")
+            // storePassword "your-store-password"
+            // keyAlias "whattoeat"
+            // keyPassword "your-key-password"
+        }
     }
     
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // signingConfig signingConfigs.release  // Uncomment after configuring signing
+        }
+        debug {
+            debuggable true
+            minifyEnabled false
         }
     }
     
@@ -25,49 +45,37 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    
-    kotlinOptions {
-        jvmTarget = '17'
-    }
 }
 
 repositories {
-    flatDir {
+    flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "androidx.appcompat:appcompat:1.6.1"
-    implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
-    implementation "androidx.core:core-splashscreen:1.0.1"
-    
-    // Force Kotlin 1.7.20
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    
-    // Capacitor
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
     
-    testImplementation "junit:junit:4.13.2"
-    androidTestImplementation "androidx.test.ext:junit:1.1.5"
-    androidTestImplementation "androidx.test.espresso:espresso-core:3.5.1"
+    // Google Play Services for Auth
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
     
-    // Capacitor Cordova plugins
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
 }
 
 apply from: 'capacitor.build.gradle'
 
-// CRITICAL FIX: Enforce Java 17 at compiler task level
-tasks.withType(JavaCompile).configureEach {
-    sourceCompatibility = "17"
-    targetCompatibility = "17"
-}
-
-// Ensure Kotlin uses Java 17
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = "17"
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
     }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied.")
 }
