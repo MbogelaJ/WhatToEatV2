@@ -3,9 +3,6 @@ require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 platform :ios, '15.0'
 use_frameworks!
 
-# workaround to avoid Xcode caching of Pods that requires
-# Product -> Clean Build Folder after new Cordova plugins installed
-# Requires CocoaPods 1.6 or newer
 install! 'cocoapods', :disable_input_output_paths => true
 
 def capacitor_pods
@@ -21,8 +18,52 @@ end
 
 target 'App' do
   capacitor_pods
-  # GoogleSignIn version managed by CodetrixStudioCapacitorGoogleAuth
 end
+
+# Privacy manifest content for SDKs that don't include one
+PRIVACY_MANIFEST_CONTENT = <<-PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyTracking</key>
+    <false/>
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array/>
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>C617.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
+PLIST
+
+# SDKs that need privacy manifests
+SDKS_NEEDING_PRIVACY_MANIFEST = [
+  'GoogleSignIn',
+  'GTMAppAuth', 
+  'GTMSessionFetcher',
+  'Capacitor',
+  'CapacitorCordova',
+  'Cordova'
+]
 
 post_install do |installer|
   assertDeploymentTarget(installer)
@@ -33,6 +74,34 @@ post_install do |installer|
       config.build_settings['GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS'] = 'NO'
       config.build_settings['CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS'] = 'NO'
       config.build_settings['CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS'] = 'NO'
+    end
+    
+    # Add privacy manifest to SDKs that need it
+    if SDKS_NEEDING_PRIVACY_MANIFEST.include?(target.name)
+      resource_bundle_target = target.resources_build_phase
+      
+      # Create privacy manifest in pod's directory
+      pod_dir = installer.sandbox.pod_dir(target.name) rescue nil
+      if pod_dir && Dir.exist?(pod_dir.to_s)
+        privacy_file = File.join(pod_dir.to_s, 'PrivacyInfo.xcprivacy')
+        unless File.exist?(privacy_file)
+          File.write(privacy_file, PRIVACY_MANIFEST_CONTENT)
+          puts "Created privacy manifest for #{target.name}"
+        end
+      end
+    end
+  end
+  
+  # Copy privacy manifest bundles to Pods directory
+  pods_dir = installer.sandbox.root
+  manifests_dir = File.join(pods_dir.to_s, '..', 'PrivacyManifests')
+  
+  if Dir.exist?(manifests_dir)
+    Dir.glob(File.join(manifests_dir, '*.bundle')).each do |bundle|
+      bundle_name = File.basename(bundle)
+      dest = File.join(pods_dir.to_s, bundle_name)
+      FileUtils.cp_r(bundle, dest) unless File.exist?(dest)
+      puts "Copied #{bundle_name} privacy manifest bundle"
     end
   end
 end
