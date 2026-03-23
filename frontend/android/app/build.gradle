@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
     namespace "com.whattoeat.penx.app"
@@ -18,9 +19,7 @@ android {
     
     signingConfigs {
         release {
-            // Configure for release signing
-            // Run: keytool -genkey -v -keystore whattoeat-release.keystore -alias whattoeat -keyalg RSA -keysize 2048 -validity 10000
-            // Then uncomment and configure:
+            // After generating keystore, uncomment and configure:
             // storeFile file("whattoeat-release.keystore")
             // storePassword "your-store-password"
             // keyAlias "whattoeat"
@@ -45,6 +44,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    
+    kotlinOptions {
+        jvmTarget = '17'
+    }
 }
 
 repositories {
@@ -59,6 +62,9 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     
     // Google Play Services for Auth
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
