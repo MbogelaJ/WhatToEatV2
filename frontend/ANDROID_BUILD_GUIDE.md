@@ -1,245 +1,132 @@
-# WhatToEat Android Build & Play Store Submission Guide
+# WhatToEat Android Build Guide - v1.0.4
 
-## App Details
-- **Package ID:** com.whattoeat.penx.app
-- **App Name:** WhatToEat
-- **Version:** 1.0.1 (versionCode: 2)
-- **Min SDK:** 24 (Android 7.0)
-- **Target SDK:** 35 (Android 15)
+## Quick Status
+- **Version:** 1.0.4 (versionCode: 5)
+- **Target SDK:** 35
 - **Compile SDK:** 35
-- **Gradle:** 8.7
-- **Android Gradle Plugin:** 8.5.0
+- **Min SDK:** 24
+- **ProGuard:** Disabled (for debugging stability)
 
 ---
 
-## Prerequisites
+## Build Instructions
 
-1. **Android Studio** (latest version)
-   - Download: https://developer.android.com/studio
+### Step 1: Save to GitHub
+Click **"Save to GitHub"** in Emergent chat
 
-2. **Java Development Kit (JDK) 17**
-   - Android Studio includes this
-
-3. **Google Play Developer Account** ($25 one-time fee)
-   - Register: https://play.google.com/console
-
----
-
-## Build Commands
-
-### 1. Pull Latest Code
+### Step 2: Clone/Pull Latest Code
 ```bash
-cd ~/WhatToEatV2
-git pull origin main
+cd /Users/jackson1
+rm -rf WhatToEatV2
+git clone https://github.com/MbogelaJ/WhatToEatV2.git
+cd WhatToEatV2
+git checkout WhatToEat-Android
+```
+
+### Step 3: Build Web Assets
+```bash
 cd frontend
-```
-
-### 2. Build React App
-```bash
+yarn install
 yarn build
-```
-
-### 3. Sync with Capacitor
-```bash
 npx cap sync android
 ```
 
-### 4. Open in Android Studio
+### Step 4: Remove Apple Sign-In (CRITICAL)
+```bash
+sed -i '' '/capacitor-community-apple-sign-in/d' android/capacitor.settings.gradle
+sed -i '' '/capacitor-community-apple-sign-in/d' android/app/capacitor.build.gradle
+```
+
+### Step 5: Open Android Studio
 ```bash
 npx cap open android
 ```
 
----
-
-## Generate Signed Release APK/AAB
-
-### Step 1: Create Signing Key (One-time)
-
-In Terminal:
-```bash
-cd ~/WhatToEatV2/frontend/android/app
-
-keytool -genkey -v -keystore whattoeat-release.keystore -alias whattoeat -keyalg RSA -keysize 2048 -validity 10000
-```
-
-You'll be prompted for:
-- Keystore password (save this!)
-- Key password (save this!)
-- Your name, organization, etc.
-
-**⚠️ IMPORTANT: Keep this keystore file safe! You need it for ALL future updates.**
-
-### Step 2: Configure Signing in build.gradle
-
-Edit `android/app/build.gradle`:
-
-```gradle
-signingConfigs {
-    release {
-        storeFile file("whattoeat-release.keystore")
-        storePassword "your-store-password"
-        keyAlias "whattoeat"
-        keyPassword "your-key-password"
-    }
-}
-
-buildTypes {
-    release {
-        signingConfig signingConfigs.release
-        // ... rest of config
-    }
-}
-```
-
-### Step 3: Build Release Bundle (AAB)
-
+### Step 6: Build APK/AAB
 In Android Studio:
-1. **Build → Generate Signed Bundle / APK**
-2. Select **Android App Bundle**
-3. Choose your keystore
-4. Enter passwords
-5. Select **release** build variant
-6. Click **Create**
-
-Output: `android/app/release/app-release.aab`
-
----
-
-## Google Play Console Setup
-
-### 1. Create New App
-- Go to https://play.google.com/console
-- Click **Create app**
-- Fill in app details:
-  - App name: WhatToEat
-  - Default language: English
-  - App or game: App
-  - Free or paid: Free
-
-### 2. Set Up Store Listing
-
-**Main Store Listing:**
-- **App name:** WhatToEat - Pregnancy Food Guide
-- **Short description:** (80 chars max)
-  "Safe food guide for pregnancy. Know what to eat and what to avoid."
-- **Full description:** (4000 chars max)
-
-**Graphics:**
-- App icon: 512x512 PNG
-- Feature graphic: 1024x500 PNG
-- Screenshots: Min 2 for each device type
-  - Phone: Min 1080px wide
-  - Tablet 7": Min 1080px wide
-  - Tablet 10": Min 1080px wide
-
-### 3. Content Rating
-- Fill out questionnaire (no violence, no mature content)
-- Expected rating: Everyone
-
-### 4. App Content
-- **Privacy policy URL:** Required
-- **Ads:** Contains no ads
-- **Data safety:**
-  - Data collected: None
-  - Data shared: None
-  - Security practices: Data encrypted in transit
-
-### 5. Pricing & Distribution
-- Free
-- Countries: All countries
-- Contains ads: No
+1. **File → Sync Project with Gradle Files**
+2. **Build → Clean Project**
+3. **Build → Generate Signed App Bundle / APK**
+   - Select APK or Android App Bundle
+   - Use your keystore (`keystore.jks`, alias: `penx`)
+   - Select **release** variant
+   - Click **Create**
 
 ---
 
-## Upload & Release
-
-### 1. Create Release Track
-- Go to **Release → Production**
-- Click **Create new release**
-
-### 2. Upload AAB
-- Drag and drop `app-release.aab`
-- Wait for processing
-
-### 3. Add Release Notes
-```
-Version 1.0.0
-- Initial release
-- 288 pregnancy food safety guides
-- Search and filter by category
-- Safety labels: Safe, Limit, Avoid
-- Offline support
-- Premium features available
-```
-
-### 4. Review & Roll Out
-- Click **Review release**
-- Click **Start rollout to Production**
-
----
-
-## Testing Before Release
-
-### Internal Testing
-1. Go to **Release → Testing → Internal testing**
-2. Create new release
-3. Upload AAB
-4. Add testers (email addresses)
-5. Share opt-in link with testers
-
-### Open Testing (Beta)
-1. Go to **Release → Testing → Open testing**
-2. Create release
-3. Upload AAB
-4. Set up feedback email
-
----
-
-## One-Liner Build Command
+## One-Liner Command (after saving to GitHub)
 
 ```bash
-cd ~/WhatToEatV2 && git pull origin main && cd frontend && yarn build && npx cap sync android && npx cap open android
+cd /Users/jackson1 && rm -rf WhatToEatV2 && git clone https://github.com/MbogelaJ/WhatToEatV2.git && cd WhatToEatV2 && git checkout WhatToEat-Android && cd frontend && yarn install && yarn build && npx cap sync android && sed -i '' '/capacitor-community-apple-sign-in/d' android/capacitor.settings.gradle && sed -i '' '/capacitor-community-apple-sign-in/d' android/app/capacitor.build.gradle && npx cap open android
 ```
+
+---
+
+## Output Files
+
+| File | Location |
+|------|----------|
+| Debug APK | `android/app/build/outputs/apk/debug/app-debug.apk` |
+| Release APK | `android/app/build/outputs/apk/release/app-release.apk` |
+| Release AAB | `android/app/release/app-release.aab` |
+
+---
+
+## Configuration Summary
+
+| Setting | Value |
+|---------|-------|
+| Package ID | com.whattoeat.penx.app |
+| Version Code | 5 |
+| Version Name | 1.0.4 |
+| Target SDK | 35 |
+| Compile SDK | 35 |
+| Min SDK | 24 |
+| ProGuard | Disabled |
+| shrinkResources | Disabled |
+| Google Auth | Included |
+| Apple Sign-In | Removed (iOS only) |
 
 ---
 
 ## Troubleshooting
 
-### Gradle Build Failed
-```bash
-cd android
-./gradlew clean
-./gradlew assembleRelease
-```
+### Gradle Wrapper Missing
+If you see "Could not find or load main class org.gradle.wrapper.GradleWrapperMain":
+- Delete the entire `android` folder locally
+- Pull fresh from GitHub
+- Run `npx cap add android` then `npx cap sync android`
 
-### SDK Not Found
-In Android Studio:
-- File → Project Structure → SDK Location
-- Set Android SDK path
+### Apple Sign-In Crash
+Always run the sed commands AFTER `npx cap sync android` to remove Apple Sign-In references.
 
-### Java Version Error
-Ensure JAVA_HOME is set to JDK 17:
-```bash
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
-```
+### Build Fails
+1. In Android Studio: File → Invalidate Caches / Restart
+2. Delete `android/.gradle` folder
+3. Build → Clean Project
+4. Try again
 
 ---
 
-## Timeline
-- First app review: 3-7 days (new developer)
-- Subsequent updates: 1-3 days
-- Internal testing: Available within hours
+## Verified Working Structure
 
----
-
-## Checklist Before Submission
-
-- [ ] App icon configured (512x512)
-- [ ] Feature graphic ready (1024x500)
-- [ ] Screenshots for phone and tablet
-- [ ] Privacy policy URL
-- [ ] Store listing complete
-- [ ] Content rating questionnaire
-- [ ] Data safety form
-- [ ] Signed release AAB uploaded
-- [ ] Release notes written
+```
+android/
+├── gradlew                     ✅ Present (executable)
+├── gradlew.bat                 ✅ Present
+├── gradle/
+│   └── wrapper/
+│       ├── gradle-wrapper.jar   ✅ Present
+│       └── gradle-wrapper.properties ✅ Present
+├── app/
+│   ├── build.gradle            ✅ Configured
+│   ├── src/main/
+│   │   ├── AndroidManifest.xml ✅ INTERNET permission
+│   │   ├── assets/public/      ✅ Web assets copied
+│   │   └── java/.../MainActivity.java ✅ Present
+├── build.gradle                ✅ Root build file
+├── settings.gradle             ✅ Project settings
+├── variables.gradle            ✅ SDK versions (35)
+├── capacitor.settings.gradle   ✅ No Apple Sign-In
+└── gradle.properties           ✅ Configured
+```
