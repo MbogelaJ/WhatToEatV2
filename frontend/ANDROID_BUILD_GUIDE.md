@@ -3,9 +3,12 @@
 ## App Details
 - **Package ID:** com.whattoeat.penx.app
 - **App Name:** WhatToEat
-- **Version:** 1.0.0
+- **Version:** 1.0.1 (versionCode: 2)
 - **Min SDK:** 24 (Android 7.0)
-- **Target SDK:** 34 (Android 14)
+- **Target SDK:** 35 (Android 15)
+- **Compile SDK:** 35
+- **Gradle:** 8.7
+- **Android Gradle Plugin:** 8.5.0
 
 ---
 
