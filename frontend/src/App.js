@@ -59,15 +59,36 @@ try {
   STATIC_FOODS_DATA = [];
 }
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// CRITICAL: For native apps, DO NOT use backend API - it won't be accessible
+// The preview URL only works during development, not in production builds
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API = BACKEND_URL ? `${BACKEND_URL}/api` : '';
 
-// Capacitor detection for native app
+// Capacitor detection for native app - check multiple ways for reliability
 const isCapacitorNative = () => {
-  return typeof window !== 'undefined' && 
-         window.Capacitor && 
-         window.Capacitor.isNativePlatform && 
-         window.Capacitor.isNativePlatform();
+  try {
+    return typeof window !== 'undefined' && 
+           window.Capacitor && 
+           window.Capacitor.isNativePlatform && 
+           window.Capacitor.isNativePlatform();
+  } catch (e) {
+    return false;
+  }
+};
+
+// Check if we should use offline mode (native app or no backend configured)
+const shouldUseOfflineMode = () => {
+  try {
+    // Always use offline for native apps
+    if (isCapacitorNative()) return true;
+    // Use offline if no backend URL configured
+    if (!BACKEND_URL || BACKEND_URL.includes('localhost') || BACKEND_URL.includes('preview.emergentagent')) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return true; // Default to offline on any error
+  }
 };
 
 // iOS platform detection
@@ -3014,25 +3035,30 @@ function App() {
     const loadFoods = async () => {
       setLoading(true);
       
-      // For native iOS/Android apps, always use static data (API won't work)
-      const isNative = isCapacitorNative();
+      // CRITICAL: Use offline mode for native apps - API URLs don't work in production
+      const useOffline = shouldUseOfflineMode();
       
-      // If native app OR API not configured, use static data immediately
-      if (isNative || !BACKEND_URL) {
-        if (STATIC_FOODS_DATA && STATIC_FOODS_DATA.length > 0) {
-          setFoods(STATIC_FOODS_DATA);
-          const uniqueCategories = [...new Set(
-            STATIC_FOODS_DATA.map(food => food.category).filter(Boolean)
-          )].sort();
-          setCategories(uniqueCategories);
-        } else {
+      // If offline mode, use static data immediately (no API calls)
+      if (useOffline) {
+        try {
+          if (STATIC_FOODS_DATA && STATIC_FOODS_DATA.length > 0) {
+            setFoods(STATIC_FOODS_DATA);
+            const uniqueCategories = [...new Set(
+              STATIC_FOODS_DATA.map(food => food.category).filter(Boolean)
+            )].sort();
+            setCategories(uniqueCategories);
+          } else {
+            setFoods([]);
+          }
+        } catch (e) {
+          // Even if static data fails, don't crash
           setFoods([]);
         }
         setLoading(false);
         return;
       }
       
-      // For web, try API first with fallback to static
+      // For web with valid backend, try API first with fallback to static
       try {
         let allFoods = [];
         let page = 1;

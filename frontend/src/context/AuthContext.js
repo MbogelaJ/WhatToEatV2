@@ -1,28 +1,79 @@
 /**
  * Auth Context - Manages authentication state across the app
  * Supports Google Sign-In and Apple Sign-In with Capacitor
+ * IMPORTANT: Native apps work offline - API calls are skipped
  */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Preferences } from '@capacitor/preferences';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import { SignInWithApple } from '@capacitor-community/apple-sign-in';
+
+// Dynamically import Capacitor plugins to prevent crashes if not available
+let Preferences = null;
+let GoogleAuth = null;
+let SignInWithApple = null;
+
+// Initialize plugins safely
+const initPlugins = async () => {
+  try {
+    const prefsModule = await import('@capacitor/preferences');
+    Preferences = prefsModule.Preferences;
+  } catch (e) {
+    console.log('Preferences plugin not available');
+  }
+  
+  try {
+    const googleModule = await import('@codetrix-studio/capacitor-google-auth');
+    GoogleAuth = googleModule.GoogleAuth;
+  } catch (e) {
+    console.log('GoogleAuth plugin not available');
+  }
+  
+  // Only load Apple Sign-In on iOS
+  if (isIOSPlatform()) {
+    try {
+      const appleModule = await import('@capacitor-community/apple-sign-in');
+      SignInWithApple = appleModule.SignInWithApple;
+    } catch (e) {
+      console.log('SignInWithApple plugin not available');
+    }
+  }
+};
 
 // Check if running on native platform
 const isNativePlatform = () => {
-  return typeof window !== 'undefined' && 
-         window.Capacitor && 
-         window.Capacitor.isNativePlatform && 
-         window.Capacitor.isNativePlatform();
+  try {
+    return typeof window !== 'undefined' && 
+           window.Capacitor && 
+           window.Capacitor.isNativePlatform && 
+           window.Capacitor.isNativePlatform();
+  } catch (e) {
+    return false;
+  }
 };
 
 // Check if running on iOS
 const isIOSPlatform = () => {
-  return isNativePlatform() && window.Capacitor.getPlatform() === 'ios';
+  try {
+    return isNativePlatform() && window.Capacitor.getPlatform() === 'ios';
+  } catch (e) {
+    return false;
+  }
 };
 
 // Check if running on Android
 const isAndroidPlatform = () => {
-  return isNativePlatform() && window.Capacitor.getPlatform() === 'android';
+  try {
+    return isNativePlatform() && window.Capacitor.getPlatform() === 'android';
+  } catch (e) {
+    return false;
+  }
+};
+
+// Check if we should skip API calls (native apps or no backend)
+const shouldSkipAPI = () => {
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+  return isNativePlatform() || 
+         !backendUrl || 
+         backendUrl.includes('localhost') || 
+         backendUrl.includes('preview.emergentagent');
 };
 
 // Storage keys
@@ -46,8 +97,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initGoogleAuth = async () => {
       try {
+        // First initialize plugins
+        await initPlugins();
+        
         // Initialize Google Auth for web (native handles it automatically)
-        if (!isNativePlatform()) {
+        if (!isNativePlatform() && GoogleAuth) {
           await GoogleAuth.initialize({
             clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID || '',
             scopes: ['profile', 'email'],
@@ -69,6 +123,21 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadStoredSession = async () => {
       try {
+        // Make sure plugins are initialized
+        await initPlugins();
+        
+        if (!Preferences) {
+          // Fallback to localStorage if Preferences not available
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+            setIsAuthenticated(true);
+          }
+          setIsLoading(false);
+          return;
+        }
+        
         const { value: storedUser } = await Preferences.get({ key: STORAGE_KEYS.USER });
         
         if (storedUser) {
@@ -82,6 +151,17 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (err) {
         console.error('Failed to load stored session:', err);
+        // Try localStorage fallback
+        try {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+            setIsAuthenticated(true);
+          }
+        } catch (e) {
+          // Ignore
+        }
       } finally {
         setIsLoading(false);
       }
@@ -99,15 +179,22 @@ export const AuthProvider = ({ children }) => {
         lastLogin: new Date().toISOString()
       };
       
-      await Preferences.set({
-        key: STORAGE_KEYS.USER,
-        value: JSON.stringify(userWithMeta)
-      });
-      
-      await Preferences.set({
-        key: STORAGE_KEYS.PROVIDER,
-        value: provider
-      });
+      // Try Capacitor Preferences first
+      if (Preferences) {
+        try {
+          await Preferences.set({
+            key: STORAGE_KEYS.USER,
+            value: JSON.stringify(userWithMeta)
+          });
+          
+          await Preferences.set({
+            key: STORAGE_KEYS.PROVIDER,
+            value: provider
+          });
+        } catch (e) {
+          console.log('Preferences save failed, using localStorage');
+        }
+      }
 
       // Also save to localStorage for backward compatibility with existing app
       localStorage.setItem('user', JSON.stringify(userWithMeta));
@@ -116,16 +203,23 @@ export const AuthProvider = ({ children }) => {
       return userWithMeta;
     } catch (err) {
       console.error('Failed to save user to storage:', err);
-      throw err;
+      // Don't throw - just log and continue
+      return userData;
     }
   }, []);
 
   // Clear storage on logout
   const clearStorage = useCallback(async () => {
     try {
-      await Preferences.remove({ key: STORAGE_KEYS.USER });
-      await Preferences.remove({ key: STORAGE_KEYS.SESSION });
-      await Preferences.remove({ key: STORAGE_KEYS.PROVIDER });
+      if (Preferences) {
+        try {
+          await Preferences.remove({ key: STORAGE_KEYS.USER });
+          await Preferences.remove({ key: STORAGE_KEYS.SESSION });
+          await Preferences.remove({ key: STORAGE_KEYS.PROVIDER });
+        } catch (e) {
+          console.log('Preferences clear failed');
+        }
+      }
       
       // Clear localStorage as well
       localStorage.removeItem('user');
@@ -258,6 +352,12 @@ export const AuthProvider = ({ children }) => {
 
   // Handle OAuth callback (for web Emergent Auth)
   const handleAuthCallback = useCallback(async (sessionId) => {
+    // Skip API calls on native apps - they work offline
+    if (shouldSkipAPI()) {
+      console.log('Skipping API auth callback on native/offline mode');
+      return null;
+    }
+    
     setIsLoading(true);
     setError(null);
 
@@ -308,8 +408,8 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
 
     try {
-      // Sign out from Google if on native
-      if (isNativePlatform()) {
+      // Sign out from Google if on native and GoogleAuth is available
+      if (isNativePlatform() && GoogleAuth) {
         try {
           await GoogleAuth.signOut();
         } catch (e) {
@@ -317,15 +417,17 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      // Call backend logout
-      try {
-        const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-        await fetch(`${API}/auth/logout`, {
-          method: 'POST',
-          credentials: 'include'
-        });
-      } catch (e) {
-        console.log('Backend logout skipped:', e);
+      // Call backend logout only if API is available
+      if (!shouldSkipAPI()) {
+        try {
+          const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+          await fetch(`${API}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include'
+          });
+        } catch (e) {
+          console.log('Backend logout skipped:', e);
+        }
       }
 
       // Clear local storage
