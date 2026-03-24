@@ -6,8 +6,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 
 // Product IDs - must match what you create in Google Play Console
 const PRODUCTS = {
-  PREMIUM_MONTHLY: 'premium_monthly',
-  PREMIUM_YEARLY: 'premium_yearly',
   PREMIUM_LIFETIME: 'premium_lifetime'
 };
 
@@ -108,18 +106,8 @@ export function BillingProvider({ children }) {
         ? CdvPurchase.Platform.GOOGLE_PLAY 
         : CdvPurchase.Platform.APPLE_APPSTORE;
       
-      // Register products
+      // Register products - Only lifetime (one-time purchase)
       const productList = [
-        {
-          id: PRODUCTS.PREMIUM_MONTHLY,
-          type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
-          platform: platform
-        },
-        {
-          id: PRODUCTS.PREMIUM_YEARLY,
-          type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
-          platform: platform
-        },
         {
           id: PRODUCTS.PREMIUM_LIFETIME,
           type: CdvPurchase.ProductType.NON_CONSUMABLE,
@@ -246,30 +234,15 @@ export function BillingProvider({ children }) {
   };
 
   const grantPremiumAccess = (receipt) => {
-    const productId = receipt?.products?.[0]?.id || receipt?.sourceReceipt?.products?.[0]?.id;
-    
-    let expiryDate = null;
-    
-    // Set expiry based on product type
-    if (productId === PRODUCTS.PREMIUM_MONTHLY) {
-      expiryDate = new Date();
-      expiryDate.setMonth(expiryDate.getMonth() + 1);
-    } else if (productId === PRODUCTS.PREMIUM_YEARLY) {
-      expiryDate = new Date();
-      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-    }
-    // PREMIUM_LIFETIME has no expiry
-    
+    // Lifetime purchase - no expiry
     setIsPremium(true);
-    setPremiumExpiry(expiryDate?.toISOString() || null);
+    setPremiumExpiry(null);
     
     // Persist to local storage
     localStorage.setItem('isPremium', 'true');
-    if (expiryDate) {
-      localStorage.setItem('premiumExpiry', expiryDate.toISOString());
-    }
+    localStorage.removeItem('premiumExpiry'); // Lifetime has no expiry
     
-    console.log('Billing: Premium access granted!', { productId, expiryDate });
+    console.log('Billing: Lifetime premium access granted!');
   };
 
   const purchase = async (productId) => {

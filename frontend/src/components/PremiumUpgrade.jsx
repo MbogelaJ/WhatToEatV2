@@ -1,6 +1,6 @@
 /**
  * Premium Upgrade Component
- * Displays available premium products and handles purchase flow
+ * Displays lifetime premium purchase option
  */
 import React from 'react';
 import { useBilling, PRODUCTS } from '../context/BillingContext';
@@ -30,11 +30,10 @@ export function PremiumUpgrade({ onClose }) {
     isInitialized
   } = useBilling();
 
-  const handlePurchase = async (productId) => {
-    const success = await purchase(productId);
+  const handlePurchase = async () => {
+    const success = await purchase(PRODUCTS.PREMIUM_LIFETIME);
     if (success) {
-      // Purchase initiated - will be handled by BillingContext
-      console.log('Purchase initiated for:', productId);
+      console.log('Purchase initiated for lifetime premium');
     }
   };
 
@@ -50,18 +49,11 @@ export function PremiumUpgrade({ onClose }) {
     'Personalized recommendations',
     'Ad-free experience',
     'Offline access to all content',
-    'Priority customer support'
+    'Lifetime access - pay once, use forever'
   ];
 
-  // Get product details
-  const getProductDetails = (productId) => {
-    const product = products.find(p => p.id === productId);
-    return product || null;
-  };
-
-  const monthlyProduct = getProductDetails(PRODUCTS.PREMIUM_MONTHLY);
-  const yearlyProduct = getProductDetails(PRODUCTS.PREMIUM_YEARLY);
-  const lifetimeProduct = getProductDetails(PRODUCTS.PREMIUM_LIFETIME);
+  // Get lifetime product details
+  const lifetimeProduct = products.find(p => p.id === PRODUCTS.PREMIUM_LIFETIME);
 
   if (isPremium) {
     return (
@@ -71,7 +63,7 @@ export function PremiumUpgrade({ onClose }) {
           <h2>You're Premium!</h2>
         </div>
         <p className="premium-message">
-          Thank you for supporting WhatToEat. Enjoy unlimited access to all pregnancy nutrition content.
+          Thank you for supporting WhatToEat. Enjoy unlimited lifetime access to all pregnancy nutrition content.
         </p>
         {onClose && (
           <button className="premium-button secondary" onClick={onClose}>
@@ -100,64 +92,27 @@ export function PremiumUpgrade({ onClose }) {
         ))}
       </div>
 
-      {/* Products */}
+      {/* Lifetime Purchase Option */}
       <div className="premium-products">
         {!isInitialized ? (
-          <div className="loading-products">Loading options...</div>
-        ) : products.length === 0 ? (
+          <div className="loading-products">Loading...</div>
+        ) : !lifetimeProduct ? (
           <div className="no-products">
-            <p>Premium options will be available soon.</p>
-            <p className="small">In-app purchases are being configured.</p>
+            <p>Premium upgrade will be available soon.</p>
           </div>
         ) : (
-          <>
-            {/* Monthly Option */}
-            {monthlyProduct && (
-              <button 
-                className="premium-product-card"
-                onClick={() => handlePurchase(PRODUCTS.PREMIUM_MONTHLY)}
-                disabled={isPurchasing}
-              >
-                <div className="product-info">
-                  <span className="product-title">Monthly</span>
-                  <span className="product-price">{monthlyProduct.price}</span>
-                  <span className="product-period">per month</span>
-                </div>
-              </button>
-            )}
-
-            {/* Yearly Option - Best Value */}
-            {yearlyProduct && (
-              <button 
-                className="premium-product-card featured"
-                onClick={() => handlePurchase(PRODUCTS.PREMIUM_YEARLY)}
-                disabled={isPurchasing}
-              >
-                <span className="product-badge">Best Value</span>
-                <div className="product-info">
-                  <span className="product-title">Yearly</span>
-                  <span className="product-price">{yearlyProduct.price}</span>
-                  <span className="product-period">per year</span>
-                  <span className="product-savings">Save over 40%</span>
-                </div>
-              </button>
-            )}
-
-            {/* Lifetime Option */}
-            {lifetimeProduct && (
-              <button 
-                className="premium-product-card"
-                onClick={() => handlePurchase(PRODUCTS.PREMIUM_LIFETIME)}
-                disabled={isPurchasing}
-              >
-                <div className="product-info">
-                  <span className="product-title">Lifetime</span>
-                  <span className="product-price">{lifetimeProduct.price}</span>
-                  <span className="product-period">one-time payment</span>
-                </div>
-              </button>
-            )}
-          </>
+          <button 
+            className="premium-product-card featured"
+            onClick={handlePurchase}
+            disabled={isPurchasing}
+          >
+            <span className="product-badge">Best Value</span>
+            <div className="product-info">
+              <span className="product-title">Lifetime Premium</span>
+              <span className="product-price">{lifetimeProduct.price}</span>
+              <span className="product-period">One-time payment • Forever yours</span>
+            </div>
+          </button>
         )}
       </div>
 
@@ -176,14 +131,6 @@ export function PremiumUpgrade({ onClose }) {
       >
         Restore Purchases
       </button>
-
-      {/* Terms */}
-      <div className="premium-terms">
-        <p>
-          Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. 
-          Manage subscriptions in your device settings.
-        </p>
-      </div>
 
       {/* Close Button */}
       {onClose && (

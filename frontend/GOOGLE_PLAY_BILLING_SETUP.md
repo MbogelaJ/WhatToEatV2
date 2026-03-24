@@ -1,12 +1,12 @@
 # Google Play Billing Setup Guide for WhatToEat
 
 ## Overview
-This guide walks you through setting up in-app purchases in Google Play Console for the WhatToEat app.
+This guide walks you through setting up the one-time lifetime purchase in Google Play Console.
 
 ## Version Info
 - **App Version:** 1.0.5 (versionCode: 6)
-- **Billing Library:** Google Play Billing 6.1.0
-- **Plugin:** cordova-plugin-purchase 13.13.1
+- **Payment Model:** One-time purchase (Lifetime Premium)
+- **Product ID:** `premium_lifetime`
 
 ---
 
@@ -20,159 +20,96 @@ Before you can create products, you MUST upload at least one AAB to Google Play 
 
 ---
 
-## Step 2: Create In-App Products
+## Step 2: Create In-App Product
 
 ### Navigate to Products
 1. Go to Google Play Console → Your app
 2. Click **Monetize** in left sidebar
-3. Click **In-app products** or **Subscriptions**
+3. Click **In-app products**
 
-### Create Subscription Products
+### Create Lifetime Premium Product
 
-#### Product 1: Monthly Premium
-| Field | Value |
-|-------|-------|
-| Product ID | `premium_monthly` |
-| Name | WhatToEat Premium (Monthly) |
-| Description | Unlimited access to all pregnancy nutrition content |
-| Price | $2.99/month (or your preferred price) |
-| Billing period | Monthly |
-| Free trial | 7 days (optional) |
-| Grace period | 3 days |
-
-#### Product 2: Yearly Premium (Best Value)
-| Field | Value |
-|-------|-------|
-| Product ID | `premium_yearly` |
-| Name | WhatToEat Premium (Yearly) |
-| Description | Save 40%! Full year of premium access |
-| Price | $19.99/year (or your preferred price) |
-| Billing period | Yearly |
-| Free trial | 14 days (optional) |
-| Grace period | 7 days |
-
-### Create One-Time Purchase (Optional)
-
-#### Product 3: Lifetime Premium
 | Field | Value |
 |-------|-------|
 | Product ID | `premium_lifetime` |
 | Name | WhatToEat Premium (Lifetime) |
-| Description | One-time purchase for permanent access |
-| Price | $29.99 (or your preferred price) |
-| Type | Non-consumable |
+| Description | One-time purchase for permanent access to all pregnancy nutrition content |
+| Default price | Set your price (e.g., $9.99, $14.99, or $19.99) |
+| Type | Non-consumable (Managed product) |
+
+### Steps to Create:
+1. Click **Create product**
+2. Enter Product ID: `premium_lifetime` (MUST match exactly)
+3. Enter Name and Description
+4. Set your price
+5. Click **Save**
+6. Click **Activate** to make it available
 
 ---
 
-## Step 3: Activate Products
-
-After creating each product:
-1. Click on the product
-2. Review all settings
-3. Click **Activate** to make it available
-
-**Note:** Products won't appear in the app until activated.
-
----
-
-## Step 4: Set Up License Testers
+## Step 3: Add License Testers
 
 To test purchases without real charges:
 
 1. Go to **Settings** → **License testing**
 2. Add email addresses of testers
-3. These accounts can make test purchases
-
-**Important:** Testers must:
-- Use the same Google account on their test device
-- Download the app from Play Store (internal testing track)
+3. These accounts can make test purchases for free
 
 ---
 
-## Step 5: Testing Purchases
+## Step 4: Testing Purchases
 
-### Test Cards
-Google provides test cards for different scenarios:
-
-| Card | Behavior |
-|------|----------|
-| Test card, always approves | Successful purchase |
-| Test card, always declines | Payment declined |
-| Test card, always pending | Pending payment |
-
-### Testing Flow
 1. Install app from Internal testing track
-2. Open app and navigate to Premium upgrade
-3. Tap on a subscription
-4. Select a test payment method
+2. Open app and go to Premium upgrade
+3. Tap "Lifetime Premium" button
+4. Select test payment method
 5. Complete purchase
 
 ---
 
-## Product IDs in Code
-
-The following product IDs are configured in `BillingContext.js`:
+## Product ID in Code
 
 ```javascript
 const PRODUCTS = {
-  PREMIUM_MONTHLY: 'premium_monthly',
-  PREMIUM_YEARLY: 'premium_yearly',
   PREMIUM_LIFETIME: 'premium_lifetime'
 };
 ```
 
-**Important:** These IDs must EXACTLY match what you create in Google Play Console.
+**IMPORTANT:** The Product ID must EXACTLY match `premium_lifetime`
+
+---
+
+## Pricing Suggestions
+
+| Price Tier | USD | Notes |
+|------------|-----|-------|
+| Budget | $4.99 | Higher conversion, lower revenue per user |
+| Standard | $9.99 | Good balance |
+| Premium | $14.99 | Higher revenue per user |
+| High Value | $19.99 | For dedicated users |
 
 ---
 
 ## Troubleshooting
 
-### Products Not Showing
-- Ensure AAB is uploaded and processed
-- Ensure products are activated
+### Product Not Showing
+- Ensure AAB is uploaded first
+- Product must be **Activated**
 - Wait 24-48 hours for propagation
-- Check Product IDs match exactly
+- Product ID must match exactly
 
 ### Purchase Fails
-- Verify tester account is added in License testing
-- Ensure app is installed from Play Store
+- Add tester email to License testing
+- Install from Play Store (not sideload)
 - Check internet connection
-- Review error logs in app
-
-### Subscription Not Renewing (Testing)
-- Use Play Billing Lab app to accelerate renewals
-- Check subscription status in Google Play Console
 
 ---
 
-## Files Changed for Billing
+## Files Changed
 
 | File | Changes |
 |------|---------|
-| `package.json` | Added cordova-plugin-purchase |
-| `android/app/build.gradle` | Added billing library dependency |
-| `AndroidManifest.xml` | Added BILLING permission |
-| `src/context/BillingContext.js` | New billing context |
-| `src/components/PremiumUpgrade.jsx` | New upgrade component |
-| `src/components/PremiumUpgrade.css` | Styles for upgrade |
-| `src/App.js` | Integrated BillingProvider |
-
----
-
-## Next Steps After Setup
-
-1. **Upload AAB** to Internal testing
-2. **Create products** in Google Play Console
-3. **Add license testers**
-4. **Test purchase flow**
-5. **Submit for review** when ready for production
-
----
-
-## Support
-
-If you encounter issues with billing integration:
-1. Check Google Play Console for errors
-2. Review app logs for billing errors
-3. Ensure all product IDs match
-4. Verify tester accounts are configured
+| `BillingContext.js` | Only lifetime product |
+| `PremiumUpgrade.jsx` | Simplified to one option |
+| `build.gradle` | Billing library added |
+| `AndroidManifest.xml` | BILLING permission |
