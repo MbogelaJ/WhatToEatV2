@@ -7,8 +7,8 @@ android {
         applicationId "com.whattoeat.penx.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "1.0.4"
+        versionCode 6
+        versionName "1.0.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -43,6 +43,9 @@ dependencies {
     
     // Google Play Services for Auth
     implementation 'com.google.android.gms:play-services-auth:21.0.0'
+    
+    // Google Play Billing for In-App Purchases
+    implementation 'com.android.billingclient:billing:6.1.0'
     
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

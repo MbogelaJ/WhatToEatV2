@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, Component } from "react";
 import "@/App.css";
 import axios from "axios";
 import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock, Star, Sparkles, Shield, Heart, Lightbulb, Crown, RefreshCw } from "lucide-react";
+import { BillingProvider, useBilling } from './context/BillingContext';
+import './components/PremiumUpgrade.css';
 
 // Global Error Boundary for production stability
 class ErrorBoundary extends Component {
@@ -2684,9 +2686,10 @@ function App() {
     return step ? parseInt(step, 10) : 0;
   });
   
-  const [isPremium, setIsPremium] = useState(() => {
-    return localStorage.getItem('isPremium') === 'true';
-  });
+  // Get premium status from BillingContext
+  // Note: We still keep local state for backward compatibility, but BillingContext is the source of truth
+  const billingContext = useBilling();
+  const isPremium = billingContext?.isPremium || localStorage.getItem('isPremium') === 'true';
   
   const [dietaryRestrictions, setDietaryRestrictions] = useState(() => {
     const saved = localStorage.getItem('dietaryRestrictions');
@@ -3568,10 +3571,12 @@ function App() {
   );
 }
 
-// Wrap App with ErrorBoundary for production stability
+// Wrap App with ErrorBoundary and BillingProvider for production stability
 const AppWithErrorBoundary = () => (
   <ErrorBoundary>
-    <App />
+    <BillingProvider>
+      <App />
+    </BillingProvider>
   </ErrorBoundary>
 );
 
