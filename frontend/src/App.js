@@ -2856,7 +2856,7 @@ function App() {
   const [paymentError, setPaymentError] = useState(null);
 
   // Apple IAP Product ID - Must match App Store Connect configuration
-  const APPLE_IAP_PRODUCT_ID = 'premium_lifetime';
+  const APPLE_IAP_PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
   const handlePremiumPurchase = async () => {
     setIsProcessingPayment(true);
@@ -3129,7 +3129,7 @@ function App() {
         
         // Register the product
         CdvPurchase.store.register({
-          id: 'premium_lifetime',
+          id: 'com.whattoeat.penx.premium.v2',
           type: CdvPurchase.ProductType.NON_CONSUMABLE,
           platform: CdvPurchase.Platform.APPLE_APPSTORE
         });
@@ -3162,9 +3162,9 @@ function App() {
         console.log('IAP: Store initialized. Products:', CdvPurchase.store.products);
         
         // Check for any owned products (restored purchases)
-        const product = CdvPurchase.store.get('premium_lifetime');
+        const product = CdvPurchase.store.get('com.whattoeat.penx.premium.v2');
         if (product && product.owned) {
-          console.log('IAP: User owns premium_lifetime');
+          console.log('IAP: User owns premium');
           localStorage.setItem('isPremium', 'true');
         }
         
