@@ -14,7 +14,6 @@ def capacitor_pods
   pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
   pod 'CapawesomeCapacitorAppUpdate', :path => '../../node_modules/@capawesome/capacitor-app-update'
-  pod 'CodetrixStudioCapacitorGoogleAuth', :path => '../../node_modules/@codetrix-studio/capacitor-google-auth'
   pod 'CordovaPlugins', :path => '../capacitor-cordova-ios-plugins'
 end
 
@@ -59,9 +58,6 @@ PLIST
 
 # SDKs that need privacy manifests
 SDKS_NEEDING_PRIVACY_MANIFEST = [
-  'GoogleSignIn',
-  'GTMAppAuth', 
-  'GTMSessionFetcher',
   'Capacitor',
   'CapacitorCordova',
   'Cordova'

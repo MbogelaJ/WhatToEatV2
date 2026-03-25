@@ -1919,66 +1919,23 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
     onNext();
   };
 
-  // Google Sign-In Handler - Uses Capacitor plugin on native, Emergent Auth on web
+  // Google Sign-In Handler - Uses Emergent Auth on all platforms
   const handleGoogleSignIn = async () => {
     setError('');
     setIsLoading(true);
     
     try {
-      // Check if running on native platform (iOS or Android)
-      if (isCapacitorNative()) {
-        // Use native Google Sign-In via Capacitor plugin
-        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-        
-        try {
-          const result = await GoogleAuth.signIn();
-          
-          if (!result || !result.email) {
-            throw new Error('Failed to get user data from Google');
-          }
-
-          const userData = {
-            user_id: `google_${result.id || Date.now()}`,
-            email: result.email,
-            name: result.name || result.displayName || 'Google User',
-            picture: result.imageUrl || null,
-            auth_provider: 'google',
-            idToken: result.authentication?.idToken
-          };
-
-          // Store user data
-          localStorage.setItem('user', JSON.stringify(userData));
-          localStorage.setItem('isAuthenticated', 'true');
-          
-          // Also persist with Capacitor Preferences for app restart
-          try {
-            const { Preferences } = await import('@capacitor/preferences');
-            await Preferences.set({ key: 'auth_user', value: JSON.stringify(userData) });
-          } catch (prefErr) {
-            
-          }
-
-          if (onAuthSuccess) {
-            onAuthSuccess(userData);
-          } else {
-            onNext();
-          }
-          return;
-        } catch (googleErr) {
-          // Handle user cancellation
-          if (googleErr.message?.includes('cancel') || googleErr.message?.includes('popup_closed')) {
-            setError(null);
-            setIsLoading(false);
-            return;
-          }
-          throw googleErr;
-        }
-      } else {
-        // Use Emergent Auth for web
-        // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-        const redirectUrl = window.location.origin + '/auth/callback';
-        window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+      // Use Emergent Auth for all platforms (web and native)
+      // On native iOS, we'll show a message to use Apple Sign-In instead
+      if (isIOS()) {
+        setError('Please use Apple Sign-In on iOS devices.');
+        setIsLoading(false);
+        return;
       }
+      
+      // For web and Android, use Emergent Auth
+      const redirectUrl = window.location.origin + '/auth/callback';
+      window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
     } catch (err) {
       console.error('Google Sign-In error:', err);
       setError(err.message || 'Google Sign-In failed. Please try again.');
@@ -2758,27 +2715,8 @@ function App() {
     localStorage.removeItem('isAuthenticated');
     setCurrentUser(null);
     
-    // Only attempt native plugin signout if actually signed in via Google
+    // Clear Capacitor Preferences storage on native
     if (isCapacitorNative()) {
-      try {
-        // Only try Google signout if user was authenticated via Google
-        const storedUser = localStorage.getItem('user');
-        const wasGoogleAuth = storedUser && JSON.parse(storedUser)?.auth_provider === 'google';
-        
-        if (wasGoogleAuth) {
-          const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-          // Wrap in try-catch as signOut can throw if not signed in
-          try {
-            await GoogleAuth.signOut();
-          } catch (signOutErr) {
-            // Ignore - user may not have been signed in via Google
-          }
-        }
-      } catch (importErr) {
-        // Plugin import failed - continue with logout
-      }
-      
-      // Clear Capacitor Preferences storage
       try {
         const { Preferences } = await import('@capacitor/preferences');
         await Preferences.remove({ key: 'auth_user' });
@@ -3037,25 +2975,10 @@ function App() {
     localStorage.setItem('dietaryRestrictions', JSON.stringify(dietaryRestrictions));
   }, [dietaryRestrictions]);
 
-  // Initialize Google Auth and restore session on app mount
+  // Initialize auth and restore session on app mount
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Initialize Google Auth for native platforms
-        if (isCapacitorNative()) {
-          const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-          
-          // Initialize with client ID (configure in capacitor.config.json)
-          if (!isIOS()) {
-            // For Android and web, we need to call initialize
-            await GoogleAuth.initialize({
-              clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID || '',
-              scopes: ['profile', 'email'],
-              grantOfflineAccess: true
-            });
-          }
-        }
-        
         // Restore session from Capacitor Preferences if not already logged in
         if (!currentUser) {
           try {
