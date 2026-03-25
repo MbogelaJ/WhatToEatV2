@@ -2856,7 +2856,7 @@ function App() {
   const [paymentError, setPaymentError] = useState(null);
 
   // Apple IAP Product ID - Must match App Store Connect configuration
-  const APPLE_IAP_PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
+  const APPLE_IAP_PRODUCT_ID = 'premium_lifetime';
 
   const handlePremiumPurchase = async () => {
     setIsProcessingPayment(true);
@@ -2865,33 +2865,51 @@ function App() {
     try {
       // Check if running on iOS native app
       if (isCapacitorNative() && isIOS()) {
-        // Use Capacitor In-App Purchase plugin
-        // Note: This requires @capgo/capacitor-purchases or similar plugin
-        // For now, we show instructions for the user
+        // Use cordova-plugin-purchase (CdvPurchase)
+        const CdvPurchase = window.CdvPurchase;
         
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorPurchases) {
-          const { CapacitorPurchases } = window.Capacitor.Plugins;
-          
+        if (CdvPurchase && CdvPurchase.store) {
           try {
-            // Get available products
-            const products = await CapacitorPurchases.getProducts({
-              productIdentifiers: [APPLE_IAP_PRODUCT_ID]
-            });
+            // Check if store is ready
+            const product = CdvPurchase.store.get(APPLE_IAP_PRODUCT_ID);
             
-            if (products && products.products && products.products.length > 0) {
-              // Purchase the product
-              const purchaseResult = await CapacitorPurchases.purchaseProduct({
-                productIdentifier: APPLE_IAP_PRODUCT_ID
-              });
+            if (product) {
+              console.log('Product found:', product);
               
-              if (purchaseResult && purchaseResult.transactionId) {
-                // Verify purchase with backend
-                const user = JSON.parse(localStorage.getItem('user') || 'null');
+              // Get the offer and initiate purchase
+              const offer = product.getOffer();
+              if (offer) {
+                console.log('Initiating purchase for offer:', offer);
                 
-                await axios.post(`${API}/iap/verify-purchase`, {
-                  receipt_data: purchaseResult.receipt || '',
-                  user_id: user?.user_id
+                // Set up one-time handlers for this purchase
+                const purchasePromise = new Promise((resolve, reject) => {
+                  const timeout = setTimeout(() => {
+                    reject(new Error('Purchase timeout - please try again'));
+                  }, 120000); // 2 minute timeout
+                  
+                  CdvPurchase.store.when()
+                    .approved(transaction => {
+                      console.log('Purchase approved:', transaction);
+                      transaction.verify();
+                    })
+                    .verified(receipt => {
+                      console.log('Purchase verified:', receipt);
+                      clearTimeout(timeout);
+                      receipt.finish();
+                      resolve(receipt);
+                    })
+                    .error(err => {
+                      console.error('Purchase error:', err);
+                      clearTimeout(timeout);
+                      reject(err);
+                    });
                 });
+                
+                // Order the product
+                await offer.order();
+                
+                // Wait for purchase completion
+                await purchasePromise;
                 
                 // Grant premium access
                 localStorage.setItem('isPremium', 'true');
@@ -2901,17 +2919,22 @@ function App() {
                 alert('🎉 Purchase successful! You now have premium access to all 249 foods.');
                 setActiveView('home');
                 return;
+              } else {
+                throw new Error('No offer available for this product');
               }
+            } else {
+              // Product not loaded yet - try to refresh
+              console.log('Product not found, available products:', CdvPurchase.store.products);
+              throw new Error('Product not available. Please try again in a moment.');
             }
           } catch (iapError) {
             console.error('IAP Error:', iapError);
-            throw new Error('Purchase failed. Please try again.');
+            throw new Error(iapError.message || 'Purchase failed. Please try again.');
           }
         } else {
-          // StoreKit not available - show message only, DO NOT grant premium
+          // CdvPurchase not available - show message
           setPaymentError(
-            'In-App Purchase will be available when you download the app from the App Store. ' +
-            'Please try again after installing from the App Store.'
+            'In-App Purchase is loading. Please wait a moment and try again.'
           );
           setIsProcessingPayment(false);
           return;
@@ -2941,37 +2964,41 @@ function App() {
     
     try {
       if (isCapacitorNative() && isIOS()) {
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorPurchases) {
-          const { CapacitorPurchases } = window.Capacitor.Plugins;
-          
-          const restoreResult = await CapacitorPurchases.restorePurchases();
-          
-          if (restoreResult && restoreResult.transactions && restoreResult.transactions.length > 0) {
-            // Verify restored purchase with backend
-            const user = JSON.parse(localStorage.getItem('user') || 'null');
+        const CdvPurchase = window.CdvPurchase;
+        
+        if (CdvPurchase && CdvPurchase.store) {
+          try {
+            console.log('Restoring purchases...');
+            await CdvPurchase.store.restorePurchases();
             
-            await axios.post(`${API}/iap/restore-purchases`, {
-              receipt_data: restoreResult.receipt || '',
-              user_id: user?.user_id
-            });
-            
-            localStorage.setItem('isPremium', 'true');
-            setIsPremium(true);
-            alert('🎉 Purchases restored! Premium access activated.');
-          } else {
-            setPaymentError('No previous purchases found.');
-          }
-        } else {
-          // Check with backend for existing purchases
-          const user = JSON.parse(localStorage.getItem('user') || 'null');
-          if (user?.user_id) {
-            const response = await axios.get(`${API}/iap/premium-status`);
-            if (response.data.is_premium) {
+            // Check if any owned products exist after restore
+            const product = CdvPurchase.store.get(APPLE_IAP_PRODUCT_ID);
+            if (product && product.owned) {
               localStorage.setItem('isPremium', 'true');
               setIsPremium(true);
-              alert('🎉 Premium access restored!');
+              alert('🎉 Purchases restored! Premium access activated.');
             } else {
-              setPaymentError('No previous purchases found for this account.');
+              setPaymentError('No previous purchases found.');
+            }
+          } catch (restoreError) {
+            console.error('Restore error:', restoreError);
+            setPaymentError('Failed to restore purchases. Please try again.');
+          }
+        } else {
+          // CdvPurchase not available - check local storage or backend
+          const user = JSON.parse(localStorage.getItem('user') || 'null');
+          if (user?.user_id) {
+            try {
+              const response = await axios.get(`${API}/iap/premium-status`);
+              if (response.data.is_premium) {
+                localStorage.setItem('isPremium', 'true');
+                setIsPremium(true);
+                alert('🎉 Premium access restored!');
+              } else {
+                setPaymentError('No previous purchases found for this account.');
+              }
+            } catch {
+              setPaymentError('Store is loading. Please wait and try again.');
             }
           } else {
             setPaymentError('Please sign in to restore purchases.');
@@ -3057,6 +3084,96 @@ function App() {
     };
 
     initializeAuth();
+  }, []); // Only run once on mount
+
+  // Initialize In-App Purchases for iOS
+  useEffect(() => {
+    const initializeIAP = async () => {
+      if (!isCapacitorNative() || !isIOS()) {
+        return;
+      }
+
+      try {
+        // Wait for CdvPurchase to be available (cordova-plugin-purchase)
+        let attempts = 0;
+        const maxAttempts = 30;
+        
+        const waitForStore = () => {
+          return new Promise((resolve) => {
+            const check = () => {
+              if (window.CdvPurchase) {
+                resolve(true);
+              } else if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(check, 200);
+              } else {
+                resolve(false);
+              }
+            };
+            check();
+          });
+        };
+
+        const storeAvailable = await waitForStore();
+        
+        if (!storeAvailable) {
+          console.log('IAP: CdvPurchase not available after waiting');
+          return;
+        }
+
+        const CdvPurchase = window.CdvPurchase;
+        console.log('IAP: Initializing store...');
+        
+        // Set debug verbosity (remove in production)
+        CdvPurchase.store.verbosity = CdvPurchase.LogLevel.DEBUG;
+        
+        // Register the product
+        CdvPurchase.store.register({
+          id: 'premium_lifetime',
+          type: CdvPurchase.ProductType.NON_CONSUMABLE,
+          platform: CdvPurchase.Platform.APPLE_APPSTORE
+        });
+
+        // Set up event listeners
+        CdvPurchase.store.when()
+          .productUpdated(product => {
+            console.log('IAP: Product updated:', product.id, product.title, product.pricing?.price);
+          })
+          .approved(transaction => {
+            console.log('IAP: Transaction approved:', transaction.transactionId);
+            transaction.verify();
+          })
+          .verified(receipt => {
+            console.log('IAP: Receipt verified');
+            // Grant premium access
+            localStorage.setItem('isPremium', 'true');
+            receipt.finish();
+          })
+          .finished(transaction => {
+            console.log('IAP: Transaction finished:', transaction.transactionId);
+          })
+          .error(err => {
+            console.error('IAP: Store error:', err);
+          });
+
+        // Initialize the store
+        await CdvPurchase.store.initialize([CdvPurchase.Platform.APPLE_APPSTORE]);
+        
+        console.log('IAP: Store initialized. Products:', CdvPurchase.store.products);
+        
+        // Check for any owned products (restored purchases)
+        const product = CdvPurchase.store.get('premium_lifetime');
+        if (product && product.owned) {
+          console.log('IAP: User owns premium_lifetime');
+          localStorage.setItem('isPremium', 'true');
+        }
+        
+      } catch (err) {
+        console.error('IAP initialization error:', err);
+      }
+    };
+
+    initializeIAP();
   }, []); // Only run once on mount
 
   useEffect(() => {
