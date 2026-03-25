@@ -3,6 +3,8 @@ import "@/App.css";
 import axios from "axios";
 import { Search, Utensils, X, AlertCircle, Filter, Check, Clock, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, AlertTriangle, ArrowLeft, Share2, Settings, Home, HelpCircle, BookOpen, Info, User, Lock, Star, Sparkles, Shield, Heart, Lightbulb, Crown, RefreshCw } from "lucide-react";
 import { BillingProvider, useBilling } from './context/BillingContext';
+import { AppUpdateProvider } from './context/AppUpdateContext';
+import UpdatePrompt from './components/UpdatePrompt';
 import './components/PremiumUpgrade.css';
 
 // Global Error Boundary for production stability
@@ -3571,12 +3573,15 @@ function App() {
   );
 }
 
-// Wrap App with ErrorBoundary and BillingProvider for production stability
+// Wrap App with ErrorBoundary, AppUpdateProvider, and BillingProvider for production stability
 const AppWithErrorBoundary = () => (
   <ErrorBoundary>
-    <BillingProvider>
-      <App />
-    </BillingProvider>
+    <AppUpdateProvider>
+      <BillingProvider>
+        <UpdatePrompt />
+        <App />
+      </BillingProvider>
+    </AppUpdateProvider>
   </ErrorBoundary>
 );
 
