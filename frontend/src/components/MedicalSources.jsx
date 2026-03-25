@@ -8,6 +8,12 @@ import React from 'react';
 // Medical sources used for food safety information
 export const MEDICAL_SOURCES = [
   {
+    id: 'pubmed',
+    name: 'PubMed® (National Library of Medicine / NIH)',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/?term=pregnancy+nutrition+food+safety',
+    description: 'Peer-reviewed medical research and clinical studies'
+  },
+  {
     id: 'acog',
     name: 'American College of Obstetricians and Gynecologists (ACOG)',
     url: 'https://www.acog.org/womens-health/faqs/nutrition-during-pregnancy',
