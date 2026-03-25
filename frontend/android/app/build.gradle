@@ -44,7 +44,7 @@ dependencies {
     // Google Play Services for Auth
     implementation 'com.google.android.gms:play-services-auth:21.0.0'
     
-    // Google Play Billing for In-App Purchases
+    // Google Play Billing
     implementation 'com.android.billingclient:billing:6.1.0'
     
     testImplementation "junit:junit:$junitVersion"
