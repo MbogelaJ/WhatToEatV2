@@ -6113,3 +6113,144 @@ body {
 .update-prompt-button.secondary:hover {
   background: #f5f5f5;
 }
+
+/* ==================== MEDICAL SOURCES ==================== */
+.medical-sources-container {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.medical-sources-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.medical-sources-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 8px 0;
+}
+
+.medical-sources-header p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.medical-sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.medical-source-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e9ecef;
+}
+
+.medical-source-item:hover {
+  background: #e9ecef;
+  transform: translateX(4px);
+}
+
+.source-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
+}
+
+.source-info p {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.source-link {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.medical-sources-disclaimer {
+  background: linear-gradient(135deg, #fff5f5 0%, #fef5e7 100%);
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.medical-sources-disclaimer h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #c2410c;
+  margin: 0 0 12px 0;
+}
+
+.medical-sources-disclaimer p {
+  font-size: 13px;
+  color: #7c2d12;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+
+.medical-sources-disclaimer p:last-child {
+  margin-bottom: 0;
+}
+
+.medical-sources-close {
+  width: 100%;
+  padding: 14px;
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inline-citation {
+  color: #667eea;
+  font-size: 10px;
+  text-decoration: none;
+  vertical-align: super;
+}
+
+.inline-citation:hover {
+  text-decoration: underline;
+}
+
+/* Sources link in footer/settings */
+.sources-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f0f4ff;
+  border-radius: 8px;
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.sources-link:hover {
+  background: #e0e7ff;
+}
+
+.sources-link svg {
+  flex-shrink: 0;
+}

@@ -1729,18 +1729,35 @@ const TopicsView = ({ onBack, onNavigateHome, isPremium, onNavigateToPremium }) 
 
 // About View Component
 const AboutView = ({ onBack, onNavigateHome }) => {
+  const [showSources, setShowSources] = useState(false);
+  
+  // Import MedicalSources dynamically
+  const MedicalSourcesComponent = React.lazy(() => import('./components/MedicalSources'));
+  
+  if (showSources) {
+    return (
+      <div className="page-view" data-testid="sources-view">
+        <div className="page-content">
+          <React.Suspense fallback={<div className="loading">Loading...</div>}>
+            <MedicalSourcesComponent onClose={() => setShowSources(false)} />
+          </React.Suspense>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="page-view" data-testid="about-view">
       <div className="page-content">
         <div className="about-section">
-          <p className="version" style={{textAlign: 'center', marginBottom: '1rem'}}>Version 1.0.0</p>
+          <p className="version" style={{textAlign: 'center', marginBottom: '1rem'}}>Version 1.0.7</p>
         </div>
 
         <div className="about-section">
           <h3>About This App</h3>
           <p>
             WhatToEat is a pregnancy nutrition guide designed to help expectant mothers make informed food choices. 
-            Browse our database of 235+ foods with pregnancy-specific safety information, nutritional benefits, 
+            Browse our database of 288+ foods with pregnancy-specific safety information, nutritional benefits, 
             and preparation tips.
           </p>
         </div>
@@ -1748,7 +1765,7 @@ const AboutView = ({ onBack, onNavigateHome }) => {
         <div className="about-section">
           <h3>Features</h3>
           <ul className="feature-list">
-            <li><Check size={16} /> 235+ foods with pregnancy safety ratings</li>
+            <li><Check size={16} /> 288+ foods with pregnancy safety ratings</li>
             <li><Check size={16} /> Instant search and filtering</li>
             <li><Check size={16} /> Personalized dietary restriction alerts</li>
             <li><Check size={16} /> Nutritional benefits and precautions</li>
@@ -1757,12 +1774,18 @@ const AboutView = ({ onBack, onNavigateHome }) => {
         </div>
 
         <div className="about-section">
-          <h3>Data Sources</h3>
+          <h3>Medical Sources & References</h3>
           <p>
-            Our information is compiled from reputable sources including the World Health Organization (WHO), 
-            USDA FoodData Central, American College of Obstetricians and Gynecologists (ACOG), 
-            FDA Food Safety Guidelines, CDC pregnancy nutrition recommendations, and NHS guidelines.
+            Our food safety information is compiled from trusted medical sources including ACOG, FDA, CDC, WHO, and more.
           </p>
+          <button 
+            className="sources-link"
+            onClick={() => setShowSources(true)}
+            data-testid="view-sources-btn"
+          >
+            <BookOpen size={18} />
+            View All Medical Sources & Citations
+          </button>
         </div>
 
         <div className="about-section disclaimer-section">
