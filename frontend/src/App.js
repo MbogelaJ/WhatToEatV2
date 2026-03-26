@@ -11,7 +11,7 @@ import './components/PremiumUpgrade.css';
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error) {
@@ -19,14 +19,15 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log error silently in production
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error caught by boundary:', error, errorInfo);
-    }
+    // Always log errors for debugging - critical for production issues
+    console.error('ErrorBoundary caught error:', error);
+    console.error('Error info:', errorInfo);
+    console.error('Component stack:', errorInfo?.componentStack);
+    this.setState({ errorInfo });
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, errorInfo: null });
     window.location.reload();
   };
 
@@ -1730,17 +1731,36 @@ const TopicsView = ({ onBack, onNavigateHome, isPremium, onNavigateToPremium }) 
 // About View Component
 const AboutView = ({ onBack, onNavigateHome }) => {
   const [showSources, setShowSources] = useState(false);
-  
-  // Import MedicalSources dynamically
-  const MedicalSourcesComponent = React.lazy(() => import('./components/MedicalSources'));
+  const [sourcesError, setSourcesError] = useState(false);
   
   if (showSources) {
+    // Import MedicalSources directly instead of lazy loading to avoid production issues
+    const MedicalSourcesComponent = require('./components/MedicalSources').default;
+    
+    if (!MedicalSourcesComponent) {
+      console.error('MedicalSources component failed to load');
+      return (
+        <div className="page-view" data-testid="sources-view">
+          <div className="page-content">
+            <div className="about-section">
+              <h3>Medical Sources</h3>
+              <p>Unable to load medical sources. Please try again later.</p>
+              <button 
+                className="sources-link"
+                onClick={() => setShowSources(false)}
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="page-view" data-testid="sources-view">
         <div className="page-content">
-          <React.Suspense fallback={<div className="loading">Loading...</div>}>
-            <MedicalSourcesComponent onClose={() => setShowSources(false)} />
-          </React.Suspense>
+          <MedicalSourcesComponent onClose={() => setShowSources(false)} />
         </div>
       </div>
     );
