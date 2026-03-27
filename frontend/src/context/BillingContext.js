@@ -1,22 +1,24 @@
 /**
  * Billing Context - Manages in-app purchases across platforms
  * Supports Google Play Billing (Android) and Apple In-App Purchase (iOS)
+ * CRITICAL: All operations wrapped in try-catch to prevent crashes
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// Product IDs - must match what you create in Google Play Console
+// Product IDs - must match what you create in Play Console / App Store Connect
 const PRODUCTS = {
-  PREMIUM_LIFETIME: 'premium_lifetime'
+  PREMIUM_LIFETIME: 'com.whattoeat.penx.premium.v2' // iOS product ID
 };
 
-// Platform detection
+// Safe platform detection - never throws
 const isNativePlatform = () => {
   try {
     return typeof window !== 'undefined' && 
            window.Capacitor && 
-           window.Capacitor.isNativePlatform && 
+           typeof window.Capacitor.isNativePlatform === 'function' &&
            window.Capacitor.isNativePlatform();
   } catch (e) {
+    console.log('Billing: Platform detection error:', e);
     return false;
   }
 };
@@ -48,129 +50,163 @@ export function BillingProvider({ children }) {
   const [error, setError] = useState(null);
   const [store, setStore] = useState(null);
 
-  // Initialize billing on mount
-  useEffect(() => {
-    initializeBilling();
-  }, []);
+  console.log('BillingProvider: Mounting...');
 
-  // Load premium status from local storage on mount
+  // Load premium status from local storage on mount - SAFE
   useEffect(() => {
-    const storedPremium = localStorage.getItem('isPremium');
-    const storedExpiry = localStorage.getItem('premiumExpiry');
-    
-    if (storedPremium === 'true') {
-      // Check if not expired
-      if (storedExpiry) {
-        const expiryDate = new Date(storedExpiry);
-        if (expiryDate > new Date()) {
-          setIsPremium(true);
-          setPremiumExpiry(storedExpiry);
+    try {
+      console.log('Billing: Loading stored premium status...');
+      const storedPremium = localStorage.getItem('isPremium');
+      const storedExpiry = localStorage.getItem('premiumExpiry');
+      
+      if (storedPremium === 'true') {
+        if (storedExpiry) {
+          const expiryDate = new Date(storedExpiry);
+          if (expiryDate > new Date()) {
+            setIsPremium(true);
+            setPremiumExpiry(storedExpiry);
+            console.log('Billing: Premium restored from storage');
+          } else {
+            localStorage.removeItem('isPremium');
+            localStorage.removeItem('premiumExpiry');
+          }
         } else {
-          // Expired - clear
-          localStorage.removeItem('isPremium');
-          localStorage.removeItem('premiumExpiry');
+          setIsPremium(true);
+          console.log('Billing: Lifetime premium restored');
         }
-      } else {
-        // Lifetime premium
-        setIsPremium(true);
       }
+    } catch (e) {
+      console.error('Billing: Error loading stored premium:', e);
     }
   }, []);
 
+  // Initialize billing - DELAYED and SAFE
+  useEffect(() => {
+    // Delay initialization to ensure app is fully loaded
+    const timer = setTimeout(() => {
+      initializeBilling();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const initializeBilling = async () => {
-    // Only initialize on native platforms
+    console.log('Billing: Starting initialization...');
+    
+    // Not on native platform - mark as initialized and return
     if (!isNativePlatform()) {
-      console.log('Billing: Not a native platform, skipping initialization');
+      console.log('Billing: Not a native platform, skipping');
       setIsInitialized(true);
       return;
     }
 
     try {
       // Wait for CdvPurchase to be available
-      await waitForCdvPurchase();
+      const cdvAvailable = await waitForCdvPurchase();
       
-      const CdvPurchase = window.CdvPurchase;
-      if (!CdvPurchase) {
-        console.log('Billing: CdvPurchase not available');
+      if (!cdvAvailable || !window.CdvPurchase) {
+        console.log('Billing: CdvPurchase not available after waiting');
         setIsInitialized(true);
         return;
       }
 
-      console.log('Billing: Initializing store...');
+      const CdvPurchase = window.CdvPurchase;
+      console.log('Billing: CdvPurchase found, initializing store...');
       
-      // Set verbosity for debugging (remove in production)
-      CdvPurchase.store.verbosity = CdvPurchase.LogLevel.DEBUG;
+      // Set verbosity for debugging
+      try {
+        CdvPurchase.store.verbosity = CdvPurchase.LogLevel.DEBUG;
+      } catch (e) {
+        console.log('Billing: Could not set verbosity');
+      }
       
       // Determine platform
       const platform = isAndroidPlatform() 
         ? CdvPurchase.Platform.GOOGLE_PLAY 
         : CdvPurchase.Platform.APPLE_APPSTORE;
       
-      // Register products - Only lifetime (one-time purchase)
-      const productList = [
-        {
+      console.log('Billing: Platform:', platform);
+      
+      // Register products
+      try {
+        CdvPurchase.store.register({
           id: PRODUCTS.PREMIUM_LIFETIME,
           type: CdvPurchase.ProductType.NON_CONSUMABLE,
           platform: platform
-        }
-      ];
-
-      productList.forEach(product => {
-        CdvPurchase.store.register(product);
-      });
-
-      // Set up event listeners
-      CdvPurchase.store.when()
-        .productUpdated(product => {
-          console.log('Billing: Product updated:', product.id);
-          updateProductsList();
-        })
-        .approved(transaction => {
-          console.log('Billing: Purchase approved:', transaction.transactionId);
-          handlePurchaseApproved(transaction);
-        })
-        .verified(receipt => {
-          console.log('Billing: Purchase verified:', receipt);
-          handlePurchaseVerified(receipt);
-        })
-        .finished(transaction => {
-          console.log('Billing: Transaction finished:', transaction.transactionId);
-        })
-        .error(err => {
-          console.error('Billing: Store error:', err);
-          setError(err.message || 'An error occurred');
         });
+        console.log('Billing: Product registered');
+      } catch (e) {
+        console.error('Billing: Error registering product:', e);
+      }
+
+      // Set up event listeners - wrapped in try-catch
+      try {
+        CdvPurchase.store.when()
+          .productUpdated(product => {
+            console.log('Billing: Product updated:', product?.id);
+            safeUpdateProductsList();
+          })
+          .approved(transaction => {
+            console.log('Billing: Purchase approved');
+            safeHandlePurchaseApproved(transaction);
+          })
+          .verified(receipt => {
+            console.log('Billing: Purchase verified');
+            safeHandlePurchaseVerified(receipt);
+          })
+          .finished(transaction => {
+            console.log('Billing: Transaction finished');
+          })
+          .error(err => {
+            console.error('Billing: Store error:', err);
+            setError(err?.message || 'Store error');
+          });
+      } catch (e) {
+        console.error('Billing: Error setting up listeners:', e);
+      }
 
       // Initialize the store
-      await CdvPurchase.store.initialize([platform]);
+      try {
+        await CdvPurchase.store.initialize([platform]);
+        console.log('Billing: Store initialized successfully');
+      } catch (e) {
+        console.error('Billing: Store initialization error:', e);
+      }
       
       // Update products list
-      updateProductsList();
+      safeUpdateProductsList();
       
       setStore(CdvPurchase.store);
       setIsInitialized(true);
       console.log('Billing: Initialization complete');
 
     } catch (err) {
-      console.error('Billing: Initialization error:', err);
-      setError(err.message);
-      setIsInitialized(true);
+      console.error('Billing: Critical initialization error:', err);
+      setError(err?.message || 'Initialization failed');
+      setIsInitialized(true); // Still mark as initialized to prevent blocking
     }
   };
 
   const waitForCdvPurchase = () => {
     return new Promise((resolve) => {
       let attempts = 0;
-      const maxAttempts = 20;
+      const maxAttempts = 30; // 7.5 seconds
       
       const check = () => {
-        if (window.CdvPurchase) {
-          resolve();
-        } else if (attempts < maxAttempts) {
-          attempts++;
-          setTimeout(check, 250);
-        } else {
-          resolve(); // Give up after 5 seconds
+        try {
+          if (window.CdvPurchase && window.CdvPurchase.store) {
+            console.log('Billing: CdvPurchase found after', attempts, 'attempts');
+            resolve(true);
+          } else if (attempts < maxAttempts) {
+            attempts++;
+            setTimeout(check, 250);
+          } else {
+            console.log('Billing: CdvPurchase not found after max attempts');
+            resolve(false);
+          }
+        } catch (e) {
+          console.error('Billing: Error checking for CdvPurchase:', e);
+          resolve(false);
         }
       };
       
@@ -178,76 +214,83 @@ export function BillingProvider({ children }) {
     });
   };
 
-  const updateProductsList = useCallback(() => {
-    if (!window.CdvPurchase) return;
-    
-    const loadedProducts = [];
-    
-    Object.values(PRODUCTS).forEach(productId => {
-      const product = window.CdvPurchase.store.get(productId);
-      if (product && product.title) {
-        loadedProducts.push({
-          id: product.id,
-          title: product.title,
-          description: product.description,
-          price: product.pricing?.price || 'N/A',
-          priceMicros: product.pricing?.priceMicros,
-          currency: product.pricing?.currency,
-          type: product.type,
-          canPurchase: product.canPurchase
-        });
-      }
-    });
-    
-    setProducts(loadedProducts);
+  const safeUpdateProductsList = useCallback(() => {
+    try {
+      if (!window.CdvPurchase || !window.CdvPurchase.store) return;
+      
+      const loadedProducts = [];
+      
+      Object.values(PRODUCTS).forEach(productId => {
+        try {
+          const product = window.CdvPurchase.store.get(productId);
+          if (product && product.title) {
+            loadedProducts.push({
+              id: product.id,
+              title: product.title,
+              description: product.description || '',
+              price: product.pricing?.price || '$1.99',
+              priceMicros: product.pricing?.priceMicros,
+              currency: product.pricing?.currency || 'USD',
+              type: product.type,
+              canPurchase: product.canPurchase
+            });
+          }
+        } catch (e) {
+          console.error('Billing: Error getting product:', e);
+        }
+      });
+      
+      setProducts(loadedProducts);
+      console.log('Billing: Products updated:', loadedProducts.length);
+    } catch (e) {
+      console.error('Billing: Error updating products list:', e);
+    }
   }, []);
 
-  const handlePurchaseApproved = async (transaction) => {
+  const safeHandlePurchaseApproved = async (transaction) => {
     try {
-      // Verify the purchase (in production, send to your backend)
       console.log('Billing: Processing approved purchase...');
-      
-      // For now, finish the transaction and grant access
-      // In production, verify with your backend first
-      transaction.verify();
-      
+      if (transaction && typeof transaction.verify === 'function') {
+        transaction.verify();
+      }
     } catch (err) {
       console.error('Billing: Error handling approved purchase:', err);
-      setError(err.message);
+      setError(err?.message || 'Purchase verification failed');
     }
   };
 
-  const handlePurchaseVerified = async (receipt) => {
+  const safeHandlePurchaseVerified = async (receipt) => {
     try {
       console.log('Billing: Purchase verified, granting access...');
       
       // Grant premium access
-      grantPremiumAccess(receipt);
+      setIsPremium(true);
+      setPremiumExpiry(null);
+      localStorage.setItem('isPremium', 'true');
+      localStorage.removeItem('premiumExpiry');
       
       // Finish the transaction
-      receipt.finish();
+      if (receipt && typeof receipt.finish === 'function') {
+        receipt.finish();
+      }
       
+      console.log('Billing: Lifetime premium access granted!');
     } catch (err) {
       console.error('Billing: Error handling verified purchase:', err);
-      setError(err.message);
+      setError(err?.message || 'Error granting access');
     }
   };
 
-  const grantPremiumAccess = (receipt) => {
-    // Lifetime purchase - no expiry
-    setIsPremium(true);
-    setPremiumExpiry(null);
-    
-    // Persist to local storage
-    localStorage.setItem('isPremium', 'true');
-    localStorage.removeItem('premiumExpiry'); // Lifetime has no expiry
-    
-    console.log('Billing: Lifetime premium access granted!');
-  };
-
   const purchase = async (productId) => {
-    if (!store || !isNativePlatform()) {
-      setError('Billing not available');
+    console.log('Billing: Purchase requested for:', productId);
+    
+    if (!isNativePlatform()) {
+      setError('Billing not available on this platform');
+      return false;
+    }
+
+    if (!store) {
+      setError('Store not initialized. Please try again.');
       return false;
     }
 
@@ -258,22 +301,22 @@ export function BillingProvider({ children }) {
       const product = store.get(productId);
       
       if (!product) {
-        throw new Error('Product not found');
+        throw new Error('Product not available. Please try again later.');
       }
 
       const offer = product.getOffer();
       if (!offer) {
-        throw new Error('No offer available');
+        throw new Error('No purchase option available.');
       }
 
-      // Initiate purchase
+      console.log('Billing: Initiating purchase...');
       await offer.order();
       
       return true;
       
     } catch (err) {
       console.error('Billing: Purchase error:', err);
-      setError(err.message || 'Purchase failed');
+      setError(err?.message || 'Purchase failed. Please try again.');
       return false;
     } finally {
       setIsPurchasing(false);
@@ -281,32 +324,38 @@ export function BillingProvider({ children }) {
   };
 
   const restorePurchases = async () => {
+    console.log('Billing: Restore purchases requested');
+    
     if (!store || !isNativePlatform()) {
+      setError('Cannot restore purchases on this platform');
       return;
     }
 
     try {
-      console.log('Billing: Restoring purchases...');
       await store.restorePurchases();
+      console.log('Billing: Restore complete');
     } catch (err) {
       console.error('Billing: Restore error:', err);
-      setError(err.message);
+      setError(err?.message || 'Could not restore purchases');
     }
   };
 
-  // For testing/development - manually set premium status
-  const setManualPremium = (isPremium, expiryDate = null) => {
-    setIsPremium(isPremium);
-    setPremiumExpiry(expiryDate);
-    
-    if (isPremium) {
-      localStorage.setItem('isPremium', 'true');
-      if (expiryDate) {
-        localStorage.setItem('premiumExpiry', expiryDate);
+  const setManualPremium = (premium, expiryDate = null) => {
+    try {
+      setIsPremium(premium);
+      setPremiumExpiry(expiryDate);
+      
+      if (premium) {
+        localStorage.setItem('isPremium', 'true');
+        if (expiryDate) {
+          localStorage.setItem('premiumExpiry', expiryDate);
+        }
+      } else {
+        localStorage.removeItem('isPremium');
+        localStorage.removeItem('premiumExpiry');
       }
-    } else {
-      localStorage.removeItem('isPremium');
-      localStorage.removeItem('premiumExpiry');
+    } catch (e) {
+      console.error('Billing: Error setting manual premium:', e);
     }
   };
 
@@ -319,7 +368,7 @@ export function BillingProvider({ children }) {
     error,
     purchase,
     restorePurchases,
-    setManualPremium, // For testing
+    setManualPremium,
     PRODUCTS
   };
 
@@ -333,7 +382,20 @@ export function BillingProvider({ children }) {
 export function useBilling() {
   const context = useContext(BillingContext);
   if (!context) {
-    throw new Error('useBilling must be used within a BillingProvider');
+    // Return safe defaults instead of throwing error
+    console.warn('useBilling called outside of BillingProvider, returning defaults');
+    return {
+      isInitialized: true,
+      products: [],
+      isPurchasing: false,
+      isPremium: false,
+      premiumExpiry: null,
+      error: null,
+      purchase: () => Promise.resolve(false),
+      restorePurchases: () => Promise.resolve(),
+      setManualPremium: () => {},
+      PRODUCTS: {}
+    };
   }
   return context;
 }

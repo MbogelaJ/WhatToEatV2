@@ -1,18 +1,23 @@
 /**
  * Update Prompt Component
  * Shows a modal when an app update is available
+ * SAFE: Handles missing context gracefully
  */
 import React from 'react';
 import { useAppUpdate } from '../context/AppUpdateContext';
 
 export function UpdatePrompt() {
-  const { 
-    updateAvailable, 
-    isUpdating, 
-    startImmediateUpdate,
-    openAppStore 
-  } = useAppUpdate();
+  // Get update context - this hook now returns safe defaults
+  const updateContext = useAppUpdate();
 
+  const { 
+    updateAvailable = false, 
+    isUpdating = false, 
+    startImmediateUpdate = () => Promise.resolve(),
+    openAppStore = () => Promise.resolve()
+  } = updateContext || {};
+
+  // Don't render if no update available
   if (!updateAvailable) {
     return null;
   }
@@ -21,8 +26,12 @@ export function UpdatePrompt() {
     try {
       await startImmediateUpdate();
     } catch (e) {
-      // Fallback to opening Play Store
-      await openAppStore();
+      console.log('UpdatePrompt: startImmediateUpdate failed, trying openAppStore');
+      try {
+        await openAppStore();
+      } catch (e2) {
+        console.error('UpdatePrompt: Both update methods failed');
+      }
     }
   };
 

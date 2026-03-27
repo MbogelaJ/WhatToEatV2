@@ -7,44 +7,101 @@ import { AppUpdateProvider } from './context/AppUpdateContext';
 import UpdatePrompt from './components/UpdatePrompt';
 import './components/PremiumUpgrade.css';
 
+// Log app startup
+console.log('=== WhatToEat App Starting ===');
+console.log('Timestamp:', new Date().toISOString());
+
 // Global Error Boundary for production stability
+// CRITICAL: Must catch ALL errors and provide recovery
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null, errorInfo: null, retryCount: 0 };
+    console.log('ErrorBoundary: Initialized');
   }
 
   static getDerivedStateFromError(error) {
+    console.error('ErrorBoundary: getDerivedStateFromError called');
     return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    // Always log errors for debugging - critical for production issues
-    console.error('ErrorBoundary caught error:', error);
-    console.error('Error info:', errorInfo);
-    console.error('Component stack:', errorInfo?.componentStack);
+    // ALWAYS log errors for debugging
+    console.error('=== APP CRASH DETECTED ===');
+    console.error('Error:', error?.message || error);
+    console.error('Stack:', error?.stack);
+    console.error('Component Stack:', errorInfo?.componentStack);
     this.setState({ errorInfo });
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
-    window.location.reload();
+    console.log('ErrorBoundary: Retry clicked, count:', this.state.retryCount + 1);
+    
+    // Clear all state and force hard reload
+    this.setState({ 
+      hasError: false, 
+      error: null, 
+      errorInfo: null,
+      retryCount: this.state.retryCount + 1
+    });
+    
+    // Force a complete page reload
+    try {
+      // Clear any cached state that might cause issues
+      sessionStorage.clear();
+      
+      // Hard reload - bypass cache
+      window.location.href = window.location.href;
+    } catch (e) {
+      console.error('ErrorBoundary: Reload failed:', e);
+      window.location.reload();
+    }
   };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="error-boundary-fallback">
+        <div className="error-boundary-fallback" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          padding: '20px',
+          backgroundColor: '#fff',
+          textAlign: 'center'
+        }}>
           <div className="error-content">
-            <div className="error-icon">
+            <div className="error-icon" style={{ marginBottom: '20px' }}>
               <AlertCircle size={48} color="#dc2626" />
             </div>
-            <h2>Something went wrong</h2>
-            <p>The app encountered an unexpected error.</p>
-            <button onClick={this.handleRetry} className="retry-button">
+            <h2 style={{ fontSize: '24px', marginBottom: '10px', color: '#333' }}>Something went wrong</h2>
+            <p style={{ color: '#666', marginBottom: '20px' }}>The app encountered an unexpected error.</p>
+            <button 
+              onClick={this.handleRetry} 
+              className="retry-button"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px 24px',
+                backgroundColor: '#22c55e',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}
+            >
               <RefreshCw size={18} />
               <span>Reload App</span>
             </button>
+            {this.state.retryCount > 0 && (
+              <p style={{ marginTop: '20px', fontSize: '12px', color: '#999' }}>
+                Retry attempt: {this.state.retryCount}
+              </p>
+            )}
           </div>
         </div>
       );
@@ -3029,94 +3086,32 @@ function App() {
     initializeAuth();
   }, []); // Only run once on mount
 
-  // Initialize In-App Purchases for iOS
+  // Initialize In-App Purchases for iOS - SAFE VERSION
+  // This is handled by BillingContext now, but keep logging here
   useEffect(() => {
-    const initializeIAP = async () => {
-      if (!isCapacitorNative() || !isIOS()) {
-        return;
-      }
-
+    console.log('App: IAP initialization effect running');
+    console.log('App: isCapacitorNative:', isCapacitorNative());
+    console.log('App: isIOS:', isIOS());
+    
+    // All IAP handling is now done by BillingContext
+    // This effect just logs for debugging
+    
+    const logIAPStatus = () => {
       try {
-        // Wait for CdvPurchase to be available (cordova-plugin-purchase)
-        let attempts = 0;
-        const maxAttempts = 30;
-        
-        const waitForStore = () => {
-          return new Promise((resolve) => {
-            const check = () => {
-              if (window.CdvPurchase) {
-                resolve(true);
-              } else if (attempts < maxAttempts) {
-                attempts++;
-                setTimeout(check, 200);
-              } else {
-                resolve(false);
-              }
-            };
-            check();
-          });
-        };
-
-        const storeAvailable = await waitForStore();
-        
-        if (!storeAvailable) {
-          console.log('IAP: CdvPurchase not available after waiting');
-          return;
+        if (window.CdvPurchase && window.CdvPurchase.store) {
+          console.log('App: CdvPurchase store is available');
+          console.log('App: Products:', window.CdvPurchase.store.products?.length || 0);
+        } else {
+          console.log('App: CdvPurchase store not yet available');
         }
-
-        const CdvPurchase = window.CdvPurchase;
-        console.log('IAP: Initializing store...');
-        
-        // Set debug verbosity (remove in production)
-        CdvPurchase.store.verbosity = CdvPurchase.LogLevel.DEBUG;
-        
-        // Register the product
-        CdvPurchase.store.register({
-          id: 'com.whattoeat.penx.premium.v2',
-          type: CdvPurchase.ProductType.NON_CONSUMABLE,
-          platform: CdvPurchase.Platform.APPLE_APPSTORE
-        });
-
-        // Set up event listeners
-        CdvPurchase.store.when()
-          .productUpdated(product => {
-            console.log('IAP: Product updated:', product.id, product.title, product.pricing?.price);
-          })
-          .approved(transaction => {
-            console.log('IAP: Transaction approved:', transaction.transactionId);
-            transaction.verify();
-          })
-          .verified(receipt => {
-            console.log('IAP: Receipt verified');
-            // Grant premium access
-            localStorage.setItem('isPremium', 'true');
-            receipt.finish();
-          })
-          .finished(transaction => {
-            console.log('IAP: Transaction finished:', transaction.transactionId);
-          })
-          .error(err => {
-            console.error('IAP: Store error:', err);
-          });
-
-        // Initialize the store
-        await CdvPurchase.store.initialize([CdvPurchase.Platform.APPLE_APPSTORE]);
-        
-        console.log('IAP: Store initialized. Products:', CdvPurchase.store.products);
-        
-        // Check for any owned products (restored purchases)
-        const product = CdvPurchase.store.get('com.whattoeat.penx.premium.v2');
-        if (product && product.owned) {
-          console.log('IAP: User owns premium');
-          localStorage.setItem('isPremium', 'true');
-        }
-        
-      } catch (err) {
-        console.error('IAP initialization error:', err);
+      } catch (e) {
+        console.log('App: Error checking IAP status:', e);
       }
     };
-
-    initializeIAP();
+    
+    // Log after a delay to allow store to initialize
+    const timer = setTimeout(logIAPStatus, 3000);
+    return () => clearTimeout(timer);
   }, []); // Only run once on mount
 
   useEffect(() => {
@@ -3657,15 +3652,20 @@ function App() {
 }
 
 // Wrap App with ErrorBoundary, AppUpdateProvider, and BillingProvider for production stability
-const AppWithErrorBoundary = () => (
-  <ErrorBoundary>
-    <AppUpdateProvider>
-      <BillingProvider>
-        <UpdatePrompt />
-        <App />
-      </BillingProvider>
-    </AppUpdateProvider>
-  </ErrorBoundary>
-);
+// CRITICAL: Each provider wrapped in try-catch via their own error handling
+const AppWithErrorBoundary = () => {
+  console.log('AppWithErrorBoundary: Rendering...');
+  
+  return (
+    <ErrorBoundary>
+      <AppUpdateProvider>
+        <BillingProvider>
+          <UpdatePrompt />
+          <App />
+        </BillingProvider>
+      </AppUpdateProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default AppWithErrorBoundary;
