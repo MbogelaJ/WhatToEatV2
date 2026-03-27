@@ -5,9 +5,9 @@
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// Product IDs - must match what you create in Play Console / App Store Connect
+// Product IDs - MUST match App Store Connect exactly
 const PRODUCTS = {
-  PREMIUM_LIFETIME: 'com.whattoeat.penx.premium.v2' // iOS product ID
+  PREMIUM_LIFETIME: 'com.whattoeat.penx.premium.v2'
 };
 
 // Safe platform detection - never throws
@@ -43,14 +43,17 @@ const BillingContext = createContext(null);
 
 export function BillingProvider({ children }) {
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isStoreReady, setIsStoreReady] = useState(false);
   const [products, setProducts] = useState([]);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [premiumExpiry, setPremiumExpiry] = useState(null);
   const [error, setError] = useState(null);
   const [store, setStore] = useState(null);
+  const [productLoadError, setProductLoadError] = useState(null);
 
   console.log('BillingProvider: Mounting...');
+  console.log('BillingProvider: Product ID =', PRODUCTS.PREMIUM_LIFETIME);
 
   // Load premium status from local storage on mount - SAFE
   useEffect(() => {
@@ -85,39 +88,48 @@ export function BillingProvider({ children }) {
     // Delay initialization to ensure app is fully loaded
     const timer = setTimeout(() => {
       initializeBilling();
-    }, 1000);
+    }, 1500);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const initializeBilling = async () => {
-    console.log('Billing: Starting initialization...');
+    console.log('=== Billing: Starting initialization ===');
+    console.log('Billing: isNativePlatform:', isNativePlatform());
+    console.log('Billing: isIOS:', isIOSPlatform());
+    console.log('Billing: isAndroid:', isAndroidPlatform());
     
     // Not on native platform - mark as initialized and return
     if (!isNativePlatform()) {
       console.log('Billing: Not a native platform, skipping');
       setIsInitialized(true);
+      setIsStoreReady(true);
       return;
     }
 
     try {
       // Wait for CdvPurchase to be available
+      console.log('Billing: Waiting for CdvPurchase...');
       const cdvAvailable = await waitForCdvPurchase();
       
       if (!cdvAvailable || !window.CdvPurchase) {
         console.log('Billing: CdvPurchase not available after waiting');
+        setProductLoadError('Store not available. Please restart the app.');
         setIsInitialized(true);
         return;
       }
 
       const CdvPurchase = window.CdvPurchase;
-      console.log('Billing: CdvPurchase found, initializing store...');
+      console.log('Billing: CdvPurchase found!');
+      console.log('Billing: CdvPurchase version:', CdvPurchase.version || 'unknown');
       
       // Set verbosity for debugging
       try {
         CdvPurchase.store.verbosity = CdvPurchase.LogLevel.DEBUG;
+        console.log('Billing: Debug verbosity set');
       } catch (e) {
-        console.log('Billing: Could not set verbosity');
+        console.log('Billing: Could not set verbosity:', e);
       }
       
       // Determine platform
@@ -126,6 +138,7 @@ export function BillingProvider({ children }) {
         : CdvPurchase.Platform.APPLE_APPSTORE;
       
       console.log('Billing: Platform:', platform);
+      console.log('Billing: Registering product:', PRODUCTS.PREMIUM_LIFETIME);
       
       // Register products
       try {
@@ -134,16 +147,22 @@ export function BillingProvider({ children }) {
           type: CdvPurchase.ProductType.NON_CONSUMABLE,
           platform: platform
         });
-        console.log('Billing: Product registered');
+        console.log('Billing: Product registered successfully');
       } catch (e) {
         console.error('Billing: Error registering product:', e);
+        setProductLoadError('Failed to register product');
       }
 
-      // Set up event listeners - wrapped in try-catch
+      // Set up event listeners
+      console.log('Billing: Setting up event listeners...');
       try {
         CdvPurchase.store.when()
           .productUpdated(product => {
-            console.log('Billing: Product updated:', product?.id);
+            console.log('=== Billing: Product Updated ===');
+            console.log('Billing: Product ID:', product?.id);
+            console.log('Billing: Product title:', product?.title);
+            console.log('Billing: Product price:', product?.pricing?.price);
+            console.log('Billing: Can purchase:', product?.canPurchase);
             safeUpdateProductsList();
           })
           .approved(transaction => {
@@ -161,36 +180,69 @@ export function BillingProvider({ children }) {
             console.error('Billing: Store error:', err);
             setError(err?.message || 'Store error');
           });
+        console.log('Billing: Event listeners set up');
       } catch (e) {
         console.error('Billing: Error setting up listeners:', e);
       }
 
       // Initialize the store
+      console.log('Billing: Initializing store with platform:', platform);
       try {
         await CdvPurchase.store.initialize([platform]);
         console.log('Billing: Store initialized successfully');
       } catch (e) {
         console.error('Billing: Store initialization error:', e);
+        setProductLoadError('Store initialization failed');
       }
+      
+      // Wait for store to be ready
+      console.log('Billing: Waiting for store.ready()...');
+      try {
+        await CdvPurchase.store.ready();
+        console.log('Billing: Store is ready!');
+        setIsStoreReady(true);
+      } catch (e) {
+        console.error('Billing: store.ready() error:', e);
+      }
+      
+      // Log all loaded products
+      console.log('=== Billing: Loaded Products ===');
+      console.log('Billing: store.products:', CdvPurchase.store.products);
+      console.log('Billing: Number of products:', CdvPurchase.store.products?.length || 0);
       
       // Update products list
       safeUpdateProductsList();
       
+      // Check if our product was loaded
+      const product = CdvPurchase.store.get(PRODUCTS.PREMIUM_LIFETIME);
+      console.log('Billing: Our product lookup result:', product);
+      
+      if (!product || !product.title) {
+        console.log('Billing: WARNING - Product not found in store!');
+        setProductLoadError('Product not found. Please check your internet connection and try again.');
+      } else {
+        console.log('Billing: Product loaded successfully!');
+        console.log('Billing: Title:', product.title);
+        console.log('Billing: Price:', product.pricing?.price);
+        setProductLoadError(null);
+      }
+      
       setStore(CdvPurchase.store);
       setIsInitialized(true);
-      console.log('Billing: Initialization complete');
+      console.log('=== Billing: Initialization complete ===');
 
     } catch (err) {
       console.error('Billing: Critical initialization error:', err);
       setError(err?.message || 'Initialization failed');
-      setIsInitialized(true); // Still mark as initialized to prevent blocking
+      setProductLoadError('Failed to initialize store');
+      setIsInitialized(true);
     }
   };
 
   const waitForCdvPurchase = () => {
     return new Promise((resolve) => {
       let attempts = 0;
-      const maxAttempts = 30; // 7.5 seconds
+      const maxAttempts = 40; // 10 seconds
       
       const check = () => {
         try {
@@ -199,9 +251,12 @@ export function BillingProvider({ children }) {
             resolve(true);
           } else if (attempts < maxAttempts) {
             attempts++;
+            if (attempts % 10 === 0) {
+              console.log('Billing: Still waiting for CdvPurchase... attempt', attempts);
+            }
             setTimeout(check, 250);
           } else {
-            console.log('Billing: CdvPurchase not found after max attempts');
+            console.log('Billing: CdvPurchase not found after', maxAttempts, 'attempts');
             resolve(false);
           }
         } catch (e) {
@@ -216,32 +271,50 @@ export function BillingProvider({ children }) {
 
   const safeUpdateProductsList = useCallback(() => {
     try {
-      if (!window.CdvPurchase || !window.CdvPurchase.store) return;
+      if (!window.CdvPurchase || !window.CdvPurchase.store) {
+        console.log('Billing: Cannot update products - store not available');
+        return;
+      }
       
       const loadedProducts = [];
       
+      console.log('Billing: Checking for products...');
       Object.values(PRODUCTS).forEach(productId => {
         try {
+          console.log('Billing: Looking for product:', productId);
           const product = window.CdvPurchase.store.get(productId);
-          if (product && product.title) {
-            loadedProducts.push({
+          console.log('Billing: Product lookup result:', product);
+          
+          if (product) {
+            const productInfo = {
               id: product.id,
-              title: product.title,
-              description: product.description || '',
+              title: product.title || 'Premium Access',
+              description: product.description || 'Unlock all pregnancy foods',
               price: product.pricing?.price || '$1.99',
               priceMicros: product.pricing?.priceMicros,
               currency: product.pricing?.currency || 'USD',
               type: product.type,
-              canPurchase: product.canPurchase
-            });
+              canPurchase: product.canPurchase,
+              owned: product.owned
+            };
+            loadedProducts.push(productInfo);
+            console.log('Billing: Added product to list:', productInfo);
+          } else {
+            console.log('Billing: Product not found:', productId);
           }
         } catch (e) {
-          console.error('Billing: Error getting product:', e);
+          console.error('Billing: Error getting product:', productId, e);
         }
       });
       
       setProducts(loadedProducts);
-      console.log('Billing: Products updated:', loadedProducts.length);
+      console.log('Billing: Products updated. Total:', loadedProducts.length);
+      
+      if (loadedProducts.length === 0) {
+        setProductLoadError('Product not found');
+      } else {
+        setProductLoadError(null);
+      }
     } catch (e) {
       console.error('Billing: Error updating products list:', e);
     }
@@ -282,15 +355,24 @@ export function BillingProvider({ children }) {
   };
 
   const purchase = async (productId) => {
-    console.log('Billing: Purchase requested for:', productId);
+    console.log('=== Billing: Purchase requested ===');
+    console.log('Billing: Product ID:', productId);
+    console.log('Billing: isNativePlatform:', isNativePlatform());
+    console.log('Billing: store available:', !!store);
+    console.log('Billing: isStoreReady:', isStoreReady);
     
     if (!isNativePlatform()) {
-      setError('Billing not available on this platform');
+      setError('Purchases only available in the app');
       return false;
     }
 
     if (!store) {
-      setError('Store not initialized. Please try again.');
+      setError('Store not initialized. Please restart the app.');
+      return false;
+    }
+
+    if (!isStoreReady) {
+      setError('Store is still loading. Please wait a moment.');
       return false;
     }
 
@@ -298,19 +380,25 @@ export function BillingProvider({ children }) {
     setError(null);
 
     try {
+      console.log('Billing: Getting product from store...');
       const product = store.get(productId);
+      console.log('Billing: Product:', product);
       
       if (!product) {
-        throw new Error('Product not available. Please try again later.');
+        throw new Error('Product not found. Please check your connection and try again.');
       }
 
+      console.log('Billing: Getting offer...');
       const offer = product.getOffer();
+      console.log('Billing: Offer:', offer);
+      
       if (!offer) {
-        throw new Error('No purchase option available.');
+        throw new Error('No purchase option available. Please try again later.');
       }
 
-      console.log('Billing: Initiating purchase...');
+      console.log('Billing: Initiating purchase order...');
       await offer.order();
+      console.log('Billing: Purchase order initiated');
       
       return true;
       
@@ -361,11 +449,13 @@ export function BillingProvider({ children }) {
 
   const value = {
     isInitialized,
+    isStoreReady,
     products,
     isPurchasing,
     isPremium,
     premiumExpiry,
     error,
+    productLoadError,
     purchase,
     restorePurchases,
     setManualPremium,
@@ -386,11 +476,13 @@ export function useBilling() {
     console.warn('useBilling called outside of BillingProvider, returning defaults');
     return {
       isInitialized: true,
+      isStoreReady: false,
       products: [],
       isPurchasing: false,
       isPremium: false,
       premiumExpiry: null,
       error: null,
+      productLoadError: 'Not initialized',
       purchase: () => Promise.resolve(false),
       restorePurchases: () => Promise.resolve(),
       setManualPremium: () => {},
