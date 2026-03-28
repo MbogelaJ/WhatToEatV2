@@ -2158,7 +2158,11 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
         <div className="form-group">
           <label>Email</label>
           <input
-            type="email"
+            type="text"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
             placeholder="reviewer@whattoeatapp.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -2170,12 +2174,14 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
         <div className="form-group">
           <label>Password</label>
           <input
-            type="password"
+            type="text"
+            autoComplete="off"
             placeholder="Test12345"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="form-input"
             data-testid="password-input"
+            style={{ WebkitTextSecurity: 'disc' }}
           />
         </div>
 
