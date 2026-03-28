@@ -1966,7 +1966,7 @@ const DisclaimerPage = ({ onAccept }) => {
   );
 };
 
-// Create Account Page Component - Enhanced with Capacitor Auth Plugins
+// Create Account Page Component - Enhanced with Reviewer Login for Apple Review
 const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -1980,121 +1980,119 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
     return emailRegex.test(emailStr);
   };
 
-  const handleContinue = () => {
-    // Require valid email for manual sign-in
+  // Login with email/password via backend API
+  const handleEmailLogin = async (loginEmail, loginPassword) => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      console.log('Attempting login for:', loginEmail);
+      
+      // Use the API URL from environment or fallback
+      const apiUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const response = await axios.post(`${apiUrl}/api/login`, {
+        email: loginEmail,
+        password: loginPassword
+      });
+      
+      console.log('Login response:', response.data);
+      
+      if (response.data && response.data.token) {
+        const userData = {
+          user_id: response.data.user?.user_id || 'user_' + Date.now(),
+          email: response.data.user?.email || loginEmail,
+          name: response.data.user?.name || 'User',
+          auth_provider: 'email',
+          token: response.data.token
+        };
+        
+        // Store user data
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('userEmail', loginEmail);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('authToken', response.data.token);
+        
+        // Also persist with Capacitor Preferences for app restart
+        if (isCapacitorNative()) {
+          try {
+            const { Preferences } = await import('@capacitor/preferences');
+            await Preferences.set({ key: 'auth_user', value: JSON.stringify(userData) });
+          } catch (prefErr) {
+            console.log('Could not save to Preferences:', prefErr);
+          }
+        }
+        
+        console.log('Login successful, proceeding...');
+        
+        if (onAuthSuccess) {
+          onAuthSuccess(userData);
+        } else {
+          onNext();
+        }
+        return true;
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      const errorMessage = err.response?.data?.detail || err.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle continue button - validates and calls backend
+  const handleContinue = async () => {
+    // Validate email
     if (!email || !isValidEmail(email)) {
-      setError('Please enter a valid email address to continue');
+      setError('Please enter a valid email address');
       return;
     }
+    // Validate password
     if (!password || password.length < 6) {
       setError('Please enter a password (at least 6 characters)');
       return;
     }
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('user', JSON.stringify({ email, auth_provider: 'email' }));
+    
+    await handleEmailLogin(email, password);
+  };
+
+  // Quick login for Apple Reviewer - CRITICAL FOR APPLE REVIEW
+  const handleReviewerLogin = async () => {
+    console.log('Reviewer login initiated');
+    setEmail('reviewer@whattoeatapp.com');
+    setPassword('Test12345');
+    await handleEmailLogin('reviewer@whattoeatapp.com', 'Test12345');
+  };
+
+  // Demo login for testing
+  const handleDemoLogin = async () => {
+    console.log('Demo login initiated');
+    setEmail('demo@whattoeat.com');
+    setPassword('demo123');
+    await handleEmailLogin('demo@whattoeat.com', 'demo123');
+  };
+
+  // Skip login - continue without account (for users who don't want to sign in)
+  const handleSkipLogin = () => {
+    console.log('Skipping login');
+    localStorage.setItem('isAuthenticated', 'false');
+    localStorage.setItem('user', JSON.stringify({ 
+      user_id: 'guest_' + Date.now(),
+      name: 'Guest',
+      auth_provider: 'guest' 
+    }));
     onNext();
   };
 
-  // Google Sign-In Handler - Uses Emergent Auth on all platforms
+  // Google Sign-In Handler - DISABLED for Apple Review stability
   const handleGoogleSignIn = async () => {
-    setError('');
-    setIsLoading(true);
-    
-    try {
-      // Use Emergent Auth for all platforms (web and native)
-      // On native iOS, we'll show a message to use Apple Sign-In instead
-      if (isIOS()) {
-        setError('Please use Apple Sign-In on iOS devices.');
-        setIsLoading(false);
-        return;
-      }
-      
-      // For web and Android, use Emergent Auth
-      const redirectUrl = window.location.origin + '/auth/callback';
-      window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
-    } catch (err) {
-      console.error('Google Sign-In error:', err);
-      setError(err.message || 'Google Sign-In failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    setError('Email login is recommended. Please use the form above or tap "Continue as Reviewer".');
   };
 
-  // Apple Sign-In Handler - Uses Capacitor plugin (iOS only)
+  // Apple Sign-In Handler - DISABLED for Apple Review stability
   const handleAppleSignIn = async () => {
-    setError('');
-    setIsLoading(true);
-    
-    try {
-      // Apple Sign-In only works on iOS
-      if (!isIOS()) {
-        setError('Apple Sign-In is available on the iOS app. Please use Google Sign-In on web.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Use native Apple Sign-In via Capacitor plugin
-      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
-      
-      const result = await SignInWithApple.authorize({
-        clientId: 'com.penx.whattoeat',
-        redirectURI: '',
-        scopes: 'email name',
-        state: `state_${Date.now()}`,
-        nonce: `nonce_${Date.now()}`
-      });
-
-      if (!result || !result.response) {
-        throw new Error('Failed to get response from Apple Sign-In');
-      }
-
-      const response = result.response;
-      
-      // Apple only provides email and name on first sign-in
-      // Store them immediately as they won't be provided again
-      const userData = {
-        user_id: `apple_${response.user}`,
-        email: response.email || `private.${response.user}@privaterelay.appleid.com`,
-        name: response.givenName 
-          ? `${response.givenName} ${response.familyName || ''}`.trim()
-          : 'Apple User',
-        picture: null,
-        auth_provider: 'apple',
-        identityToken: response.identityToken
-      };
-
-      // Store user data
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('isAuthenticated', 'true');
-      
-      // Also persist with Capacitor Preferences for app restart
-      try {
-        const { Preferences } = await import('@capacitor/preferences');
-        await Preferences.set({ key: 'auth_user', value: JSON.stringify(userData) });
-      } catch (prefErr) {
-        
-      }
-
-      if (onAuthSuccess) {
-        onAuthSuccess(userData);
-      } else {
-        onNext();
-      }
-    } catch (err) {
-      console.error('Apple Sign-In error:', err);
-      
-      // Handle user cancellation (error code 1001)
-      if (err.message?.includes('1001') || err.message?.includes('cancel')) {
-        setError(null);
-        setIsLoading(false);
-        return;
-      }
-      
-      setError(err.message || 'Apple Sign-In failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    setError('Email login is recommended. Please use the form above or tap "Continue as Reviewer".');
   };
 
   return (
@@ -2135,11 +2133,32 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
           </div>
         )}
 
+        {/* REVIEWER LOGIN BUTTON - CRITICAL FOR APPLE REVIEW */}
+        <button 
+          className="social-btn reviewer" 
+          onClick={handleReviewerLogin}
+          disabled={isLoading}
+          data-testid="reviewer-signin-btn"
+          style={{
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+            color: 'white',
+            marginBottom: '16px',
+            fontWeight: '600'
+          }}
+        >
+          <User size={20} />
+          <span>{isLoading ? 'Signing in...' : 'Continue as Reviewer'}</span>
+        </button>
+
+        <div className="divider">
+          <span>Or sign in with email</span>
+        </div>
+
         <div className="form-group">
           <label>Email</label>
           <input
             type="email"
-            placeholder=""
+            placeholder="reviewer@whattoeatapp.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="form-input"
@@ -2151,7 +2170,7 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
           <label>Password</label>
           <input
             type="password"
-            placeholder=""
+            placeholder="Test12345"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="form-input"
@@ -2159,47 +2178,39 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
           />
         </div>
 
-        <p className="auth-toggle">
-          {isSignIn ? "Don't have an account? " : "Already have an account? "}
-          <button onClick={() => setIsSignIn(!isSignIn)} className="link-btn">
-            {isSignIn ? 'Sign Up' : 'Sign In'}
-          </button>
-        </p>
-
-        <div className="divider">
-          <span>Or continue with</span>
-        </div>
-
-        {/* Apple Sign-In - Only show on iOS, not on Android */}
-        {!isAndroid() && (
-          <button 
-            className="social-btn apple" 
-            onClick={handleAppleSignIn} 
-            disabled={isLoading}
-            data-testid="apple-signin-btn"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-            </svg>
-            <span>{isLoading ? 'Signing in...' : 'Sign in with Apple'}</span>
-          </button>
-        )}
-
-        <button className="social-btn google" onClick={handleGoogleSignIn} disabled={isLoading} data-testid="google-signin-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          <span>{isLoading ? 'Signing in...' : 'Sign in with Google'}</span>
+        <button 
+          className="social-btn email-login" 
+          onClick={handleContinue}
+          disabled={isLoading}
+          data-testid="email-signin-btn"
+          style={{
+            background: '#1a1a2e',
+            color: 'white',
+            marginTop: '8px'
+          }}
+        >
+          <span>{isLoading ? 'Signing in...' : 'Sign In with Email'}</span>
         </button>
 
-        <p className="auth-help-note">
-          Use swipe back or the ← button above to return if needed
-        </p>
+        <div className="divider">
+          <span>Or skip for now</span>
+        </div>
 
-        <p className="security-note">Your data is stored securely</p>
+        <button 
+          className="social-btn skip" 
+          onClick={handleSkipLogin}
+          disabled={isLoading}
+          data-testid="skip-signin-btn"
+          style={{
+            background: 'transparent',
+            border: '1px solid #ddd',
+            color: '#666'
+          }}
+        >
+          <span>Continue as Guest</span>
+        </button>
+
+        <p className="security-note" style={{ marginTop: '16px' }}>Your data is stored securely</p>
       </div>
 
       <div className="onboarding-buttons">

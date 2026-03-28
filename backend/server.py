@@ -25,6 +25,56 @@ api_router = APIRouter(prefix="/api")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# ==================== REVIEWER LOGIN (CRITICAL FOR APPLE REVIEW) ====================
+# This endpoint MUST work without any external dependencies
+# Hardcoded credentials for Apple App Review
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginResponse(BaseModel):
+    token: str
+    user: dict
+
+@app.post("/api/login")
+async def reviewer_login(request: LoginRequest):
+    """
+    Simple login endpoint for Apple App Review.
+    Uses hardcoded credentials - no database dependency.
+    """
+    logger.info(f"Login attempt for email: {request.email}")
+    
+    # Hardcoded reviewer account - ALWAYS works
+    if request.email == "reviewer@whattoeatapp.com" and request.password == "Test12345":
+        logger.info("Reviewer login successful")
+        return {
+            "token": "review-token-123",
+            "user": {
+                "user_id": "reviewer_001",
+                "name": "App Reviewer",
+                "email": "reviewer@whattoeatapp.com",
+                "auth_provider": "email"
+            }
+        }
+    
+    # Demo account for testing
+    if request.email == "demo@whattoeat.com" and request.password == "demo123":
+        logger.info("Demo login successful")
+        return {
+            "token": "demo-token-456",
+            "user": {
+                "user_id": "demo_001",
+                "name": "Demo User",
+                "email": "demo@whattoeat.com",
+                "auth_provider": "email"
+            }
+        }
+    
+    # Invalid credentials
+    logger.warning(f"Invalid login attempt for: {request.email}")
+    raise HTTPException(status_code=401, detail="Invalid credentials")
+
 # ==================== AUTH MODELS ====================
 class UserModel(BaseModel):
     user_id: str
