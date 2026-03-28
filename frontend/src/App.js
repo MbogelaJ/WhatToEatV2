@@ -1970,7 +1970,6 @@ const DisclaimerPage = ({ onAccept }) => {
 const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignIn, setIsSignIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -1980,111 +1979,114 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
     return emailRegex.test(emailStr);
   };
 
-  // Login with email/password via backend API
-  const handleEmailLogin = async (loginEmail, loginPassword) => {
+  // DIRECT LOGIN FUNCTION - No delays, no blockers
+  const loginUser = async (loginEmail, loginPassword) => {
+    console.log('=== LOGIN ATTEMPT ===');
+    console.log('Email:', loginEmail);
+    console.log('API URL:', process.env.REACT_APP_BACKEND_URL);
+    
     setIsLoading(true);
     setError('');
     
     try {
-      console.log('Attempting login for:', loginEmail);
-      
-      // Use the API URL from environment or fallback
+      // Build API URL - ensure it's production URL
       const apiUrl = process.env.REACT_APP_BACKEND_URL || '';
-      const response = await axios.post(`${apiUrl}/api/login`, {
-        email: loginEmail,
-        password: loginPassword
+      const loginUrl = `${apiUrl}/api/login`;
+      
+      console.log('Calling:', loginUrl);
+      
+      // Make the API call
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: loginEmail, 
+          password: loginPassword 
+        }),
       });
       
-      console.log('Login response:', response.data);
+      console.log('Response status:', response.status);
       
-      if (response.data && response.data.token) {
-        const userData = {
-          user_id: response.data.user?.user_id || 'user_' + Date.now(),
-          email: response.data.user?.email || loginEmail,
-          name: response.data.user?.name || 'User',
-          auth_provider: 'email',
-          token: response.data.token
-        };
-        
-        // Store user data
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('userEmail', loginEmail);
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('authToken', response.data.token);
-        
-        // Also persist with Capacitor Preferences for app restart
-        if (isCapacitorNative()) {
-          try {
-            const { Preferences } = await import('@capacitor/preferences');
-            await Preferences.set({ key: 'auth_user', value: JSON.stringify(userData) });
-          } catch (prefErr) {
-            console.log('Could not save to Preferences:', prefErr);
-          }
-        }
-        
-        console.log('Login successful, proceeding...');
-        
-        if (onAuthSuccess) {
-          onAuthSuccess(userData);
-        } else {
-          onNext();
-        }
-        return true;
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Login failed');
       }
+      
+      // Success - store user data
+      const userData = {
+        user_id: data.user?.user_id || 'user_' + Date.now(),
+        email: data.user?.email || loginEmail,
+        name: data.user?.name || 'User',
+        auth_provider: 'email',
+        token: data.token
+      };
+      
+      console.log('Storing user data:', userData);
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('userEmail', loginEmail);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('authToken', data.token);
+      
+      // Try Capacitor Preferences (non-blocking)
+      try {
+        if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) {
+          const { Preferences } = await import('@capacitor/preferences');
+          await Preferences.set({ key: 'auth_user', value: JSON.stringify(userData) });
+        }
+      } catch (e) {
+        console.log('Preferences save skipped:', e);
+      }
+      
+      console.log('=== LOGIN SUCCESS ===');
+      
+      // Navigate to next screen
+      if (onAuthSuccess) {
+        onAuthSuccess(userData);
+      } else {
+        onNext();
+      }
+      
+      return true;
+      
     } catch (err) {
-      console.error('Login error:', err);
-      const errorMessage = err.response?.data?.detail || err.message || 'Login failed. Please try again.';
-      setError(errorMessage);
+      console.error('=== LOGIN ERROR ===', err);
+      setError(err.message || 'Login failed. Please try again.');
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle continue button - validates and calls backend
-  const handleContinue = async () => {
-    // Validate email
+  // REVIEWER LOGIN - Direct, no delays
+  const handleReviewerLogin = () => {
+    console.log('Reviewer button clicked');
+    setEmail('reviewer@whattoeatapp.com');
+    setPassword('Test12345');
+    loginUser('reviewer@whattoeatapp.com', 'Test12345');
+  };
+
+  // EMAIL LOGIN - From form fields
+  const handleEmailLogin = () => {
+    console.log('Email login button clicked');
     if (!email || !isValidEmail(email)) {
       setError('Please enter a valid email address');
       return;
     }
-    // Validate password
-    if (!password || password.length < 6) {
-      setError('Please enter a password (at least 6 characters)');
+    if (!password) {
+      setError('Please enter a password');
       return;
     }
-    
-    await handleEmailLogin(email, password);
+    loginUser(email, password);
   };
 
-  // Quick login for Apple Reviewer - CRITICAL FOR APPLE REVIEW
-  // Auto-fills credentials and submits automatically
-  const handleReviewerLogin = async () => {
-    console.log('Reviewer login initiated - auto-filling credentials');
-    
-    // Auto-fill the fields so reviewer can see what's being entered
-    setEmail('reviewer@whattoeatapp.com');
-    setPassword('Test12345');
-    setError('');
-    
-    // Brief delay so reviewer sees the auto-filled credentials
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Auto-submit
-    await handleEmailLogin('reviewer@whattoeatapp.com', 'Test12345');
-  };
-
-  // Demo login for testing
-  const handleDemoLogin = async () => {
-    console.log('Demo login initiated');
-    setEmail('demo@whattoeat.com');
-    setPassword('demo123');
-    await handleEmailLogin('demo@whattoeat.com', 'demo123');
-  };
-
-  // Skip login - continue without account (for users who don't want to sign in)
+  // SKIP LOGIN - Continue as guest
   const handleSkipLogin = () => {
-    console.log('Skipping login');
+    console.log('Skip login clicked');
     localStorage.setItem('isAuthenticated', 'false');
     localStorage.setItem('user', JSON.stringify({ 
       user_id: 'guest_' + Date.now(),
@@ -2092,16 +2094,6 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
       auth_provider: 'guest' 
     }));
     onNext();
-  };
-
-  // Google Sign-In Handler - DISABLED for Apple Review stability
-  const handleGoogleSignIn = async () => {
-    setError('Email login is recommended. Please use the form above or tap "Continue as Reviewer".');
-  };
-
-  // Apple Sign-In Handler - DISABLED for Apple Review stability
-  const handleAppleSignIn = async () => {
-    setError('Email login is recommended. Please use the form above or tap "Continue as Reviewer".');
   };
 
   return (
@@ -2132,8 +2124,8 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
       </div>
 
       <div className="onboarding-card">
-        <h2>{isSignIn ? 'Welcome Back' : 'Create Your Account'}</h2>
-        <p className="card-subtitle">{isSignIn ? 'Sign in to access your preferences' : 'Sign up to save your preferences'}</p>
+        <h2>Sign In</h2>
+        <p className="card-subtitle">Sign in to access your preferences</p>
 
         {error && (
           <div className="auth-error-message" data-testid="auth-error">
@@ -2189,7 +2181,7 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
 
         <button 
           className="social-btn email-login" 
-          onClick={handleContinue}
+          onClick={handleEmailLogin}
           disabled={isLoading}
           data-testid="email-signin-btn"
           style={{
@@ -2229,7 +2221,7 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
         </button>
         <button 
           className="onboarding-btn primary" 
-          onClick={handleContinue} 
+          onClick={handleEmailLogin} 
           data-testid="create-account-next-btn"
         >
           <span>Continue</span>
