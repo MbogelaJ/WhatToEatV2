@@ -2058,10 +2058,19 @@ const CreateAccountPage = ({ onNext, onBack, onAuthSuccess }) => {
   };
 
   // Quick login for Apple Reviewer - CRITICAL FOR APPLE REVIEW
+  // Auto-fills credentials and submits automatically
   const handleReviewerLogin = async () => {
-    console.log('Reviewer login initiated');
+    console.log('Reviewer login initiated - auto-filling credentials');
+    
+    // Auto-fill the fields so reviewer can see what's being entered
     setEmail('reviewer@whattoeatapp.com');
     setPassword('Test12345');
+    setError('');
+    
+    // Brief delay so reviewer sees the auto-filled credentials
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Auto-submit
     await handleEmailLogin('reviewer@whattoeatapp.com', 'Test12345');
   };
 
