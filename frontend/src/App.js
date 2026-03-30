@@ -2742,18 +2742,35 @@ function App() {
   const [activeView, setActiveView] = useState('home');
   
   // Auth state
+  // Default guest user - ensures app always has valid user object
+  const defaultGuestUser = {
+    user_id: 'guest_' + Date.now(),
+    name: 'Guest',
+    email: null,
+    auth_provider: 'guest'
+  };
+
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [isAuthCallback, setIsAuthCallback] = useState(() => {
-    // Check if we're returning from OAuth callback
-    return window.location.hash?.includes('session_id=') || 
-           window.location.pathname === '/auth/callback';
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return defaultGuestUser;
+      }
+    }
+    // Set default guest user if no user found
+    localStorage.setItem('user', JSON.stringify(defaultGuestUser));
+    localStorage.setItem('isAuthenticated', 'true');
+    return defaultGuestUser;
   });
   
-  // Onboarding flow: Disclaimer -> CreateAccount -> AgePregnancy -> DietaryConsiderations -> Premium -> Home
-  // Step tracking: 0=Disclaimer, 1=CreateAccount, 2=AgePregnancy, 3=DietaryConsiderations, 4=Premium, 5=Home
+  // Auth callback handling removed - no longer using OAuth
+  const [isAuthCallback, setIsAuthCallback] = useState(false);
+  
+  // Onboarding flow: Disclaimer -> AgePregnancy -> DietaryConsiderations -> Premium -> Home
+  // Step tracking: 0=Disclaimer, 2=AgePregnancy, 3=DietaryConsiderations, 4=Premium, 5=Home
+  // NOTE: Step 1 (CreateAccount/Login) has been REMOVED
   
   // Track if disclaimer was accepted THIS SESSION (not persisted)
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
@@ -2784,11 +2801,11 @@ function App() {
   // Personalized view state
   const [personalizedView, setPersonalizedView] = useState(false);
 
-  // Handle successful auth
+  // Auth success handler - now just for guest setup
   const handleAuthSuccess = (user) => {
-    setCurrentUser(user);
+    setCurrentUser(user || defaultGuestUser);
     setIsAuthCallback(false);
-    // Skip to Age/Pregnancy step after successful auth
+    // Go directly to Age/Pregnancy step
     const nextStep = 2;
     localStorage.setItem('onboardingStep', nextStep.toString());
     setOnboardingStep(nextStep);
@@ -2850,13 +2867,13 @@ function App() {
   };
 
   const goToPreviousStep = () => {
-    if (onboardingStep === 1) {
-      // Going back from Create Account should show Disclaimer
+    if (onboardingStep === 2) {
+      // Going back from Age/Pregnancy should show Disclaimer
       setDisclaimerAccepted(false);
       setOnboardingStep(0);
       localStorage.setItem('onboardingStep', '0');
     } else {
-      const prevStep = Math.max(1, onboardingStep - 1);
+      const prevStep = Math.max(2, onboardingStep - 1);
       localStorage.setItem('onboardingStep', prevStep.toString());
       setOnboardingStep(prevStep);
     }
@@ -3070,12 +3087,15 @@ function App() {
     localStorage.setItem('dietaryRestrictions', JSON.stringify(dietaryRestrictions));
   }, [dietaryRestrictions]);
 
-  // Initialize auth and restore session on app mount
+  // Initialize user and restore session on app mount
   useEffect(() => {
-    const initializeAuth = async () => {
+    const initializeUser = async () => {
       try {
-        // Restore session from Capacitor Preferences if not already logged in
+        console.log('App: Initializing user...');
+        
+        // Ensure user exists - use stored or create guest
         if (!currentUser) {
+          // Try to restore from Capacitor Preferences first
           try {
             const { Preferences } = await import('@capacitor/preferences');
             const { value: storedUser } = await Preferences.get({ key: 'auth_user' });
@@ -3085,23 +3105,40 @@ function App() {
               setCurrentUser(userData);
               localStorage.setItem('user', storedUser);
               localStorage.setItem('isAuthenticated', 'true');
-              
-              // If user is authenticated but onboarding not complete, skip to appropriate step
-              if (onboardingStep < 2) {
-                setOnboardingStep(2);
-                localStorage.setItem('onboardingStep', '2');
-              }
+              console.log('App: User restored from Preferences');
+            } else {
+              // Set default guest user
+              const guestUser = {
+                user_id: 'guest_' + Date.now(),
+                name: 'Guest',
+                email: null,
+                auth_provider: 'guest'
+              };
+              setCurrentUser(guestUser);
+              localStorage.setItem('user', JSON.stringify(guestUser));
+              localStorage.setItem('isAuthenticated', 'true');
+              console.log('App: Guest user created');
             }
           } catch (prefErr) {
-            
+            // Create guest user as fallback
+            const guestUser = {
+              user_id: 'guest_' + Date.now(),
+              name: 'Guest',
+              email: null,
+              auth_provider: 'guest'
+            };
+            setCurrentUser(guestUser);
+            localStorage.setItem('user', JSON.stringify(guestUser));
+            localStorage.setItem('isAuthenticated', 'true');
+            console.log('App: Guest user created (fallback)');
           }
         }
       } catch (err) {
-        console.error('Auth initialization error:', err);
+        console.error('User initialization error:', err);
       }
     };
 
-    initializeAuth();
+    initializeUser();
   }, []); // Only run once on mount
 
   // Initialize In-App Purchases for iOS - SAFE VERSION
@@ -3259,30 +3296,21 @@ function App() {
       <DisclaimerPage 
         onAccept={() => {
           setDisclaimerAccepted(true);
-          // ALWAYS go to step 1 (Create Account) - no skipping for anyone
-          setOnboardingStep(1);
-          localStorage.setItem('onboardingStep', '1');
+          // Go directly to Age/Pregnancy step (Step 2) - SKIP login step
+          setOnboardingStep(2);
+          localStorage.setItem('onboardingStep', '2');
         }} 
       />
     );
   }
 
-  // Onboarding Flow: Step 0 = Disclaimer (legacy - redirect to step 1)
-  if (onboardingStep === 0) {
-    // Move to Create Account page
-    setOnboardingStep(1);
-    localStorage.setItem('onboardingStep', '1');
+  // Onboarding Flow: Step 0 or 1 = Legacy steps, redirect to Step 2 (Age/Pregnancy)
+  // Login has been removed from the flow
+  if (onboardingStep === 0 || onboardingStep === 1) {
+    // Move to Age/Pregnancy page - skip login
+    setOnboardingStep(2);
+    localStorage.setItem('onboardingStep', '2');
     return null;
-  }
-
-  // Onboarding Flow: Step 1 = Create Account
-  if (onboardingStep === 1) {
-    return (
-      <CreateAccountPage 
-        onNext={goToNextStep} 
-        onBack={goToPreviousStep} 
-      />
-    );
   }
 
   // Onboarding Flow: Step 2 = Age and Pregnancy Stage
