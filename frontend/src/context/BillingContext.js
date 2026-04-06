@@ -190,9 +190,14 @@ export function BillingProvider({ children }) {
       try {
         await CdvPurchase.store.initialize([platform]);
         console.log('Billing: Store initialized successfully');
+        
+        // Call update to refresh products from the store
+        console.log('Billing: Calling store.update()...');
+        await CdvPurchase.store.update();
+        console.log('Billing: Store updated successfully');
       } catch (e) {
         console.error('Billing: Store initialization error:', e);
-        setProductLoadError('Store initialization failed');
+        setProductLoadError('Store initialization failed. Tap "Try Again" to retry.');
       }
       
       // Wait for store to be ready
@@ -447,6 +452,27 @@ export function BillingProvider({ children }) {
     }
   };
 
+  // Refresh store - call when user taps "Try Again"
+  const refreshStore = async () => {
+    console.log('Billing: Refreshing store...');
+    setProductLoadError(null);
+    setError(null);
+    
+    try {
+      if (window.CdvPurchase && window.CdvPurchase.store) {
+        await window.CdvPurchase.store.update();
+        safeUpdateProductsList();
+        console.log('Billing: Store refreshed');
+      } else {
+        // Reinitialize
+        await initializeBilling();
+      }
+    } catch (e) {
+      console.error('Billing: Refresh error:', e);
+      setProductLoadError('Failed to refresh. Please restart the app.');
+    }
+  };
+
   const value = {
     isInitialized,
     isStoreReady,
@@ -458,6 +484,7 @@ export function BillingProvider({ children }) {
     productLoadError,
     purchase,
     restorePurchases,
+    refreshStore,
     setManualPremium,
     PRODUCTS
   };
@@ -485,6 +512,7 @@ export function useBilling() {
       productLoadError: 'Not initialized',
       purchase: () => Promise.resolve(false),
       restorePurchases: () => Promise.resolve(),
+      refreshStore: () => Promise.resolve(),
       setManualPremium: () => {},
       PRODUCTS: {}
     };
