@@ -2907,7 +2907,7 @@ function App() {
 
   // Product IDs - Must match App Store Connect / Google Play Console
   const PRODUCT_ID_IOS = 'com.whattoeat.penx.premium.v2';
-  const PRODUCT_ID_ANDROID = 'com.whattoeat.premium';
+  const PRODUCT_ID_ANDROID = 'com.whattoeat.penx.premium.v2';
   
   // Get the correct product ID based on platform
   const getProductId = () => {
