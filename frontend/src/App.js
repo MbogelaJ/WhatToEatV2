@@ -2784,7 +2784,87 @@ function App() {
   // Note: We still keep local state for backward compatibility, but BillingContext is the source of truth
   const billingContext = useBilling();
   const isPremium = billingContext?.isPremium || localStorage.getItem('isPremium') === 'true';
-  
+
+  // ==================== GOOGLE PLAY BILLING INITIALIZATION ====================
+  // Initialize Google Play Billing on Android
+  useEffect(() => {
+    const initializeGooglePlayBilling = async () => {
+      // Check if running on native platform
+      const isNative = typeof window !== 'undefined' && 
+                       window.Capacitor && 
+                       typeof window.Capacitor.isNativePlatform === 'function' &&
+                       window.Capacitor.isNativePlatform();
+      
+      if (!isNative) {
+        console.log('🌐 Running on web - skipping Google Play Billing initialization');
+        return;
+      }
+      
+      // Check if Android
+      const isAndroid = window.Capacitor.getPlatform() === 'android';
+      if (!isAndroid) {
+        console.log('📱 Running on iOS - Google Play Billing not needed');
+        return;
+      }
+      
+      console.log('🤖 Android detected - Initializing Google Play Billing...');
+      
+      // Wait for CdvPurchase to be available
+      let attempts = 0;
+      const maxAttempts = 30;
+      
+      const waitForStore = () => {
+        return new Promise((resolve) => {
+          const check = () => {
+            if (window.CdvPurchase && window.CdvPurchase.store) {
+              resolve(true);
+            } else if (attempts < maxAttempts) {
+              attempts++;
+              setTimeout(check, 200);
+            } else {
+              resolve(false);
+            }
+          };
+          check();
+        });
+      };
+      
+      const storeAvailable = await waitForStore();
+      
+      if (!storeAvailable) {
+        console.log('❌ CdvPurchase not available after waiting');
+        return;
+      }
+      
+      try {
+        const store = window.CdvPurchase.store;
+        store.verbosity = window.CdvPurchase.LogLevel.DEBUG;
+        
+        console.log('💳 Initializing Google Play Billing...');
+        
+        // Register product
+        store.register({
+          id: 'com.whattoeat.penx.premium.v2',
+          type: window.CdvPurchase.ProductType.NON_CONSUMABLE,
+          platform: window.CdvPurchase.Platform.GOOGLE_PLAY
+        });
+        
+        // Initialize store
+        await store.initialize([window.CdvPurchase.Platform.GOOGLE_PLAY]);
+        await store.update();
+        
+        console.log('✅ Google Play Billing initialized successfully!');
+        console.log('📦 Products loaded:', store.products);
+        
+      } catch (error) {
+        console.error('❌ Google Play Billing initialization failed:', error);
+      }
+    };
+    
+    initializeGooglePlayBilling();
+  }, []);
+  // ==================== END OF BILLING INITIALIZATION ====================
+
   const [dietaryRestrictions, setDietaryRestrictions] = useState(() => {
     const saved = localStorage.getItem('dietaryRestrictions');
     return saved ? JSON.parse(saved) : [];
