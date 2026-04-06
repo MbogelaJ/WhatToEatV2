@@ -2901,184 +2901,244 @@ function App() {
     }
   };
 
-  // Handle premium purchase - Apple In-App Purchase
+  // Handle premium purchase - Production-ready IAP
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
 
-  // Apple IAP Product ID - Must match App Store Connect configuration
-  const APPLE_IAP_PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
+  // Product IDs - Must match App Store Connect / Google Play Console
+  const PRODUCT_ID_IOS = 'com.whattoeat.penx.premium.v2';
+  const PRODUCT_ID_ANDROID = 'com.whattoeat.premium';
+  
+  // Get the correct product ID based on platform
+  const getProductId = () => {
+    if (isIOS()) return PRODUCT_ID_IOS;
+    if (isAndroid()) return PRODUCT_ID_ANDROID;
+    return PRODUCT_ID_IOS; // Default to iOS
+  };
 
   const handlePremiumPurchase = async () => {
+    console.log('=== PREMIUM PURCHASE INITIATED ===');
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      // Check if running on iOS native app
-      if (isCapacitorNative() && isIOS()) {
-        // Use cordova-plugin-purchase (CdvPurchase)
-        const CdvPurchase = window.CdvPurchase;
-        
-        if (CdvPurchase && CdvPurchase.store) {
-          try {
-            // Check if store is ready
-            const product = CdvPurchase.store.get(APPLE_IAP_PRODUCT_ID);
-            
-            if (product) {
-              console.log('Product found:', product);
-              
-              // Get the offer and initiate purchase
-              const offer = product.getOffer();
-              if (offer) {
-                console.log('Initiating purchase for offer:', offer);
-                
-                // Set up one-time handlers for this purchase
-                const purchasePromise = new Promise((resolve, reject) => {
-                  const timeout = setTimeout(() => {
-                    reject(new Error('Purchase timeout - please try again'));
-                  }, 120000); // 2 minute timeout
-                  
-                  CdvPurchase.store.when()
-                    .approved(transaction => {
-                      console.log('Purchase approved:', transaction);
-                      transaction.verify();
-                    })
-                    .verified(receipt => {
-                      console.log('Purchase verified:', receipt);
-                      clearTimeout(timeout);
-                      receipt.finish();
-                      resolve(receipt);
-                    })
-                    .error(err => {
-                      console.error('Purchase error:', err);
-                      clearTimeout(timeout);
-                      reject(err);
-                    });
-                });
-                
-                // Order the product
-                await offer.order();
-                
-                // Wait for purchase completion
-                await purchasePromise;
-                
-                // Grant premium access
-                localStorage.setItem('isPremium', 'true');
-                setIsPremium(true);
-                setIsProcessingPayment(false);
-                
-                alert('🎉 Purchase successful! You now have premium access to all 249 foods.');
-                setActiveView('home');
-                return;
-              } else {
-                throw new Error('No offer available for this product');
-              }
+      // Wait for CdvPurchase to be available
+      const CdvPurchase = window.CdvPurchase;
+      
+      if (!CdvPurchase || !CdvPurchase.store) {
+        console.log('CdvPurchase not available, waiting...');
+        // Wait up to 5 seconds for store to initialize
+        await new Promise((resolve, reject) => {
+          let attempts = 0;
+          const check = () => {
+            if (window.CdvPurchase && window.CdvPurchase.store) {
+              resolve(true);
+            } else if (attempts < 20) {
+              attempts++;
+              setTimeout(check, 250);
             } else {
-              // Product not loaded yet - try to refresh
-              console.log('Product not found, available products:', CdvPurchase.store.products);
-              throw new Error('Product not available. Please try again in a moment.');
+              reject(new Error('Store not available. Please restart the app and try again.'));
             }
-          } catch (iapError) {
-            console.error('IAP Error:', iapError);
-            throw new Error(iapError.message || 'Purchase failed. Please try again.');
-          }
-        } else {
-          // CdvPurchase not available - show message
-          setPaymentError(
-            'In-App Purchase is loading. Please wait a moment and try again.'
-          );
-          setIsProcessingPayment(false);
-          return;
-        }
-      } else {
-        // Web version - show message to download iOS app
-        setPaymentError(null);
-        alert(
-          '📱 Premium Purchase\n\n' +
-          'To purchase premium access, please download the WhatToEat app from the App Store.\n\n' +
-          'The App Store handles all payments securely through Apple Pay.'
-        );
-        setIsProcessingPayment(false);
-        return;
+          };
+          check();
+        });
       }
+      
+      const store = window.CdvPurchase.store;
+      const productId = getProductId();
+      
+      console.log('Store ready, looking for product:', productId);
+      console.log('Available products:', store.products);
+      
+      // Get the product
+      let product = store.get(productId);
+      
+      // If product not found, try to register and refresh
+      if (!product) {
+        console.log('Product not found, registering...');
+        
+        const platform = isIOS() 
+          ? window.CdvPurchase.Platform.APPLE_APPSTORE 
+          : window.CdvPurchase.Platform.GOOGLE_PLAY;
+        
+        store.register({
+          id: productId,
+          type: window.CdvPurchase.ProductType.NON_CONSUMABLE,
+          platform: platform
+        });
+        
+        // Refresh to load product
+        await store.refresh();
+        
+        // Try to get product again
+        product = store.get(productId);
+      }
+      
+      if (!product) {
+        console.error('Product still not available after refresh');
+        throw new Error('Product not available. Please check your internet connection and try again.');
+      }
+      
+      console.log('Product found:', product.id, product.title, product.pricing?.price);
+      
+      // Get offer
+      const offer = product.getOffer();
+      if (!offer) {
+        throw new Error('No purchase option available for this product.');
+      }
+      
+      console.log('Offer found, initiating purchase...');
+      
+      // Set up purchase handlers
+      const purchasePromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Purchase timed out. Please try again.'));
+        }, 180000); // 3 minute timeout
+        
+        // Handle approved purchases
+        store.when()
+          .approved(transaction => {
+            console.log('Transaction approved:', transaction.transactionId);
+            // Verify the transaction (for NON_CONSUMABLE, just finish it)
+            transaction.verify();
+          })
+          .verified(receipt => {
+            console.log('Receipt verified, finishing transaction...');
+            clearTimeout(timeout);
+            receipt.finish();
+            resolve({ success: true, receipt });
+          })
+          .finished(transaction => {
+            console.log('Transaction finished:', transaction.transactionId);
+          })
+          .error(err => {
+            console.error('Store error during purchase:', err);
+            clearTimeout(timeout);
+            // Check if it's a user cancellation
+            if (err.code === 'E_USER_CANCELLED' || err.message?.includes('cancel')) {
+              reject({ cancelled: true, message: 'Purchase cancelled' });
+            } else {
+              reject(err);
+            }
+          });
+      });
+      
+      // Initiate the purchase
+      console.log('Calling offer.order()...');
+      await offer.order();
+      
+      // Wait for purchase to complete
+      console.log('Waiting for purchase completion...');
+      const result = await purchasePromise;
+      
+      if (result.success) {
+        console.log('=== PURCHASE SUCCESSFUL ===');
+        
+        // Grant premium access
+        localStorage.setItem('isPremium', 'true');
+        setIsPremium(true);
+        
+        // Also save to Capacitor Preferences
+        try {
+          const { Preferences } = await import('@capacitor/preferences');
+          await Preferences.set({ key: 'isPremium', value: 'true' });
+        } catch (e) {
+          console.log('Could not save to Preferences:', e);
+        }
+        
+        setIsProcessingPayment(false);
+        setPaymentError(null);
+        
+        // Show success message
+        alert('🎉 Purchase successful!\n\nYou now have premium access to all 249 pregnancy food guides.');
+        
+        // Navigate to home
+        setActiveView('home');
+      }
+      
     } catch (error) {
-      console.error('Payment error:', error);
-      setPaymentError(error.message || 'Failed to complete purchase. Please try again.');
+      console.error('=== PURCHASE ERROR ===', error);
+      
       setIsProcessingPayment(false);
+      
+      if (error.cancelled) {
+        // User cancelled - don't show error
+        setPaymentError(null);
+      } else {
+        setPaymentError(error.message || 'Purchase failed. Please try again.');
+      }
     }
   };
 
-  // Handle restore purchases
+  // Handle restore purchases - Production-ready
   const handleRestorePurchases = async () => {
+    console.log('=== RESTORE PURCHASES INITIATED ===');
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      if (isCapacitorNative() && isIOS()) {
-        const CdvPurchase = window.CdvPurchase;
-        
-        if (CdvPurchase && CdvPurchase.store) {
-          try {
-            console.log('Restoring purchases...');
-            await CdvPurchase.store.restorePurchases();
-            
-            // Check if any owned products exist after restore
-            const product = CdvPurchase.store.get(APPLE_IAP_PRODUCT_ID);
-            if (product && product.owned) {
-              localStorage.setItem('isPremium', 'true');
-              setIsPremium(true);
-              alert('🎉 Purchases restored! Premium access activated.');
+      const CdvPurchase = window.CdvPurchase;
+      
+      if (!CdvPurchase || !CdvPurchase.store) {
+        // Wait for store
+        await new Promise((resolve, reject) => {
+          let attempts = 0;
+          const check = () => {
+            if (window.CdvPurchase && window.CdvPurchase.store) {
+              resolve(true);
+            } else if (attempts < 20) {
+              attempts++;
+              setTimeout(check, 250);
             } else {
-              setPaymentError('No previous purchases found.');
+              reject(new Error('Store not available'));
             }
-          } catch (restoreError) {
-            console.error('Restore error:', restoreError);
-            setPaymentError('Failed to restore purchases. Please try again.');
-          }
-        } else {
-          // CdvPurchase not available - check local storage or backend
-          const user = JSON.parse(localStorage.getItem('user') || 'null');
-          if (user?.user_id) {
-            try {
-              const response = await axios.get(`${API}/iap/premium-status`);
-              if (response.data.is_premium) {
-                localStorage.setItem('isPremium', 'true');
-                setIsPremium(true);
-                alert('🎉 Premium access restored!');
-              } else {
-                setPaymentError('No previous purchases found for this account.');
-              }
-            } catch {
-              setPaymentError('Store is loading. Please wait and try again.');
-            }
-          } else {
-            setPaymentError('Please sign in to restore purchases.');
-          }
-        }
-      } else {
-        // Web version
-        const user = JSON.parse(localStorage.getItem('user') || 'null');
-        if (user?.user_id) {
-          try {
-            const response = await axios.get(`${API}/iap/premium-status`);
-            if (response.data.is_premium) {
-              localStorage.setItem('isPremium', 'true');
-              setIsPremium(true);
-              alert('🎉 Premium access restored!');
-            } else {
-              setPaymentError('No previous purchases found. Purchase premium on the iOS app.');
-            }
-          } catch {
-            setPaymentError('Unable to check purchase status. Please try again.');
-          }
-        } else {
-          setPaymentError('Please sign in to restore purchases.');
-        }
+          };
+          check();
+        });
       }
+      
+      const store = window.CdvPurchase.store;
+      const productId = getProductId();
+      
+      console.log('Restoring purchases for product:', productId);
+      
+      // Restore purchases
+      await store.restorePurchases();
+      
+      // Wait a moment for owned status to update
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if product is now owned
+      const product = store.get(productId);
+      console.log('Product after restore:', product);
+      console.log('Product owned:', product?.owned);
+      
+      if (product && product.owned) {
+        console.log('=== RESTORE SUCCESSFUL ===');
+        
+        localStorage.setItem('isPremium', 'true');
+        setIsPremium(true);
+        
+        // Save to Capacitor Preferences
+        try {
+          const { Preferences } = await import('@capacitor/preferences');
+          await Preferences.set({ key: 'isPremium', value: 'true' });
+        } catch (e) {
+          console.log('Could not save to Preferences:', e);
+        }
+        
+        setIsProcessingPayment(false);
+        alert('🎉 Purchases restored!\n\nYour premium access has been activated.');
+      } else {
+        console.log('No previous purchases found');
+        setIsProcessingPayment(false);
+        setPaymentError('No previous purchases found for this account.');
+      }
+      
     } catch (error) {
-      console.error('Restore error:', error);
-      setPaymentError('Failed to restore purchases. Please try again.');
-    } finally {
+      console.error('=== RESTORE ERROR ===', error);
       setIsProcessingPayment(false);
+      setPaymentError(error.message || 'Failed to restore purchases. Please try again.');
     }
   };
 
