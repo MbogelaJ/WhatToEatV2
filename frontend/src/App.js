@@ -2981,95 +2981,105 @@ function App() {
     }
   };
 
-  // Handle premium purchase - Production-ready IAP
+  // Handle premium purchase - Production-ready IAP for SUBSCRIPTIONS
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
 
-  // Product IDs - Must match App Store Connect / Google Play Console
-  const PRODUCT_ID_IOS = 'com.whattoeat.penx.premium.v2';
-  const PRODUCT_ID_ANDROID = 'com.whattoeat.penx.premium.v2';
-  
-  // Get the correct product ID based on platform
-  const getProductId = () => {
-    if (isIOS()) return PRODUCT_ID_IOS;
-    if (isAndroid()) return PRODUCT_ID_ANDROID;
-    return PRODUCT_ID_IOS; // Default to iOS
-  };
+  // Product ID - Must match Google Play Console / App Store Connect exactly
+  const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
   const handlePremiumPurchase = async () => {
     console.log('=== PREMIUM PURCHASE INITIATED ===');
+    console.log('Platform:', isIOS() ? 'iOS' : isAndroid() ? 'Android' : 'Web');
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
       // Wait for CdvPurchase to be available
-      const CdvPurchase = window.CdvPurchase;
+      let CdvPurchase = window.CdvPurchase;
       
       if (!CdvPurchase || !CdvPurchase.store) {
         console.log('CdvPurchase not available, waiting...');
-        // Wait up to 5 seconds for store to initialize
         await new Promise((resolve, reject) => {
           let attempts = 0;
           const check = () => {
             if (window.CdvPurchase && window.CdvPurchase.store) {
               resolve(true);
-            } else if (attempts < 20) {
+            } else if (attempts < 30) {
               attempts++;
-              setTimeout(check, 250);
+              setTimeout(check, 200);
             } else {
               reject(new Error('Store not available. Please restart the app and try again.'));
             }
           };
           check();
         });
+        CdvPurchase = window.CdvPurchase;
       }
       
-      const store = window.CdvPurchase.store;
-      const productId = getProductId();
+      const store = CdvPurchase.store;
       
-      console.log('Store ready, looking for product:', productId);
-      console.log('Available products:', store.products);
+      // Set high verbosity for debugging
+      store.verbosity = 4;
+      
+      console.log('Store ready, looking for product:', PRODUCT_ID);
+      console.log('All products in store:', store.products);
       
       // Get the product
-      let product = store.get(productId);
+      let product = store.get(PRODUCT_ID);
+      console.log('Product lookup result:', product);
       
-      // If product not found, try to register and refresh
+      // If product not found, register it and refresh
       if (!product) {
-        console.log('Product not found, registering...');
+        console.log('Product not found, registering as PAID_SUBSCRIPTION...');
         
         const platform = isIOS() 
-          ? window.CdvPurchase.Platform.APPLE_APPSTORE 
-          : window.CdvPurchase.Platform.GOOGLE_PLAY;
+          ? CdvPurchase.Platform.APPLE_APPSTORE 
+          : CdvPurchase.Platform.GOOGLE_PLAY;
+        
+        console.log('Platform:', platform);
         
         store.register({
-          id: productId,
-          type: window.CdvPurchase.ProductType.NON_CONSUMABLE,
+          id: PRODUCT_ID,
+          type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
           platform: platform
         });
         
-        // Refresh to load product
-        await store.refresh();
+        console.log('Product registered, calling store.update()...');
+        await store.update();
         
-        // Try to get product again
-        product = store.get(productId);
+        console.log('Store updated, waiting for ready...');
+        await store.ready();
+        
+        product = store.get(PRODUCT_ID);
+        console.log('Product after refresh:', product);
       }
       
       if (!product) {
         console.error('Product still not available after refresh');
-        throw new Error('Product not available. Please check your internet connection and try again.');
+        console.log('Store products:', store.products);
+        throw new Error('Subscription not available. Please check your internet connection and try again.');
       }
       
-      console.log('Product found:', product.id, product.title, product.pricing?.price);
+      console.log('Product found:', product.id);
+      console.log('Product title:', product.title);
+      console.log('Product owned:', product.owned);
+      console.log('Product offers:', product.offers);
       
-      // Get offer
+      // Get offer for subscription
       const offer = product.getOffer();
+      console.log('Offer:', offer);
+      
       if (!offer) {
-        throw new Error('No purchase option available for this product.');
+        console.error('No offer available');
+        console.log('Product offers array:', product.offers);
+        throw new Error('No subscription offer available. Please try again later.');
       }
       
-      console.log('Offer found, initiating purchase...');
+      console.log('Offer ID:', offer.id);
+      console.log('Offer pricing phases:', offer.pricingPhases);
       
-      // Set up purchase handlers
+      // Set up one-time purchase handlers for this transaction
       const purchasePromise = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Purchase timed out. Please try again.'));
@@ -3078,24 +3088,27 @@ function App() {
         // Handle approved purchases
         store.when()
           .approved(transaction => {
-            console.log('Transaction approved:', transaction.transactionId);
-            // Verify the transaction (for NON_CONSUMABLE, just finish it)
+            console.log('=== Transaction APPROVED ===');
+            console.log('Transaction ID:', transaction?.transactionId);
             transaction.verify();
           })
           .verified(receipt => {
-            console.log('Receipt verified, finishing transaction...');
+            console.log('=== Receipt VERIFIED ===');
             clearTimeout(timeout);
             receipt.finish();
             resolve({ success: true, receipt });
           })
           .finished(transaction => {
-            console.log('Transaction finished:', transaction.transactionId);
+            console.log('=== Transaction FINISHED ===');
+            console.log('Transaction ID:', transaction?.transactionId);
           })
           .error(err => {
-            console.error('Store error during purchase:', err);
+            console.error('=== Store ERROR during purchase ===', err);
+            console.error('Error code:', err?.code);
             clearTimeout(timeout);
-            // Check if it's a user cancellation
-            if (err.code === 'E_USER_CANCELLED' || err.message?.includes('cancel')) {
+            if (err?.code === 'E_USER_CANCELLED' || 
+                err?.message?.includes('cancel') ||
+                err?.code === 6777010) {
               reject({ cancelled: true, message: 'Purchase cancelled' });
             } else {
               reject(err);
@@ -3103,11 +3116,12 @@ function App() {
           });
       });
       
-      // Initiate the purchase
-      console.log('Calling offer.order()...');
-      await offer.order();
+      // Initiate the purchase - this should open Google Play dialog
+      console.log('=== Calling offer.order() ===');
+      const orderResult = await offer.order();
+      console.log('Order result:', orderResult);
       
-      // Wait for purchase to complete
+      // Wait for purchase to complete through event handlers
       console.log('Waiting for purchase completion...');
       const result = await purchasePromise;
       
@@ -3129,20 +3143,18 @@ function App() {
         setIsProcessingPayment(false);
         setPaymentError(null);
         
-        // Show success message
-        alert('🎉 Purchase successful!\n\nYou now have premium access to all 249 pregnancy food guides.');
-        
-        // Navigate to home
+        alert('🎉 Subscription successful!\n\nYou now have premium access to all 249 pregnancy food guides.');
         setActiveView('home');
       }
       
     } catch (error) {
       console.error('=== PURCHASE ERROR ===', error);
+      console.error('Error message:', error?.message);
+      console.error('Error code:', error?.code);
       
       setIsProcessingPayment(false);
       
       if (error.cancelled) {
-        // User cancelled - don't show error
         setPaymentError(null);
       } else {
         setPaymentError(error.message || 'Purchase failed. Please try again.');
@@ -3150,56 +3162,57 @@ function App() {
     }
   };
 
-  // Handle restore purchases - Production-ready
+  // Handle restore purchases - Production-ready for SUBSCRIPTIONS
   const handleRestorePurchases = async () => {
     console.log('=== RESTORE PURCHASES INITIATED ===');
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      const CdvPurchase = window.CdvPurchase;
+      let CdvPurchase = window.CdvPurchase;
       
       if (!CdvPurchase || !CdvPurchase.store) {
-        // Wait for store
         await new Promise((resolve, reject) => {
           let attempts = 0;
           const check = () => {
             if (window.CdvPurchase && window.CdvPurchase.store) {
               resolve(true);
-            } else if (attempts < 20) {
+            } else if (attempts < 30) {
               attempts++;
-              setTimeout(check, 250);
+              setTimeout(check, 200);
             } else {
               reject(new Error('Store not available'));
             }
           };
           check();
         });
+        CdvPurchase = window.CdvPurchase;
       }
       
-      const store = window.CdvPurchase.store;
-      const productId = getProductId();
+      const store = CdvPurchase.store;
       
-      console.log('Restoring purchases for product:', productId);
+      console.log('Restoring purchases for product:', PRODUCT_ID);
       
-      // Restore purchases
+      // Restore purchases - this will check active subscriptions
       await store.restorePurchases();
       
-      // Wait a moment for owned status to update
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait for store to process
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Check if product is now owned
-      const product = store.get(productId);
+      // Refresh store to get latest status
+      await store.update();
+      
+      // Check if subscription is now owned
+      const product = store.get(PRODUCT_ID);
       console.log('Product after restore:', product);
       console.log('Product owned:', product?.owned);
       
       if (product && product.owned) {
-        console.log('=== RESTORE SUCCESSFUL ===');
+        console.log('=== RESTORE SUCCESSFUL - Subscription Active ===');
         
         localStorage.setItem('isPremium', 'true');
         setIsPremium(true);
         
-        // Save to Capacitor Preferences
         try {
           const { Preferences } = await import('@capacitor/preferences');
           await Preferences.set({ key: 'isPremium', value: 'true' });
@@ -3208,11 +3221,11 @@ function App() {
         }
         
         setIsProcessingPayment(false);
-        alert('🎉 Purchases restored!\n\nYour premium access has been activated.');
+        alert('🎉 Subscription restored!\n\nYour premium access has been activated.');
       } else {
-        console.log('No previous purchases found');
+        console.log('No active subscription found');
         setIsProcessingPayment(false);
-        setPaymentError('No previous purchases found for this account.');
+        setPaymentError('No active subscription found for this account.');
       }
       
     } catch (error) {

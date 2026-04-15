@@ -2,12 +2,14 @@
  * Billing Context - Manages in-app purchases across platforms
  * Supports Google Play Billing (Android) and Apple In-App Purchase (iOS)
  * CRITICAL: All operations wrapped in try-catch to prevent crashes
+ * 
+ * Product: "Premium Pregnancy Access" - PAID_SUBSCRIPTION
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// Product IDs - MUST match App Store Connect exactly
+// Product IDs - MUST match Google Play Console / App Store Connect exactly
 const PRODUCTS = {
-  PREMIUM_LIFETIME: 'com.whattoeat.penx.premium.v2'
+  PREMIUM_SUBSCRIPTION: 'com.whattoeat.penx.premium.v2'
 };
 
 // Safe platform detection - never throws
@@ -53,7 +55,7 @@ export function BillingProvider({ children }) {
   const [productLoadError, setProductLoadError] = useState(null);
 
   console.log('BillingProvider: Mounting...');
-  console.log('BillingProvider: Product ID =', PRODUCTS.PREMIUM_LIFETIME);
+  console.log('BillingProvider: Product ID =', PRODUCTS.PREMIUM_SUBSCRIPTION);
 
   // Load premium status from local storage on mount - SAFE
   useEffect(() => {
@@ -124,10 +126,10 @@ export function BillingProvider({ children }) {
       console.log('Billing: CdvPurchase found!');
       console.log('Billing: CdvPurchase version:', CdvPurchase.version || 'unknown');
       
-      // Set verbosity for debugging
+      // Set HIGH verbosity for debugging (4 = maximum debug output)
       try {
-        CdvPurchase.store.verbosity = CdvPurchase.LogLevel.DEBUG;
-        console.log('Billing: Debug verbosity set');
+        CdvPurchase.store.verbosity = 4;
+        console.log('Billing: Verbosity set to 4 (DEBUG)');
       } catch (e) {
         console.log('Billing: Could not set verbosity:', e);
       }
@@ -138,22 +140,22 @@ export function BillingProvider({ children }) {
         : CdvPurchase.Platform.APPLE_APPSTORE;
       
       console.log('Billing: Platform:', platform);
-      console.log('Billing: Registering product:', PRODUCTS.PREMIUM_LIFETIME);
+      console.log('Billing: Registering SUBSCRIPTION product:', PRODUCTS.PREMIUM_SUBSCRIPTION);
       
-      // Register products
+      // Register products - Use PAID_SUBSCRIPTION for Google Play subscriptions
       try {
         CdvPurchase.store.register({
-          id: PRODUCTS.PREMIUM_LIFETIME,
-          type: CdvPurchase.ProductType.NON_CONSUMABLE,
+          id: PRODUCTS.PREMIUM_SUBSCRIPTION,
+          type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
           platform: platform
         });
-        console.log('Billing: Product registered successfully');
+        console.log('Billing: Subscription product registered successfully');
       } catch (e) {
         console.error('Billing: Error registering product:', e);
         setProductLoadError('Failed to register product');
       }
 
-      // Set up event listeners
+      // Set up event listeners BEFORE initializing
       console.log('Billing: Setting up event listeners...');
       try {
         CdvPurchase.store.when()
@@ -163,21 +165,41 @@ export function BillingProvider({ children }) {
             console.log('Billing: Product title:', product?.title);
             console.log('Billing: Product price:', product?.pricing?.price);
             console.log('Billing: Can purchase:', product?.canPurchase);
+            console.log('Billing: Owned:', product?.owned);
             safeUpdateProductsList();
+            
+            // Check if this product is owned (subscription active)
+            if (product?.id === PRODUCTS.PREMIUM_SUBSCRIPTION && product?.owned) {
+              console.log('Billing: Subscription is ACTIVE!');
+              grantPremiumAccess();
+            }
           })
           .approved(transaction => {
-            console.log('Billing: Purchase approved');
+            console.log('=== Billing: Purchase APPROVED ===');
+            console.log('Billing: Transaction ID:', transaction?.transactionId);
+            console.log('Billing: Product ID:', transaction?.products?.[0]?.id);
             safeHandlePurchaseApproved(transaction);
           })
           .verified(receipt => {
-            console.log('Billing: Purchase verified');
+            console.log('=== Billing: Purchase VERIFIED ===');
             safeHandlePurchaseVerified(receipt);
           })
           .finished(transaction => {
-            console.log('Billing: Transaction finished');
+            console.log('=== Billing: Transaction FINISHED ===');
+            console.log('Billing: Transaction ID:', transaction?.transactionId);
+          })
+          .receiptsReady(receipts => {
+            console.log('=== Billing: Receipts Ready ===');
+            console.log('Billing: Number of receipts:', receipts?.length);
+          })
+          .receiptUpdated(receipt => {
+            console.log('=== Billing: Receipt Updated ===');
+            checkSubscriptionStatus();
           })
           .error(err => {
-            console.error('Billing: Store error:', err);
+            console.error('=== Billing: Store ERROR ===', err);
+            console.error('Billing: Error code:', err?.code);
+            console.error('Billing: Error message:', err?.message);
             setError(err?.message || 'Store error');
           });
         console.log('Billing: Event listeners set up');
@@ -219,17 +241,24 @@ export function BillingProvider({ children }) {
       safeUpdateProductsList();
       
       // Check if our product was loaded
-      const product = CdvPurchase.store.get(PRODUCTS.PREMIUM_LIFETIME);
+      const product = CdvPurchase.store.get(PRODUCTS.PREMIUM_SUBSCRIPTION);
       console.log('Billing: Our product lookup result:', product);
       
       if (!product || !product.title) {
         console.log('Billing: WARNING - Product not found in store!');
+        console.log('Billing: Make sure product ID matches Google Play Console exactly');
         setProductLoadError('Product not found. Please check your internet connection and try again.');
       } else {
         console.log('Billing: Product loaded successfully!');
         console.log('Billing: Title:', product.title);
         console.log('Billing: Price:', product.pricing?.price);
+        console.log('Billing: Owned:', product.owned);
         setProductLoadError(null);
+        
+        // Check subscription status
+        if (product.owned) {
+          grantPremiumAccess();
+        }
       }
       
       setStore(CdvPurchase.store);
@@ -241,6 +270,28 @@ export function BillingProvider({ children }) {
       setError(err?.message || 'Initialization failed');
       setProductLoadError('Failed to initialize store');
       setIsInitialized(true);
+    }
+  };
+  
+  // Grant premium access helper
+  const grantPremiumAccess = () => {
+    console.log('Billing: Granting premium access...');
+    setIsPremium(true);
+    localStorage.setItem('isPremium', 'true');
+  };
+  
+  // Check subscription status
+  const checkSubscriptionStatus = () => {
+    try {
+      if (!window.CdvPurchase || !window.CdvPurchase.store) return;
+      
+      const product = window.CdvPurchase.store.get(PRODUCTS.PREMIUM_SUBSCRIPTION);
+      if (product?.owned) {
+        console.log('Billing: Subscription is active');
+        grantPremiumAccess();
+      }
+    } catch (e) {
+      console.error('Billing: Error checking subscription status:', e);
     }
   };
 
@@ -291,16 +342,33 @@ export function BillingProvider({ children }) {
           console.log('Billing: Product lookup result:', product);
           
           if (product) {
+            // For subscriptions, get pricing from offers
+            let price = product.pricing?.price;
+            let priceMicros = product.pricing?.priceMicros;
+            let currency = product.pricing?.currency;
+            
+            // Check offers for subscription pricing
+            if (product.offers && product.offers.length > 0) {
+              const offer = product.offers[0];
+              if (offer.pricingPhases && offer.pricingPhases.length > 0) {
+                const phase = offer.pricingPhases[0];
+                price = phase.price || price;
+                priceMicros = phase.priceMicros || priceMicros;
+                currency = phase.currency || currency;
+              }
+            }
+            
             const productInfo = {
               id: product.id,
-              title: product.title || 'Premium Access',
-              description: product.description || 'Unlock all pregnancy foods',
-              price: product.pricing?.price || '$1.99',
-              priceMicros: product.pricing?.priceMicros,
-              currency: product.pricing?.currency || 'USD',
+              title: product.title || 'Premium Pregnancy Access',
+              description: product.description || 'Unlock all pregnancy food guides',
+              price: price || '$1.99',
+              priceMicros: priceMicros,
+              currency: currency || 'USD',
               type: product.type,
               canPurchase: product.canPurchase,
-              owned: product.owned
+              owned: product.owned,
+              offers: product.offers
             };
             loadedProducts.push(productInfo);
             console.log('Billing: Added product to list:', productInfo);
@@ -347,12 +415,20 @@ export function BillingProvider({ children }) {
       localStorage.setItem('isPremium', 'true');
       localStorage.removeItem('premiumExpiry');
       
+      // Also save to Capacitor Preferences for persistence
+      try {
+        const { Preferences } = await import('@capacitor/preferences');
+        await Preferences.set({ key: 'isPremium', value: 'true' });
+      } catch (e) {
+        console.log('Billing: Could not save to Capacitor Preferences:', e);
+      }
+      
       // Finish the transaction
       if (receipt && typeof receipt.finish === 'function') {
         receipt.finish();
       }
       
-      console.log('Billing: Lifetime premium access granted!');
+      console.log('Billing: Premium subscription access granted!');
     } catch (err) {
       console.error('Billing: Error handling verified purchase:', err);
       setError(err?.message || 'Error granting access');
@@ -371,13 +447,11 @@ export function BillingProvider({ children }) {
       return false;
     }
 
-    if (!store) {
+    // Use window.CdvPurchase.store directly to ensure we have the latest reference
+    const currentStore = window.CdvPurchase?.store;
+    
+    if (!currentStore) {
       setError('Store not initialized. Please restart the app.');
-      return false;
-    }
-
-    if (!isStoreReady) {
-      setError('Store is still loading. Please wait a moment.');
       return false;
     }
 
@@ -386,8 +460,9 @@ export function BillingProvider({ children }) {
 
     try {
       console.log('Billing: Getting product from store...');
-      const product = store.get(productId);
+      const product = currentStore.get(productId);
       console.log('Billing: Product:', product);
+      console.log('Billing: Product offers:', product?.offers);
       
       if (!product) {
         throw new Error('Product not found. Please check your connection and try again.');
@@ -396,20 +471,37 @@ export function BillingProvider({ children }) {
       console.log('Billing: Getting offer...');
       const offer = product.getOffer();
       console.log('Billing: Offer:', offer);
+      console.log('Billing: Offer ID:', offer?.id);
+      console.log('Billing: Offer pricing phases:', offer?.pricingPhases);
       
       if (!offer) {
-        throw new Error('No purchase option available. Please try again later.');
+        throw new Error('No subscription offer available. Please try again later.');
       }
 
-      console.log('Billing: Initiating purchase order...');
-      await offer.order();
-      console.log('Billing: Purchase order initiated');
+      console.log('Billing: Initiating subscription order...');
+      console.log('Billing: Calling offer.order()...');
       
+      // For subscriptions, order() should trigger the Google Play dialog
+      const orderResult = await offer.order();
+      console.log('Billing: Order result:', orderResult);
+      
+      // The purchase flow continues in the event listeners (approved -> verified -> finished)
       return true;
       
     } catch (err) {
       console.error('Billing: Purchase error:', err);
-      setError(err?.message || 'Purchase failed. Please try again.');
+      console.error('Billing: Error code:', err?.code);
+      console.error('Billing: Error message:', err?.message);
+      
+      // Handle user cancellation gracefully
+      if (err?.code === 'E_USER_CANCELLED' || 
+          err?.message?.toLowerCase().includes('cancel') ||
+          err?.code === 6777010) {
+        console.log('Billing: User cancelled purchase');
+        setError(null);
+      } else {
+        setError(err?.message || 'Purchase failed. Please try again.');
+      }
       return false;
     } finally {
       setIsPurchasing(false);
