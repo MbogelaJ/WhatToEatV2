@@ -3,78 +3,132 @@ import ReactDOM from "react-dom/client";
 import "@/index.css";
 import App from "@/App";
 
-// ==================== GOOGLE PLAY BILLING INITIALIZATION ====================
-// Initialize CdvPurchase store BEFORE React renders
-// This must happen early so the store is ready when components need it
+/**
+ * ==================== GOOGLE PLAY BILLING INITIALIZATION ====================
+ * 
+ * This MUST run BEFORE React renders to ensure billing is ready.
+ * Uses Capacitor.ready() to ensure native plugins are loaded.
+ * 
+ * Product: "Premium Pregnancy Access"
+ * Product ID: com.whattoeat.penx.premium.v2
+ * Type: PAID_SUBSCRIPTION
+ * ============================================================================
+ */
 
-const initializeBillingStore = async () => {
-  console.log('=== INDEX.JS: Billing Store Pre-initialization ===');
+// Global state for billing
+window.billingStoreInitialized = false;
+window.billingInitError = null;
+
+const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
+
+// Clear any unverified premium flags on fresh app load
+const clearUnverifiedPremium = () => {
+  console.log('[INDEX] Checking for unverified premium flags...');
+  const isPremium = localStorage.getItem('isPremium');
+  const verified = localStorage.getItem('premiumPurchaseVerified');
   
-  // Check if running on native Android platform
-  const isNative = typeof window !== 'undefined' && 
-                   window.Capacitor && 
-                   typeof window.Capacitor.isNativePlatform === 'function' &&
-                   window.Capacitor.isNativePlatform();
+  console.log('[INDEX] isPremium:', isPremium, 'verified:', verified);
+  
+  // Only keep premium if BOTH flags are set
+  if (isPremium === 'true' && verified !== 'true') {
+    console.log('[INDEX] Clearing unverified premium flag');
+    localStorage.removeItem('isPremium');
+  }
+};
+
+// Initialize billing store
+const initializeBillingStore = async () => {
+  console.log('[INDEX] ====================================');
+  console.log('[INDEX] BILLING INITIALIZATION STARTING');
+  console.log('[INDEX] ====================================');
+  console.log('[INDEX] Timestamp:', new Date().toISOString());
+  
+  // First, clear any unverified premium
+  clearUnverifiedPremium();
+  
+  // Check if Capacitor is available
+  if (typeof window === 'undefined' || !window.Capacitor) {
+    console.log('[INDEX] Capacitor not available - web environment');
+    return;
+  }
+  
+  // Check if native platform
+  const isNative = window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+  console.log('[INDEX] isNativePlatform:', isNative);
   
   if (!isNative) {
-    console.log('INDEX.JS: Not native platform, skipping billing init');
+    console.log('[INDEX] Not native platform, skipping billing init');
     return;
   }
   
+  // Get platform
   const platform = window.Capacitor.getPlatform();
-  console.log('INDEX.JS: Platform detected:', platform);
+  console.log('[INDEX] Platform:', platform);
   
   if (platform !== 'android') {
-    console.log('INDEX.JS: Not Android, skipping Google Play Billing');
+    console.log('[INDEX] Not Android, skipping Google Play Billing');
     return;
   }
   
-  console.log('INDEX.JS: Android detected, waiting for CdvPurchase...');
+  console.log('[INDEX] Android detected - initializing Google Play Billing...');
   
-  // Wait for CdvPurchase to be available (loaded by Cordova plugin)
+  // Wait for Capacitor to be fully ready
+  try {
+    if (window.Capacitor.ready) {
+      console.log('[INDEX] Waiting for Capacitor.ready()...');
+      await window.Capacitor.ready();
+      console.log('[INDEX] Capacitor is ready');
+    }
+  } catch (e) {
+    console.log('[INDEX] Capacitor.ready() not available or failed:', e);
+  }
+  
+  // Wait for CdvPurchase to be available
+  console.log('[INDEX] Waiting for CdvPurchase plugin...');
+  
   let attempts = 0;
-  const maxAttempts = 50; // 10 seconds max
+  const maxAttempts = 50; // 10 seconds
   
-  const waitForCdvPurchase = () => {
-    return new Promise((resolve) => {
-      const check = () => {
-        if (window.CdvPurchase && window.CdvPurchase.store) {
-          console.log('INDEX.JS: CdvPurchase found after', attempts, 'attempts');
-          resolve(true);
-        } else if (attempts < maxAttempts) {
-          attempts++;
-          if (attempts % 10 === 0) {
-            console.log('INDEX.JS: Still waiting for CdvPurchase... attempt', attempts);
-          }
-          setTimeout(check, 200);
-        } else {
-          console.log('INDEX.JS: CdvPurchase NOT found after', maxAttempts, 'attempts');
-          resolve(false);
+  const cdvAvailable = await new Promise((resolve) => {
+    const check = () => {
+      attempts++;
+      
+      if (window.CdvPurchase && window.CdvPurchase.store) {
+        console.log('[INDEX] CdvPurchase found after', attempts, 'attempts');
+        resolve(true);
+      } else if (attempts >= maxAttempts) {
+        console.log('[INDEX] CdvPurchase NOT found after', maxAttempts, 'attempts');
+        resolve(false);
+      } else {
+        if (attempts % 10 === 0) {
+          console.log('[INDEX] Still waiting for CdvPurchase... attempt', attempts);
         }
-      };
-      check();
-    });
-  };
-  
-  const cdvAvailable = await waitForCdvPurchase();
+        setTimeout(check, 200);
+      }
+    };
+    check();
+  });
   
   if (!cdvAvailable) {
-    console.error('INDEX.JS: CdvPurchase not available - billing will not work');
+    console.error('[INDEX] CdvPurchase plugin not available!');
+    console.error('[INDEX] Make sure cordova-plugin-purchase is installed');
+    window.billingInitError = 'Store plugin not available';
     return;
   }
   
   try {
-    const { store, ProductType, Platform, LogLevel } = window.CdvPurchase;
+    const { store, ProductType, Platform } = window.CdvPurchase;
+    
+    console.log('[INDEX] CdvPurchase version:', window.CdvPurchase.version || 'unknown');
     
     // Set maximum verbosity for debugging
-    store.verbosity = 4; // Maximum debug logging
-    console.log('INDEX.JS: Store verbosity set to 4 (DEBUG)');
+    store.verbosity = 4;
+    console.log('[INDEX] Store verbosity set to 4 (MAX DEBUG)');
     
     // Register the subscription product
-    const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
-    console.log('INDEX.JS: Registering product:', PRODUCT_ID);
-    console.log('INDEX.JS: Product type: PAID_SUBSCRIPTION');
-    console.log('INDEX.JS: Platform: GOOGLE_PLAY');
+    console.log('[INDEX] Registering product:', PRODUCT_ID);
+    console.log('[INDEX] Type: PAID_SUBSCRIPTION');
+    console.log('[INDEX] Platform: GOOGLE_PLAY');
     
     store.register({
       id: PRODUCT_ID,
@@ -82,100 +136,130 @@ const initializeBillingStore = async () => {
       platform: Platform.GOOGLE_PLAY
     });
     
-    console.log('INDEX.JS: Product registered successfully');
+    console.log('[INDEX] Product registered');
     
-    // Set up global event listeners
+    // Set up event listeners BEFORE initializing
+    console.log('[INDEX] Setting up event listeners...');
+    
     store.when()
       .productUpdated((product) => {
-        console.log('INDEX.JS: Product updated:', product?.id);
-        console.log('INDEX.JS: Product title:', product?.title);
-        console.log('INDEX.JS: Product price:', product?.pricing?.price);
-        console.log('INDEX.JS: Product owned:', product?.owned);
-        console.log('INDEX.JS: Product canPurchase:', product?.canPurchase);
+        console.log('[INDEX] EVENT: productUpdated');
+        console.log('[INDEX] - ID:', product?.id);
+        console.log('[INDEX] - Title:', product?.title);
+        console.log('[INDEX] - Price:', product?.pricing?.price);
+        console.log('[INDEX] - Owned:', product?.owned);
+        console.log('[INDEX] - CanPurchase:', product?.canPurchase);
+        
+        // If product is owned, grant premium
+        if (product?.id === PRODUCT_ID && product?.owned) {
+          console.log('[INDEX] Product is OWNED - granting premium');
+          localStorage.setItem('isPremium', 'true');
+          localStorage.setItem('premiumPurchaseVerified', 'true');
+          // Dispatch event for React to pick up
+          window.dispatchEvent(new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } }));
+        }
       })
       .approved((transaction) => {
-        console.log('INDEX.JS: Transaction APPROVED:', transaction?.transactionId);
-        // Verify the transaction
+        console.log('[INDEX] EVENT: approved');
+        console.log('[INDEX] - Transaction ID:', transaction?.transactionId);
+        console.log('[INDEX] Calling transaction.verify()...');
         transaction.verify();
       })
       .verified((receipt) => {
-        console.log('INDEX.JS: Receipt VERIFIED');
-        // Finish the transaction
-        receipt.finish();
-        // Set premium in localStorage (will be picked up by React)
+        console.log('[INDEX] EVENT: verified');
+        console.log('[INDEX] Purchase verified - granting premium access');
         localStorage.setItem('isPremium', 'true');
         localStorage.setItem('premiumPurchaseVerified', 'true');
-        console.log('INDEX.JS: Premium access GRANTED');
+        console.log('[INDEX] Calling receipt.finish()...');
+        receipt.finish();
+        // Dispatch event for React
+        window.dispatchEvent(new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } }));
       })
       .finished((transaction) => {
-        console.log('INDEX.JS: Transaction FINISHED:', transaction?.transactionId);
+        console.log('[INDEX] EVENT: finished');
+        console.log('[INDEX] - Transaction ID:', transaction?.transactionId);
       })
       .error((err) => {
-        console.error('INDEX.JS: Store ERROR:', err?.code, err?.message);
+        console.error('[INDEX] EVENT: error');
+        console.error('[INDEX] - Code:', err?.code);
+        console.error('[INDEX] - Message:', err?.message);
       });
     
-    console.log('INDEX.JS: Event listeners registered');
+    console.log('[INDEX] Event listeners registered');
     
-    // Initialize the store with Google Play
-    console.log('INDEX.JS: Initializing store with GOOGLE_PLAY...');
+    // Initialize the store
+    console.log('[INDEX] Initializing store with GOOGLE_PLAY...');
     await store.initialize([Platform.GOOGLE_PLAY]);
-    console.log('INDEX.JS: Store initialized');
+    console.log('[INDEX] Store initialized');
     
     // Update/refresh products
-    console.log('INDEX.JS: Calling store.update()...');
+    console.log('[INDEX] Calling store.update()...');
     await store.update();
-    console.log('INDEX.JS: Store updated');
+    console.log('[INDEX] Store updated');
     
-    // Wait for store to be ready
-    console.log('INDEX.JS: Waiting for store.ready()...');
+    // Wait for store ready
+    console.log('[INDEX] Waiting for store.ready()...');
     await store.ready();
-    console.log('INDEX.JS: Store is READY!');
+    console.log('[INDEX] Store is READY!');
     
-    // Check loaded products
-    console.log('INDEX.JS: === LOADED PRODUCTS ===');
-    console.log('INDEX.JS: Total products:', store.products?.length || 0);
-    store.products?.forEach((p, i) => {
-      console.log(`INDEX.JS: Product[${i}]:`, p.id, p.title, p.pricing?.price, 'owned:', p.owned);
-    });
+    // Log products
+    console.log('[INDEX] ====================================');
+    console.log('[INDEX] LOADED PRODUCTS');
+    console.log('[INDEX] ====================================');
+    console.log('[INDEX] Total products:', store.products?.length || 0);
     
-    // Check if our specific product loaded
-    const product = store.get(PRODUCT_ID);
-    if (product) {
-      console.log('INDEX.JS: Our product found!');
-      console.log('INDEX.JS: - ID:', product.id);
-      console.log('INDEX.JS: - Title:', product.title);
-      console.log('INDEX.JS: - Price:', product.pricing?.price);
-      console.log('INDEX.JS: - Owned:', product.owned);
-      console.log('INDEX.JS: - CanPurchase:', product.canPurchase);
-      console.log('INDEX.JS: - Offers:', product.offers?.length);
-      
-      // If product is already owned, set premium
-      if (product.owned) {
-        console.log('INDEX.JS: Product is OWNED - setting premium');
-        localStorage.setItem('isPremium', 'true');
-      }
-    } else {
-      console.error('INDEX.JS: Our product NOT found in store!');
-      console.error('INDEX.JS: Make sure product ID matches Google Play Console exactly');
+    if (store.products && store.products.length > 0) {
+      store.products.forEach((p, i) => {
+        console.log(`[INDEX] Product[${i}]: ${p.id}`);
+        console.log(`[INDEX]   Title: ${p.title}`);
+        console.log(`[INDEX]   Price: ${p.pricing?.price}`);
+        console.log(`[INDEX]   Owned: ${p.owned}`);
+        console.log(`[INDEX]   CanPurchase: ${p.canPurchase}`);
+      });
     }
     
-    // Mark store as initialized globally
+    // Check our specific product
+    const product = store.get(PRODUCT_ID);
+    if (product) {
+      console.log('[INDEX] Our product found!');
+      console.log('[INDEX] - Owned:', product.owned);
+      
+      if (product.owned) {
+        console.log('[INDEX] Subscription is ACTIVE');
+        localStorage.setItem('isPremium', 'true');
+        localStorage.setItem('premiumPurchaseVerified', 'true');
+      }
+    } else {
+      console.error('[INDEX] Our product NOT found!');
+      console.error('[INDEX] Check that product ID matches Google Play Console');
+    }
+    
+    // Mark as initialized
     window.billingStoreInitialized = true;
-    console.log('INDEX.JS: === BILLING INITIALIZATION COMPLETE ===');
+    console.log('[INDEX] ====================================');
+    console.log('[INDEX] BILLING INITIALIZATION COMPLETE');
+    console.log('[INDEX] ====================================');
     
   } catch (error) {
-    console.error('INDEX.JS: Billing initialization error:', error);
-    console.error('INDEX.JS: Error message:', error?.message);
+    console.error('[INDEX] Billing initialization ERROR:', error);
+    console.error('[INDEX] Error message:', error?.message);
+    window.billingInitError = error?.message || 'Unknown error';
   }
 };
 
-// Initialize billing, then render React
-initializeBillingStore().finally(() => {
-  console.log('INDEX.JS: Rendering React app...');
-  const root = ReactDOM.createRoot(document.getElementById("root"));
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-});
+// Run initialization, then render React
+console.log('[INDEX] Starting app initialization...');
+
+initializeBillingStore()
+  .catch(err => {
+    console.error('[INDEX] Initialization promise rejected:', err);
+  })
+  .finally(() => {
+    console.log('[INDEX] Rendering React app...');
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  });

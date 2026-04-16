@@ -2419,7 +2419,10 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
 };
 
 // Premium Page Component
-const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, paymentError }) => {
+const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, paymentError, onRefresh }) => {
+  // Debug logging
+  console.log('[PremiumPage] Rendering with isPremium:', isPremium);
+  
   return (
     <div className="premium-page-v2" data-testid="premium-page">
       {/* Back Button */}
@@ -2463,7 +2466,7 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
       {paymentError && (
         <div className="payment-error-banner">
           <span>{paymentError}</span>
-          <button onClick={() => window.location.reload()}>Try Again</button>
+          <button onClick={onRefresh || (() => window.location.reload())}>Try Again</button>
         </div>
       )}
 
@@ -2715,6 +2718,11 @@ const BottomNav = ({ activeView, onChangeView }) => {
 
 // Main App
 function App() {
+  console.log('[APP] App component rendering...');
+  console.log('[APP] billingStoreInitialized:', window.billingStoreInitialized);
+  console.log('[APP] localStorage.isPremium:', localStorage.getItem('isPremium'));
+  console.log('[APP] localStorage.premiumPurchaseVerified:', localStorage.getItem('premiumPurchaseVerified'));
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSafety, setSelectedSafety] = useState('');
@@ -3352,6 +3360,7 @@ function App() {
         onBack={handlePremiumClose}
         onPurchase={handlePremiumPurchase}
         onRestore={handleRestorePurchases}
+        onRefresh={billingContext?.refreshStore}
         isPremium={isPremium}
         isProcessing={isProcessingPayment}
         paymentError={paymentError}
@@ -3372,6 +3381,7 @@ function App() {
         }}
         onPurchase={handlePremiumPurchase}
         onRestore={handleRestorePurchases}
+        onRefresh={billingContext?.refreshStore}
         isPremium={isPremium}
         isProcessing={isProcessingPayment}
         paymentError={paymentError}

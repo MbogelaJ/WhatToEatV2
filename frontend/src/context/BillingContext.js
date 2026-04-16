@@ -1,24 +1,25 @@
 /**
- * Billing Context - Manages Google Play Billing / Apple In-App Purchase
+ * Billing Context - Manages Google Play Billing for Android
  * 
- * CRITICAL: isPremium defaults to FALSE
- * Premium is ONLY granted after verified purchase or confirmed subscription ownership
+ * CRITICAL RULES:
+ * 1. isPremium MUST default to FALSE
+ * 2. Only set isPremium=true after VERIFIED purchase or confirmed ownership
+ * 3. Always show Premium screen for non-premium users
  * 
  * Product: "Premium Pregnancy Access"
  * Product ID: com.whattoeat.penx.premium.v2
- * Type: PAID_SUBSCRIPTION (Google Play subscription)
+ * Type: PAID_SUBSCRIPTION
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 // Product ID - MUST match Google Play Console exactly
 const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
-// Export for use in other components
 export const PRODUCTS = {
   PREMIUM_SUBSCRIPTION: PRODUCT_ID
 };
 
-// Platform detection helpers
+// Platform detection
 const isNativePlatform = () => {
   try {
     return typeof window !== 'undefined' && 
@@ -38,19 +39,10 @@ const isAndroidPlatform = () => {
   }
 };
 
-const isIOSPlatform = () => {
-  try {
-    return isNativePlatform() && window.Capacitor.getPlatform() === 'ios';
-  } catch (e) {
-    return false;
-  }
-};
-
 const BillingContext = createContext(null);
 
 export function BillingProvider({ children }) {
-  // CRITICAL: Default isPremium to FALSE
-  // Only set to true after verified purchase
+  // CRITICAL: isPremium MUST default to FALSE
   const [isPremium, setIsPremium] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isStoreReady, setIsStoreReady] = useState(false);
@@ -59,109 +51,104 @@ export function BillingProvider({ children }) {
   const [error, setError] = useState(null);
   const [productLoadError, setProductLoadError] = useState(null);
 
-  console.log('BillingContext: Provider mounting');
-  console.log('BillingContext: isNativePlatform:', isNativePlatform());
-  console.log('BillingContext: isAndroid:', isAndroidPlatform());
+  console.log('[BILLING] BillingProvider mounting');
+  console.log('[BILLING] isNativePlatform:', isNativePlatform());
+  console.log('[BILLING] isAndroid:', isAndroidPlatform());
 
-  // Check stored premium status on mount
-  // Only trust if we have a verified purchase flag
+  // Check stored premium on mount - STRICT verification required
   useEffect(() => {
-    const checkStoredPremium = () => {
-      console.log('BillingContext: Checking stored premium status...');
-      
-      const storedPremium = localStorage.getItem('isPremium');
-      const purchaseVerified = localStorage.getItem('premiumPurchaseVerified');
-      
-      console.log('BillingContext: storedPremium:', storedPremium);
-      console.log('BillingContext: purchaseVerified:', purchaseVerified);
-      
-      // Only trust premium if we have verification
-      if (storedPremium === 'true' && purchaseVerified === 'true') {
-        console.log('BillingContext: Verified premium found in storage');
-        setIsPremium(true);
-      } else {
-        console.log('BillingContext: No verified premium - defaulting to false');
-        // Clear any unverified premium flags
+    console.log('[BILLING] Checking stored premium status...');
+    
+    const storedPremium = localStorage.getItem('isPremium');
+    const verified = localStorage.getItem('premiumPurchaseVerified');
+    
+    console.log('[BILLING] storedPremium:', storedPremium);
+    console.log('[BILLING] verified:', verified);
+    
+    // ONLY trust premium if BOTH flags are true
+    if (storedPremium === 'true' && verified === 'true') {
+      console.log('[BILLING] Verified premium found - setting isPremium=true');
+      setIsPremium(true);
+    } else {
+      console.log('[BILLING] No verified premium - keeping isPremium=false');
+      // Clear any unverified flags
+      if (storedPremium === 'true' && verified !== 'true') {
+        console.log('[BILLING] Clearing unverified premium flag');
         localStorage.removeItem('isPremium');
-        setIsPremium(false);
+      }
+      setIsPremium(false);
+    }
+  }, []);
+
+  // Listen for premium status changes from index.js
+  useEffect(() => {
+    const handlePremiumChange = (event) => {
+      console.log('[BILLING] premiumStatusChanged event received:', event.detail);
+      if (event.detail?.isPremium) {
+        setIsPremium(true);
       }
     };
     
-    checkStoredPremium();
+    window.addEventListener('premiumStatusChanged', handlePremiumChange);
+    return () => window.removeEventListener('premiumStatusChanged', handlePremiumChange);
   }, []);
 
-  // Connect to the store that was initialized in index.js
+  // Connect to store initialized by index.js
   useEffect(() => {
     const connectToStore = async () => {
-      console.log('BillingContext: Connecting to store...');
+      console.log('[BILLING] Connecting to store...');
       
+      // Non-native platforms don't need billing
       if (!isNativePlatform()) {
-        console.log('BillingContext: Not native platform, marking as ready');
+        console.log('[BILLING] Not native - marking ready');
         setIsInitialized(true);
         setIsStoreReady(true);
         return;
       }
       
       if (!isAndroidPlatform()) {
-        console.log('BillingContext: Not Android, Google Play Billing not needed');
+        console.log('[BILLING] Not Android - marking ready');
         setIsInitialized(true);
         setIsStoreReady(true);
         return;
       }
       
-      // Wait for store to be initialized by index.js
+      // Wait for store to be initialized by index.js (max 15 seconds)
       let attempts = 0;
-      const maxAttempts = 60; // 12 seconds
+      const maxAttempts = 75;
       
-      const waitForStore = () => {
-        return new Promise((resolve) => {
-          const check = () => {
-            if (window.CdvPurchase && window.CdvPurchase.store && window.billingStoreInitialized) {
-              console.log('BillingContext: Store found after', attempts, 'attempts');
-              resolve(true);
-            } else if (attempts < maxAttempts) {
-              attempts++;
-              if (attempts % 10 === 0) {
-                console.log('BillingContext: Waiting for store... attempt', attempts);
-              }
-              setTimeout(check, 200);
-            } else {
-              console.log('BillingContext: Store not found after', maxAttempts, 'attempts');
-              resolve(false);
+      const storeReady = await new Promise((resolve) => {
+        const check = () => {
+          attempts++;
+          
+          if (window.billingStoreInitialized && window.CdvPurchase?.store) {
+            console.log('[BILLING] Store found after', attempts, 'attempts');
+            resolve(true);
+          } else if (window.billingInitError) {
+            console.log('[BILLING] Store init error detected:', window.billingInitError);
+            resolve(false);
+          } else if (attempts >= maxAttempts) {
+            console.log('[BILLING] Timeout waiting for store');
+            resolve(false);
+          } else {
+            if (attempts % 15 === 0) {
+              console.log('[BILLING] Waiting for store... attempt', attempts);
             }
-          };
-          check();
-        });
-      };
+            setTimeout(check, 200);
+          }
+        };
+        check();
+      });
       
-      const storeFound = await waitForStore();
-      
-      if (!storeFound) {
-        console.error('BillingContext: Store not available');
-        setProductLoadError('Store not available. Please restart the app.');
+      if (!storeReady) {
+        console.error('[BILLING] Store not available');
+        setProductLoadError('Store not available. Tap "Try Again" to retry.');
         setIsInitialized(true);
         return;
       }
       
       const store = window.CdvPurchase.store;
-      console.log('BillingContext: Connected to store');
-      
-      // Add our own listeners for React state updates
-      store.when()
-        .productUpdated((product) => {
-          console.log('BillingContext: Product updated:', product?.id);
-          updateProductsList();
-          
-          // Check if our product is now owned
-          if (product?.id === PRODUCT_ID && product?.owned) {
-            console.log('BillingContext: Our product is OWNED - granting premium');
-            grantPremiumAccess();
-          }
-        })
-        .verified((receipt) => {
-          console.log('BillingContext: Receipt verified in context');
-          grantPremiumAccess();
-        });
+      console.log('[BILLING] Connected to store');
       
       // Update products list
       updateProductsList();
@@ -169,90 +156,87 @@ export function BillingProvider({ children }) {
       // Check if product is already owned
       const product = store.get(PRODUCT_ID);
       if (product) {
-        console.log('BillingContext: Product found:', product.id);
-        console.log('BillingContext: Product owned:', product.owned);
+        console.log('[BILLING] Product found:', product.id);
+        console.log('[BILLING] Product owned:', product.owned);
         
         if (product.owned) {
-          console.log('BillingContext: Product already owned - granting premium');
+          console.log('[BILLING] Product owned - granting premium');
           grantPremiumAccess();
         }
       } else {
-        console.log('BillingContext: Product not found in store');
-        setProductLoadError('Product not found. Please check your internet connection.');
+        console.log('[BILLING] Product not found');
+        setProductLoadError('Subscription not found. Check your internet connection.');
       }
       
       setIsStoreReady(true);
       setIsInitialized(true);
-      console.log('BillingContext: Initialization complete');
+      console.log('[BILLING] Initialization complete');
     };
     
-    // Delay slightly to let index.js initialize first
-    const timer = setTimeout(connectToStore, 1000);
+    // Delay to let index.js initialize first
+    const timer = setTimeout(connectToStore, 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Grant premium access helper
+  // Grant premium access
   const grantPremiumAccess = useCallback(() => {
-    console.log('BillingContext: Granting premium access');
+    console.log('[BILLING] Granting premium access');
     setIsPremium(true);
     localStorage.setItem('isPremium', 'true');
     localStorage.setItem('premiumPurchaseVerified', 'true');
   }, []);
 
-  // Update products list from store
+  // Update products list
   const updateProductsList = useCallback(() => {
     try {
-      if (!window.CdvPurchase?.store) {
-        console.log('BillingContext: Cannot update products - store not available');
+      const store = window.CdvPurchase?.store;
+      if (!store) {
+        console.log('[BILLING] Cannot update products - no store');
         return;
       }
       
-      const store = window.CdvPurchase.store;
       const product = store.get(PRODUCT_ID);
+      console.log('[BILLING] Product lookup:', product);
       
       if (product) {
-        // Get price from offers for subscriptions
         let price = product.pricing?.price || '$1.99';
-        if (product.offers && product.offers.length > 0) {
+        
+        // Get price from offers for subscriptions
+        if (product.offers?.length > 0) {
           const offer = product.offers[0];
-          if (offer.pricingPhases && offer.pricingPhases.length > 0) {
+          if (offer.pricingPhases?.length > 0) {
             price = offer.pricingPhases[0].price || price;
           }
         }
         
-        const productInfo = {
+        setProducts([{
           id: product.id,
           title: product.title || 'Premium Pregnancy Access',
           description: product.description || 'Unlock all pregnancy food guides',
           price: price,
           canPurchase: product.canPurchase,
           owned: product.owned
-        };
-        
-        setProducts([productInfo]);
+        }]);
         setProductLoadError(null);
-        console.log('BillingContext: Products updated:', productInfo);
+        console.log('[BILLING] Products updated');
       } else {
         setProducts([]);
-        setProductLoadError('Product not available');
+        setProductLoadError('Subscription not available');
       }
     } catch (e) {
-      console.error('BillingContext: Error updating products:', e);
+      console.error('[BILLING] Error updating products:', e);
     }
   }, []);
 
-  // Purchase function - triggers Google Play dialog
+  // Purchase function
   const purchase = async (productId = PRODUCT_ID) => {
-    console.log('=== BillingContext: Purchase requested ===');
-    console.log('BillingContext: Product ID:', productId);
+    console.log('[BILLING] ====================================');
+    console.log('[BILLING] PURCHASE REQUESTED');
+    console.log('[BILLING] ====================================');
+    console.log('[BILLING] Product ID:', productId);
     
-    if (!isNativePlatform()) {
-      setError('Purchases are only available in the app');
-      return false;
-    }
-    
-    if (!isAndroidPlatform()) {
-      setError('Google Play Billing is only available on Android');
+    if (!isNativePlatform() || !isAndroidPlatform()) {
+      setError('Purchases only available on Android');
       return false;
     }
     
@@ -266,40 +250,37 @@ export function BillingProvider({ children }) {
     setError(null);
     
     try {
-      console.log('BillingContext: Getting product from store...');
+      console.log('[BILLING] Getting product...');
       const product = store.get(productId);
       
       if (!product) {
-        throw new Error('Product not found. Please check your internet connection.');
+        throw new Error('Subscription not found. Check your internet connection.');
       }
       
-      console.log('BillingContext: Product:', product.id);
-      console.log('BillingContext: Product offers:', product.offers?.length);
+      console.log('[BILLING] Product:', product.id);
+      console.log('[BILLING] Product.offers:', product.offers?.length);
       
-      // Get the first offer
       const offer = product.getOffer();
       if (!offer) {
         throw new Error('No subscription offer available.');
       }
       
-      console.log('BillingContext: Offer found:', offer.id);
-      console.log('BillingContext: Calling offer.order()...');
+      console.log('[BILLING] Offer:', offer.id);
+      console.log('[BILLING] Calling offer.order()...');
       
-      // This should trigger the Google Play purchase dialog
       const result = await offer.order();
-      console.log('BillingContext: Order result:', result);
+      console.log('[BILLING] Order result:', result);
       
-      // Purchase flow continues in event listeners (approved -> verified -> finished)
+      // Purchase continues in event listeners
       return true;
       
     } catch (err) {
-      console.error('BillingContext: Purchase error:', err);
+      console.error('[BILLING] Purchase error:', err);
       
-      // Handle user cancellation
       if (err?.code === 'E_USER_CANCELLED' || 
           err?.code === 6777010 ||
           err?.message?.toLowerCase().includes('cancel')) {
-        console.log('BillingContext: User cancelled purchase');
+        console.log('[BILLING] User cancelled');
         setError(null);
       } else {
         setError(err?.message || 'Purchase failed. Please try again.');
@@ -310,12 +291,14 @@ export function BillingProvider({ children }) {
     }
   };
 
-  // Restore purchases function
+  // Restore purchases
   const restorePurchases = async () => {
-    console.log('=== BillingContext: Restore requested ===');
+    console.log('[BILLING] ====================================');
+    console.log('[BILLING] RESTORE REQUESTED');
+    console.log('[BILLING] ====================================');
     
     if (!isNativePlatform() || !isAndroidPlatform()) {
-      setError('Restore is only available on Android');
+      setError('Restore only available on Android');
       return false;
     }
     
@@ -329,39 +312,38 @@ export function BillingProvider({ children }) {
     setError(null);
     
     try {
-      console.log('BillingContext: Calling restorePurchases...');
+      console.log('[BILLING] Calling restorePurchases()...');
       await store.restorePurchases();
       
-      // Wait for store to process
+      // Wait for processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Refresh store
+      // Refresh
       await store.update();
       
-      // Check if product is now owned
       const product = store.get(PRODUCT_ID);
-      console.log('BillingContext: Product after restore:', product?.owned);
+      console.log('[BILLING] Product after restore:', product?.owned);
       
       if (product?.owned) {
-        console.log('BillingContext: Restore successful - subscription active');
+        console.log('[BILLING] Restore successful');
         grantPremiumAccess();
         return true;
       } else {
-        setError('No active subscription found for this account.');
+        setError('No active subscription found.');
         return false;
       }
     } catch (err) {
-      console.error('BillingContext: Restore error:', err);
-      setError(err?.message || 'Failed to restore. Please try again.');
+      console.error('[BILLING] Restore error:', err);
+      setError(err?.message || 'Restore failed.');
       return false;
     } finally {
       setIsPurchasing(false);
     }
   };
 
-  // Refresh store - for "Try Again" button
+  // Refresh store (Try Again button)
   const refreshStore = async () => {
-    console.log('BillingContext: Refreshing store...');
+    console.log('[BILLING] Refreshing store...');
     setError(null);
     setProductLoadError(null);
     
@@ -370,15 +352,19 @@ export function BillingProvider({ children }) {
       if (store) {
         await store.update();
         updateProductsList();
-        console.log('BillingContext: Store refreshed');
+        console.log('[BILLING] Store refreshed');
+      } else {
+        // Try to reinitialize
+        console.log('[BILLING] Store not available, need app restart');
+        setProductLoadError('Please restart the app to initialize billing.');
       }
     } catch (e) {
-      console.error('BillingContext: Refresh error:', e);
+      console.error('[BILLING] Refresh error:', e);
       setProductLoadError('Failed to refresh. Please restart the app.');
     }
   };
 
-  // Manual premium toggle (for testing only)
+  // Manual premium toggle (testing only)
   const setManualPremium = (premium) => {
     if (premium) {
       grantPremiumAccess();
@@ -414,9 +400,9 @@ export function BillingProvider({ children }) {
 export function useBilling() {
   const context = useContext(BillingContext);
   if (!context) {
-    console.warn('useBilling called outside BillingProvider');
+    console.warn('[BILLING] useBilling called outside BillingProvider');
     return {
-      isPremium: false,
+      isPremium: false, // CRITICAL: Default to false
       isInitialized: true,
       isStoreReady: false,
       products: [],
