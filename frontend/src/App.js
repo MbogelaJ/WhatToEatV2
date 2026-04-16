@@ -2780,90 +2780,62 @@ function App() {
     return step ? parseInt(step, 10) : 0;
   });
   
-  // Get premium status from BillingContext
-  // Note: We still keep local state for backward compatibility, but BillingContext is the source of truth
+  // Get premium status from BillingContext - DO NOT fallback to localStorage
+  // BillingContext is the ONLY source of truth for premium status
   const billingContext = useBilling();
-  const isPremium = billingContext?.isPremium || localStorage.getItem('isPremium') === 'true';
+  const isPremium = billingContext?.isPremium || false;
+  
+  console.log('App: isPremium from BillingContext:', isPremium);
 
   // ==================== GOOGLE PLAY BILLING INITIALIZATION ====================
-  // Initialize Google Play Billing on Android
+  // NOTE: Primary initialization happens in index.js BEFORE React renders
+  // This useEffect just logs status and handles any late initialization
   useEffect(() => {
-    const initializeGooglePlayBilling = async () => {
-      // Check if running on native platform
+    const checkBillingStatus = async () => {
+      console.log('App: Checking billing status...');
+      console.log('App: billingStoreInitialized:', window.billingStoreInitialized);
+      console.log('App: CdvPurchase available:', !!window.CdvPurchase);
+      
+      // Check if running on native Android
       const isNative = typeof window !== 'undefined' && 
                        window.Capacitor && 
                        typeof window.Capacitor.isNativePlatform === 'function' &&
                        window.Capacitor.isNativePlatform();
       
       if (!isNative) {
-        console.log('🌐 Running on web - skipping Google Play Billing initialization');
+        console.log('App: Not native platform');
         return;
       }
       
-      // Check if Android
       const isAndroid = window.Capacitor.getPlatform() === 'android';
       if (!isAndroid) {
-        console.log('📱 Running on iOS - Google Play Billing not needed');
+        console.log('App: Not Android');
         return;
       }
       
-      console.log('🤖 Android detected - Initializing Google Play Billing...');
-      
-      // Wait for CdvPurchase to be available
-      let attempts = 0;
-      const maxAttempts = 30;
-      
-      const waitForStore = () => {
-        return new Promise((resolve) => {
-          const check = () => {
-            if (window.CdvPurchase && window.CdvPurchase.store) {
-              resolve(true);
-            } else if (attempts < maxAttempts) {
-              attempts++;
-              setTimeout(check, 200);
-            } else {
-              resolve(false);
-            }
-          };
-          check();
-        });
-      };
-      
-      const storeAvailable = await waitForStore();
-      
-      if (!storeAvailable) {
-        console.log('❌ CdvPurchase not available after waiting');
-        return;
-      }
-      
-      try {
+      // Log store status
+      if (window.CdvPurchase && window.CdvPurchase.store) {
         const store = window.CdvPurchase.store;
-        store.verbosity = window.CdvPurchase.LogLevel.DEBUG;
+        console.log('App: Store products count:', store.products?.length || 0);
         
-        console.log('💳 Initializing Google Play Billing...');
-        
-        // Register product
-        store.register({
-          id: 'com.whattoeat.penx.premium.v2',
-          type: window.CdvPurchase.ProductType.NON_CONSUMABLE,
-          platform: window.CdvPurchase.Platform.GOOGLE_PLAY
-        });
-        
-        // Initialize store
-        await store.initialize([window.CdvPurchase.Platform.GOOGLE_PLAY]);
-        await store.update();
-        
-        console.log('✅ Google Play Billing initialized successfully!');
-        console.log('📦 Products loaded:', store.products);
-        
-      } catch (error) {
-        console.error('❌ Google Play Billing initialization failed:', error);
+        const product = store.get('com.whattoeat.penx.premium.v2');
+        if (product) {
+          console.log('App: Product found:', product.id);
+          console.log('App: Product owned:', product.owned);
+          console.log('App: Product canPurchase:', product.canPurchase);
+        } else {
+          console.log('App: Product NOT found in store');
+        }
+      } else {
+        console.log('App: Store not yet available');
       }
     };
     
-    initializeGooglePlayBilling();
+    // Check after a delay to let index.js initialize
+    const timer = setTimeout(checkBillingStatus, 3000);
+    return () => clearTimeout(timer);
   }, []);
-  // ==================== END OF BILLING INITIALIZATION ====================
+  // ==================== END OF BILLING STATUS CHECK ====================
 
   const [dietaryRestrictions, setDietaryRestrictions] = useState(() => {
     const saved = localStorage.getItem('dietaryRestrictions');
@@ -2981,7 +2953,7 @@ function App() {
     }
   };
 
-  // Handle premium purchase - Production-ready IAP for SUBSCRIPTIONS
+  // Handle premium purchase - Uses BillingContext
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
 
@@ -2989,172 +2961,68 @@ function App() {
   const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
   const handlePremiumPurchase = async () => {
-    console.log('=== PREMIUM PURCHASE INITIATED ===');
-    console.log('Platform:', isIOS() ? 'iOS' : isAndroid() ? 'Android' : 'Web');
+    console.log('=== App: PREMIUM PURCHASE INITIATED ===');
+    console.log('App: Platform:', isIOS() ? 'iOS' : isAndroid() ? 'Android' : 'Web');
+    console.log('App: billingContext available:', !!billingContext);
+    
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      // Wait for CdvPurchase to be available
-      let CdvPurchase = window.CdvPurchase;
-      
-      if (!CdvPurchase || !CdvPurchase.store) {
-        console.log('CdvPurchase not available, waiting...');
-        await new Promise((resolve, reject) => {
-          let attempts = 0;
-          const check = () => {
-            if (window.CdvPurchase && window.CdvPurchase.store) {
-              resolve(true);
-            } else if (attempts < 30) {
-              attempts++;
-              setTimeout(check, 200);
-            } else {
-              reject(new Error('Store not available. Please restart the app and try again.'));
-            }
-          };
-          check();
-        });
-        CdvPurchase = window.CdvPurchase;
-      }
-      
-      const store = CdvPurchase.store;
-      
-      // Set high verbosity for debugging
-      store.verbosity = 4;
-      
-      console.log('Store ready, looking for product:', PRODUCT_ID);
-      console.log('All products in store:', store.products);
-      
-      // Get the product
-      let product = store.get(PRODUCT_ID);
-      console.log('Product lookup result:', product);
-      
-      // If product not found, register it and refresh
-      if (!product) {
-        console.log('Product not found, registering as PAID_SUBSCRIPTION...');
+      // Use BillingContext for purchase if available
+      if (billingContext && billingContext.purchase) {
+        console.log('App: Using BillingContext.purchase()');
+        const success = await billingContext.purchase(PRODUCT_ID);
         
-        const platform = isIOS() 
-          ? CdvPurchase.Platform.APPLE_APPSTORE 
-          : CdvPurchase.Platform.GOOGLE_PLAY;
-        
-        console.log('Platform:', platform);
-        
-        store.register({
-          id: PRODUCT_ID,
-          type: CdvPurchase.ProductType.PAID_SUBSCRIPTION,
-          platform: platform
-        });
-        
-        console.log('Product registered, calling store.update()...');
-        await store.update();
-        
-        console.log('Store updated, waiting for ready...');
-        await store.ready();
-        
-        product = store.get(PRODUCT_ID);
-        console.log('Product after refresh:', product);
-      }
-      
-      if (!product) {
-        console.error('Product still not available after refresh');
-        console.log('Store products:', store.products);
-        throw new Error('Subscription not available. Please check your internet connection and try again.');
-      }
-      
-      console.log('Product found:', product.id);
-      console.log('Product title:', product.title);
-      console.log('Product owned:', product.owned);
-      console.log('Product offers:', product.offers);
-      
-      // Get offer for subscription
-      const offer = product.getOffer();
-      console.log('Offer:', offer);
-      
-      if (!offer) {
-        console.error('No offer available');
-        console.log('Product offers array:', product.offers);
-        throw new Error('No subscription offer available. Please try again later.');
-      }
-      
-      console.log('Offer ID:', offer.id);
-      console.log('Offer pricing phases:', offer.pricingPhases);
-      
-      // Set up one-time purchase handlers for this transaction
-      const purchasePromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Purchase timed out. Please try again.'));
-        }, 180000); // 3 minute timeout
-        
-        // Handle approved purchases
-        store.when()
-          .approved(transaction => {
-            console.log('=== Transaction APPROVED ===');
-            console.log('Transaction ID:', transaction?.transactionId);
-            transaction.verify();
-          })
-          .verified(receipt => {
-            console.log('=== Receipt VERIFIED ===');
-            clearTimeout(timeout);
-            receipt.finish();
-            resolve({ success: true, receipt });
-          })
-          .finished(transaction => {
-            console.log('=== Transaction FINISHED ===');
-            console.log('Transaction ID:', transaction?.transactionId);
-          })
-          .error(err => {
-            console.error('=== Store ERROR during purchase ===', err);
-            console.error('Error code:', err?.code);
-            clearTimeout(timeout);
-            if (err?.code === 'E_USER_CANCELLED' || 
-                err?.message?.includes('cancel') ||
-                err?.code === 6777010) {
-              reject({ cancelled: true, message: 'Purchase cancelled' });
-            } else {
-              reject(err);
-            }
-          });
-      });
-      
-      // Initiate the purchase - this should open Google Play dialog
-      console.log('=== Calling offer.order() ===');
-      const orderResult = await offer.order();
-      console.log('Order result:', orderResult);
-      
-      // Wait for purchase to complete through event handlers
-      console.log('Waiting for purchase completion...');
-      const result = await purchasePromise;
-      
-      if (result.success) {
-        console.log('=== PURCHASE SUCCESSFUL ===');
-        
-        // Grant premium access
-        localStorage.setItem('isPremium', 'true');
-        setIsPremium(true);
-        
-        // Also save to Capacitor Preferences
-        try {
-          const { Preferences } = await import('@capacitor/preferences');
-          await Preferences.set({ key: 'isPremium', value: 'true' });
-        } catch (e) {
-          console.log('Could not save to Preferences:', e);
+        if (success) {
+          console.log('App: Purchase initiated successfully');
+          // The actual premium grant happens in BillingContext event handlers
         }
         
         setIsProcessingPayment(false);
-        setPaymentError(null);
-        
-        alert('🎉 Subscription successful!\n\nYou now have premium access to all 249 pregnancy food guides.');
-        setActiveView('home');
+        return;
       }
       
-    } catch (error) {
-      console.error('=== PURCHASE ERROR ===', error);
-      console.error('Error message:', error?.message);
-      console.error('Error code:', error?.code);
+      // Fallback: Direct store access
+      console.log('App: BillingContext not available, using direct store access');
       
+      const CdvPurchase = window.CdvPurchase;
+      if (!CdvPurchase || !CdvPurchase.store) {
+        throw new Error('Store not available. Please restart the app.');
+      }
+      
+      const store = CdvPurchase.store;
+      console.log('App: Store products:', store.products?.length);
+      
+      const product = store.get(PRODUCT_ID);
+      console.log('App: Product:', product?.id, 'owned:', product?.owned);
+      
+      if (!product) {
+        throw new Error('Product not found. Please check your internet connection.');
+      }
+      
+      const offer = product.getOffer();
+      console.log('App: Offer:', offer?.id);
+      
+      if (!offer) {
+        throw new Error('No subscription offer available.');
+      }
+      
+      console.log('App: Calling offer.order()...');
+      await offer.order();
+      console.log('App: Order initiated');
+      
+      // Purchase flow continues in event handlers set up in index.js
       setIsProcessingPayment(false);
       
-      if (error.cancelled) {
+    } catch (error) {
+      console.error('App: Purchase error:', error);
+      setIsProcessingPayment(false);
+      
+      if (error?.cancelled || 
+          error?.code === 'E_USER_CANCELLED' ||
+          error?.code === 6777010 ||
+          error?.message?.toLowerCase().includes('cancel')) {
         setPaymentError(null);
       } else {
         setPaymentError(error.message || 'Purchase failed. Please try again.');
@@ -3162,74 +3030,59 @@ function App() {
     }
   };
 
-  // Handle restore purchases - Production-ready for SUBSCRIPTIONS
+  // Handle restore purchases - Uses BillingContext
   const handleRestorePurchases = async () => {
-    console.log('=== RESTORE PURCHASES INITIATED ===');
+    console.log('=== App: RESTORE PURCHASES INITIATED ===');
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      let CdvPurchase = window.CdvPurchase;
+      // Use BillingContext for restore if available
+      if (billingContext && billingContext.restorePurchases) {
+        console.log('App: Using BillingContext.restorePurchases()');
+        const success = await billingContext.restorePurchases();
+        
+        setIsProcessingPayment(false);
+        
+        if (success) {
+          alert('🎉 Subscription restored!\n\nYour premium access has been activated.');
+        }
+        return;
+      }
       
+      // Fallback: Direct store access
+      console.log('App: BillingContext not available, using direct store access');
+      
+      const CdvPurchase = window.CdvPurchase;
       if (!CdvPurchase || !CdvPurchase.store) {
-        await new Promise((resolve, reject) => {
-          let attempts = 0;
-          const check = () => {
-            if (window.CdvPurchase && window.CdvPurchase.store) {
-              resolve(true);
-            } else if (attempts < 30) {
-              attempts++;
-              setTimeout(check, 200);
-            } else {
-              reject(new Error('Store not available'));
-            }
-          };
-          check();
-        });
-        CdvPurchase = window.CdvPurchase;
+        throw new Error('Store not available. Please restart the app.');
       }
       
       const store = CdvPurchase.store;
       
-      console.log('Restoring purchases for product:', PRODUCT_ID);
-      
-      // Restore purchases - this will check active subscriptions
+      console.log('App: Restoring purchases for product:', PRODUCT_ID);
       await store.restorePurchases();
       
       // Wait for store to process
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Refresh store to get latest status
       await store.update();
       
-      // Check if subscription is now owned
       const product = store.get(PRODUCT_ID);
-      console.log('Product after restore:', product);
-      console.log('Product owned:', product?.owned);
+      console.log('App: Product after restore:', product?.owned);
       
       if (product && product.owned) {
-        console.log('=== RESTORE SUCCESSFUL - Subscription Active ===');
-        
+        console.log('App: Restore successful');
         localStorage.setItem('isPremium', 'true');
-        setIsPremium(true);
-        
-        try {
-          const { Preferences } = await import('@capacitor/preferences');
-          await Preferences.set({ key: 'isPremium', value: 'true' });
-        } catch (e) {
-          console.log('Could not save to Preferences:', e);
-        }
-        
+        localStorage.setItem('premiumPurchaseVerified', 'true');
         setIsProcessingPayment(false);
         alert('🎉 Subscription restored!\n\nYour premium access has been activated.');
       } else {
-        console.log('No active subscription found');
         setIsProcessingPayment(false);
         setPaymentError('No active subscription found for this account.');
       }
       
     } catch (error) {
-      console.error('=== RESTORE ERROR ===', error);
+      console.error('App: Restore error:', error);
       setIsProcessingPayment(false);
       setPaymentError(error.message || 'Failed to restore purchases. Please try again.');
     }
