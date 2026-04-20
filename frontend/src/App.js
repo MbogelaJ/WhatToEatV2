@@ -2961,138 +2961,87 @@ function App() {
     }
   };
 
-  // Handle premium purchase - Uses BillingContext
+  // Handle premium purchase - Uses global window.purchasePremium
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
 
-  // Product ID - Must match Google Play Console / App Store Connect exactly
-  const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
-
   const handlePremiumPurchase = async () => {
-    console.log('=== App: PREMIUM PURCHASE INITIATED ===');
-    console.log('App: Platform:', isIOS() ? 'iOS' : isAndroid() ? 'Android' : 'Web');
-    console.log('App: billingContext available:', !!billingContext);
+    console.log('[APP] =====================================');
+    console.log('[APP] PURCHASE BUTTON HANDLER CALLED');
+    console.log('[APP] =====================================');
     
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      // Use BillingContext for purchase if available
-      if (billingContext && billingContext.purchase) {
-        console.log('App: Using BillingContext.purchase()');
-        const success = await billingContext.purchase(PRODUCT_ID);
+      // Use global purchase function defined in index.js
+      if (typeof window.purchasePremium === 'function') {
+        console.log('[APP] Calling window.purchasePremium()...');
+        const result = await window.purchasePremium();
+        console.log('[APP] Purchase result:', result);
         
-        if (success) {
-          console.log('App: Purchase initiated successfully');
-          // The actual premium grant happens in BillingContext event handlers
+        if (result.cancelled) {
+          // User cancelled - no error
+          setPaymentError(null);
+        } else if (result.error) {
+          setPaymentError(result.error);
+        } else if (result.success || result.alreadyOwned) {
+          // Success - premium will be updated via event
+          setPaymentError(null);
         }
-        
-        setIsProcessingPayment(false);
-        return;
-      }
-      
-      // Fallback: Direct store access
-      console.log('App: BillingContext not available, using direct store access');
-      
-      const CdvPurchase = window.CdvPurchase;
-      if (!CdvPurchase || !CdvPurchase.store) {
-        throw new Error('Store not available. Please restart the app.');
-      }
-      
-      const store = CdvPurchase.store;
-      console.log('App: Store products:', store.products?.length);
-      
-      const product = store.get(PRODUCT_ID);
-      console.log('App: Product:', product?.id, 'owned:', product?.owned);
-      
-      if (!product) {
-        throw new Error('Product not found. Please check your internet connection.');
-      }
-      
-      const offer = product.getOffer();
-      console.log('App: Offer:', offer?.id);
-      
-      if (!offer) {
-        throw new Error('No subscription offer available.');
-      }
-      
-      console.log('App: Calling offer.order()...');
-      await offer.order();
-      console.log('App: Order initiated');
-      
-      // Purchase flow continues in event handlers set up in index.js
-      setIsProcessingPayment(false);
-      
-    } catch (error) {
-      console.error('App: Purchase error:', error);
-      setIsProcessingPayment(false);
-      
-      if (error?.cancelled || 
-          error?.code === 'E_USER_CANCELLED' ||
-          error?.code === 6777010 ||
-          error?.message?.toLowerCase().includes('cancel')) {
-        setPaymentError(null);
       } else {
-        setPaymentError(error.message || 'Purchase failed. Please try again.');
+        // Fallback to BillingContext
+        console.log('[APP] Using BillingContext.purchase()...');
+        if (billingContext?.purchase) {
+          await billingContext.purchase();
+        } else {
+          throw new Error('Purchase not available. Please restart the app.');
+        }
       }
+    } catch (error) {
+      console.error('[APP] Purchase error:', error);
+      if (!error?.cancelled) {
+        setPaymentError(error?.message || 'Purchase failed. Please try again.');
+      }
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
-  // Handle restore purchases - Uses BillingContext
+  // Handle restore purchases - Uses global window.restorePurchases
   const handleRestorePurchases = async () => {
-    console.log('=== App: RESTORE PURCHASES INITIATED ===');
+    console.log('[APP] =====================================');
+    console.log('[APP] RESTORE BUTTON HANDLER CALLED');
+    console.log('[APP] =====================================');
+    
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      // Use BillingContext for restore if available
-      if (billingContext && billingContext.restorePurchases) {
-        console.log('App: Using BillingContext.restorePurchases()');
-        const success = await billingContext.restorePurchases();
+      // Use global restore function defined in index.js
+      if (typeof window.restorePurchases === 'function') {
+        console.log('[APP] Calling window.restorePurchases()...');
+        const result = await window.restorePurchases();
+        console.log('[APP] Restore result:', result);
         
-        setIsProcessingPayment(false);
-        
-        if (success) {
-          alert('🎉 Subscription restored!\n\nYour premium access has been activated.');
+        if (!result.success) {
+          setPaymentError('No previous purchase found for this account.');
         }
-        return;
-      }
-      
-      // Fallback: Direct store access
-      console.log('App: BillingContext not available, using direct store access');
-      
-      const CdvPurchase = window.CdvPurchase;
-      if (!CdvPurchase || !CdvPurchase.store) {
-        throw new Error('Store not available. Please restart the app.');
-      }
-      
-      const store = CdvPurchase.store;
-      
-      console.log('App: Restoring purchases for product:', PRODUCT_ID);
-      await store.restorePurchases();
-      
-      // Wait for store to process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      await store.update();
-      
-      const product = store.get(PRODUCT_ID);
-      console.log('App: Product after restore:', product?.owned);
-      
-      if (product && product.owned) {
-        console.log('App: Restore successful');
-        localStorage.setItem('isPremium', 'true');
-        localStorage.setItem('premiumPurchaseVerified', 'true');
-        setIsProcessingPayment(false);
-        alert('🎉 Subscription restored!\n\nYour premium access has been activated.');
+      } else if (billingContext?.restorePurchases) {
+        // Fallback to BillingContext
+        console.log('[APP] Using BillingContext.restorePurchases()...');
+        const success = await billingContext.restorePurchases();
+        if (!success) {
+          setPaymentError('No previous purchase found.');
+        }
       } else {
-        setIsProcessingPayment(false);
-        setPaymentError('No active subscription found for this account.');
+        throw new Error('Restore not available. Please restart the app.');
       }
-      
     } catch (error) {
-      console.error('App: Restore error:', error);
+      console.error('[APP] Restore error:', error);
+      setPaymentError(error?.message || 'Restore failed. Please try again.');
+    } finally {
       setIsProcessingPayment(false);
-      setPaymentError(error.message || 'Failed to restore purchases. Please try again.');
     }
   };
 
