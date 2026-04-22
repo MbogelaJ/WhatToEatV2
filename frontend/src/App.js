@@ -2795,53 +2795,32 @@ function App() {
   
   console.log('App: isPremium from BillingContext:', isPremium);
 
-  // ==================== GOOGLE PLAY BILLING INITIALIZATION ====================
-  // NOTE: Primary initialization happens in index.js BEFORE React renders
-  // This useEffect just logs status and handles any late initialization
+  // ==================== GOOGLE PLAY BILLING STATUS CHECK ====================
+  // Listen for billingReady event (instead of setTimeout!)
   useEffect(() => {
-    const checkBillingStatus = async () => {
-      console.log('App: Checking billing status...');
-      console.log('App: billingStoreInitialized:', window.billingStoreInitialized);
-      console.log('App: CdvPurchase available:', !!window.CdvPurchase);
+    console.log('[APP] Setting up billing status listener...');
+    
+    const handleBillingReady = (e) => {
+      console.log('[APP] billingReady event received:', e.detail);
       
-      // Check if running on native Android
-      const isNative = typeof window !== 'undefined' && 
-                       window.Capacitor && 
-                       typeof window.Capacitor.isNativePlatform === 'function' &&
-                       window.Capacitor.isNativePlatform();
-      
-      if (!isNative) {
-        console.log('App: Not native platform');
-        return;
-      }
-      
-      const isAndroid = window.Capacitor.getPlatform() === 'android';
-      if (!isAndroid) {
-        console.log('App: Not Android');
-        return;
-      }
-      
-      // Log store status
-      if (window.CdvPurchase && window.CdvPurchase.store) {
-        const store = window.CdvPurchase.store;
-        console.log('App: Store products count:', store.products?.length || 0);
-        
-        const product = store.get('com.whattoeat.penx.premium.v2');
-        if (product) {
-          console.log('App: Product found:', product.id);
-          console.log('App: Product owned:', product.owned);
-          console.log('App: Product canPurchase:', product.canPurchase);
-        } else {
-          console.log('App: Product NOT found in store');
-        }
+      if (e.detail?.product) {
+        console.log('[APP] Product loaded:', e.detail.product.id);
+        console.log('[APP] Product owned:', e.detail.product.owned);
+        console.log('[APP] Product canPurchase:', e.detail.product.canPurchase);
       } else {
-        console.log('App: Store not yet available');
+        console.log('[APP] Product not found in billing event');
       }
     };
     
-    // Check after a delay to let index.js initialize
-    const timer = setTimeout(checkBillingStatus, 3000);
-    return () => clearTimeout(timer);
+    window.addEventListener('billingReady', handleBillingReady);
+    
+    // Check if already ready
+    if (window.billingStoreInitialized) {
+      console.log('[APP] Billing already initialized');
+      console.log('[APP] billingProduct:', window.billingProduct?.id);
+    }
+    
+    return () => window.removeEventListener('billingReady', handleBillingReady);
   }, []);
   // ==================== END OF BILLING STATUS CHECK ====================
 
@@ -3105,31 +3084,14 @@ function App() {
   }, []); // Only run once on mount
 
   // Initialize In-App Purchases for iOS - SAFE VERSION
-  // This is handled by BillingContext now, but keep logging here
+  // This is handled by BillingContext now, logging via billingReady event
   useEffect(() => {
-    console.log('App: IAP initialization effect running');
-    console.log('App: isCapacitorNative:', isCapacitorNative());
-    console.log('App: isIOS:', isIOS());
+    console.log('[APP] IAP initialization effect running');
+    console.log('[APP] isCapacitorNative:', isCapacitorNative());
+    console.log('[APP] isIOS:', isIOS());
     
-    // All IAP handling is now done by BillingContext
-    // This effect just logs for debugging
-    
-    const logIAPStatus = () => {
-      try {
-        if (window.CdvPurchase && window.CdvPurchase.store) {
-          console.log('App: CdvPurchase store is available');
-          console.log('App: Products:', window.CdvPurchase.store.products?.length || 0);
-        } else {
-          console.log('App: CdvPurchase store not yet available');
-        }
-      } catch (e) {
-        console.log('App: Error checking IAP status:', e);
-      }
-    };
-    
-    // Log after a delay to allow store to initialize
-    const timer = setTimeout(logIAPStatus, 3000);
-    return () => clearTimeout(timer);
+    // All IAP handling is now done by index.js and BillingContext
+    // Logging happens via billingReady event listener above
   }, []); // Only run once on mount
 
   useEffect(() => {
