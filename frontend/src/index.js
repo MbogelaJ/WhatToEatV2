@@ -3,6 +3,14 @@ import ReactDOM from "react-dom/client";
 import "@/index.css";
 import App from "@/App";
 
+// ==================== DEEP DEBUG LOGS ====================
+console.log("[DEBUG] INDEX.JS LOADED");
+console.log("[DEBUG] window.Capacitor:", window.Capacitor);
+console.log("[DEBUG] isNativePlatform exists:", typeof window?.Capacitor?.isNativePlatform);
+console.log("[DEBUG] isNativePlatform():", window?.Capacitor?.isNativePlatform?.());
+console.log("[DEBUG] platform:", window?.Capacitor?.getPlatform?.());
+// =========================================================
+
 /**
  * ==================== GOOGLE PLAY BILLING INITIALIZATION ====================
  * 

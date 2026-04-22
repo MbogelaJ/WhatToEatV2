@@ -7,6 +7,15 @@ import { AppUpdateProvider } from './context/AppUpdateContext';
 import UpdatePrompt from './components/UpdatePrompt';
 import './components/PremiumUpgrade.css';
 
+// ==================== DEEP DEBUG LOGS ====================
+console.log("[DEBUG] APP.JS LOADED");
+console.log("[DEBUG] APP STARTED");
+console.log("[DEBUG] window.Capacitor:", window.Capacitor);
+console.log("[DEBUG] isNativePlatform exists:", typeof window?.Capacitor?.isNativePlatform);
+console.log("[DEBUG] isNativePlatform():", window?.Capacitor?.isNativePlatform?.());
+console.log("[DEBUG] platform:", window?.Capacitor?.getPlatform?.());
+// =========================================================
+
 // Log app startup
 console.log('=== WhatToEat App Starting ===');
 console.log('Timestamp:', new Date().toISOString());
