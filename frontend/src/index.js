@@ -32,22 +32,22 @@ const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
 // Clear unverified premium
 const clearUnverifiedPremium = () => {
-  console.log('[BILLING] Checking premium flags...');
+  console.error('[BILLING] Checking premium flags...');
   const isPremium = localStorage.getItem('isPremium');
   const verified = localStorage.getItem('premiumPurchaseVerified');
-  console.log('[BILLING] isPremium:', isPremium, 'verified:', verified);
+  console.error('[BILLING] isPremium:', isPremium, 'verified:', verified);
   
   if (isPremium === 'true' && verified !== 'true') {
-    console.log('[BILLING] Clearing unverified premium');
+    console.error('[BILLING] Clearing unverified premium');
     localStorage.removeItem('isPremium');
   }
 };
 
 // Grant premium access
 const grantPremiumAccess = () => {
-  console.log('[BILLING] ========================================');
-  console.log('[BILLING] GRANTING PREMIUM ACCESS');
-  console.log('[BILLING] ========================================');
+  console.error('[BILLING] ========================================');
+  console.error('[BILLING] GRANTING PREMIUM ACCESS');
+  console.error('[BILLING] ========================================');
   localStorage.setItem('isPremium', 'true');
   localStorage.setItem('premiumPurchaseVerified', 'true');
   window.dispatchEvent(new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } }));
@@ -55,51 +55,51 @@ const grantPremiumAccess = () => {
 
 // Main initialization
 const initializeBillingStore = async () => {
-  console.log('[BILLING] ========================================');
-  console.log('[BILLING] BILLING INITIALIZATION STARTING');
-  console.log('[BILLING] Timestamp:', new Date().toISOString());
-  console.log('[BILLING] Product ID:', PRODUCT_ID);
-  console.log('[BILLING] Expected Type: NON_CONSUMABLE');
-  console.log('[BILLING] ========================================');
+  console.error('[BILLING] ========================================');
+  console.error('[BILLING] BILLING INITIALIZATION STARTING');
+  console.error('[BILLING] Timestamp:', new Date().toISOString());
+  console.error('[BILLING] Product ID:', PRODUCT_ID);
+  console.error('[BILLING] Expected Type: NON_CONSUMABLE');
+  console.error('[BILLING] ========================================');
   
   clearUnverifiedPremium();
   
   // Check Capacitor
   if (typeof window === 'undefined' || !window.Capacitor) {
-    console.log('[BILLING] No Capacitor - web environment');
+    console.error('[BILLING] No Capacitor - web environment');
     return;
   }
   
   const isNative = window.Capacitor.isNativePlatform?.();
-  console.log('[BILLING] isNativePlatform:', isNative);
+  console.error('[BILLING] isNativePlatform:', isNative);
   
   if (!isNative) {
-    console.log('[BILLING] Not native platform, skipping');
+    console.error('[BILLING] Not native platform, skipping');
     return;
   }
   
   const platform = window.Capacitor.getPlatform();
-  console.log('[BILLING] Platform:', platform);
+  console.error('[BILLING] Platform:', platform);
   
   if (platform !== 'android') {
-    console.log('[BILLING] Not Android, skipping Google Play Billing');
+    console.error('[BILLING] Not Android, skipping Google Play Billing');
     return;
   }
   
-  console.log('[BILLING] Android detected - initializing...');
+  console.error('[BILLING] Android detected - initializing...');
   
   // Wait for Capacitor ready
   try {
     if (typeof window.Capacitor.ready === 'function') {
       await window.Capacitor.ready();
-      console.log('[BILLING] Capacitor ready');
+      console.error('[BILLING] Capacitor ready');
     }
   } catch (e) {
-    console.log('[BILLING] Capacitor.ready error:', e);
+    console.error('[BILLING] Capacitor.ready error:', e);
   }
   
   // Wait for CdvPurchase
-  console.log('[BILLING] Waiting for CdvPurchase...');
+  console.error('[BILLING] Waiting for CdvPurchase...');
   
   let attempts = 0;
   const maxAttempts = 60;
@@ -108,7 +108,7 @@ const initializeBillingStore = async () => {
     const check = () => {
       attempts++;
       if (window.CdvPurchase?.store) {
-        console.log('[BILLING] CdvPurchase found after', attempts, 'attempts');
+        console.error('[BILLING] CdvPurchase found after', attempts, 'attempts');
         resolve(true);
       } else if (attempts >= maxAttempts) {
         console.error('[BILLING] CdvPurchase NOT found after', maxAttempts, 'attempts');
@@ -133,45 +133,45 @@ const initializeBillingStore = async () => {
     
     // Maximum verbosity
     store.verbosity = 4;
-    console.log('[BILLING] Verbosity set to 4');
+    console.error('[BILLING] Verbosity set to 4');
     
     // ========================================
     // STEP 1: SET UP EVENT LISTENERS FIRST
     // ========================================
-    console.log('[BILLING] Setting up event listeners...');
+    console.error('[BILLING] Setting up event listeners...');
     
     // Product updated listener
     store.when()
       .productUpdated((product) => {
-        console.log('[BILLING] Product UPDATED:', product?.id);
-        console.log('[BILLING]   title:', product?.title);
-        console.log('[BILLING]   price:', product?.pricing?.price);
-        console.log('[BILLING]   owned:', product?.owned);
-        console.log('[BILLING]   canPurchase:', product?.canPurchase);
-        console.log('[BILLING]   offers:', product?.offers?.length);
+        console.error('[BILLING] Product UPDATED:', product?.id);
+        console.error('[BILLING]   title:', product?.title);
+        console.error('[BILLING]   price:', product?.pricing?.price);
+        console.error('[BILLING]   owned:', product?.owned);
+        console.error('[BILLING]   canPurchase:', product?.canPurchase);
+        console.error('[BILLING]   offers:', product?.offers?.length);
         
         // Save product reference when updated
         if (product?.id === PRODUCT_ID) {
           window.billingProduct = product;
-          console.log('[BILLING] Saved product to window.billingProduct');
+          console.error('[BILLING] Saved product to window.billingProduct');
           
           if (product.owned) {
-            console.log('[BILLING] Product is OWNED - granting premium');
+            console.error('[BILLING] Product is OWNED - granting premium');
             grantPremiumAccess();
           }
         }
       })
       .approved((transaction) => {
-        console.log('[BILLING] Transaction APPROVED:', transaction?.transactionId);
+        console.error('[BILLING] Transaction APPROVED:', transaction?.transactionId);
         transaction.verify();
       })
       .verified((receipt) => {
-        console.log('[BILLING] Receipt VERIFIED');
+        console.error('[BILLING] Receipt VERIFIED');
         grantPremiumAccess();
         receipt.finish();
       })
       .finished((transaction) => {
-        console.log('[BILLING] Transaction FINISHED:', transaction?.transactionId);
+        console.error('[BILLING] Transaction FINISHED:', transaction?.transactionId);
       })
       .error((err) => {
         console.error('[BILLING] ERROR:', err?.code, err?.message);
@@ -180,8 +180,8 @@ const initializeBillingStore = async () => {
     // ========================================
     // STEP 2: REGISTER PRODUCT
     // ========================================
-    console.log('[BILLING] Registering product:', PRODUCT_ID);
-    console.log('[BILLING] Type: NON_CONSUMABLE');
+    console.error('[BILLING] Registering product:', PRODUCT_ID);
+    console.error('[BILLING] Type: NON_CONSUMABLE');
     
     store.register({
       id: PRODUCT_ID,
@@ -189,87 +189,76 @@ const initializeBillingStore = async () => {
       platform: Platform.GOOGLE_PLAY
     });
     
-    console.log('[BILLING] Product registered');
+    console.error('[BILLING] Product registered');
     
     // ========================================
     // STEP 3: INITIALIZE STORE
     // ========================================
-    console.log('[BILLING] Initializing store with GOOGLE_PLAY...');
+    console.error('[BILLING] Initializing store with GOOGLE_PLAY...');
     await store.initialize([Platform.GOOGLE_PLAY]);
-    console.log('[BILLING] Store initialized');
+    console.error('[BILLING] Store initialized');
     
     // ========================================
     // STEP 4: UPDATE STORE
     // ========================================
-    console.log('[BILLING] Calling store.update()...');
+    console.error('[BILLING] Calling store.update()...');
     await store.update();
-    console.log('[BILLING] Store updated');
+    console.error('[BILLING] Store updated');
     
     // ========================================
     // STEP 5: WAIT FOR STORE READY (CRITICAL!)
     // ========================================
-    console.log('[BILLING] Waiting for store.ready()...');
+    console.error('[BILLING] Waiting for store.ready()...');
     
     // Use store.ready() with callback - THIS IS THE KEY FIX
     store.ready(() => {
-      console.log('[BILLING] ========================================');
-      console.log('[BILLING] STORE IS READY');
-      console.log('[BILLING] ========================================');
+      console.error('[BILLING] ========================================');
+      console.error('[BILLING] STORE IS READY ✅');
+      console.error('[BILLING] ========================================');
       
-      // 🔴 LOG ALL PRODUCTS RETURNED BY GOOGLE PLAY
-      console.log('[BILLING] All products:', store.products);
-      console.log('[BILLING] Products count:', store.products?.length || 0);
+      // 1. Log ALL products
+      console.error('[BILLING] Products array:', store.products);
+      console.error('[BILLING] Products count:', store.products?.length || 0);
       
-      // Loop through ALL products for detailed diagnosis
-      if (store.products && store.products.length > 0) {
-        store.products.forEach((p, index) => {
-          console.log(`[BILLING] Product ${index}:`, {
-            id: p.id,
-            title: p.title,
-            type: p.type,
-            state: p.state,
-            platform: p.platform,
-            canPurchase: p.canPurchase,
-            owned: p.owned,
-            pricing: p.pricing,
-            offers: p.offers?.length || 0
-          });
-        });
-      } else {
-        console.warn('[BILLING] ========================================');
-        console.warn('[BILLING] NO PRODUCTS RETURNED FROM STORE!');
-        console.warn('[BILLING] ========================================');
-        console.warn('[BILLING] Possible causes:');
-        console.warn('[BILLING] 1. Product not active in Google Play Console');
-        console.warn('[BILLING] 2. App not installed from Play Store (sideloaded)');
-        console.warn('[BILLING] 3. Tester account not configured');
-        console.warn('[BILLING] 4. Product ID mismatch');
-        console.warn('[BILLING] 5. App version not published to testing track');
-      }
-      
-      // Now try to get our specific product
-      console.log('[BILLING] Looking for product:', PRODUCT_ID);
+      // 2. Try direct get
       const product = store.get(PRODUCT_ID);
       
-      console.log('[BILLING] store.get() result:', product);
+      console.error('[BILLING] store.get result:', product);
       
+      if (!product) {
+        console.error('[BILLING] ❌ PRODUCT NOT FOUND BY ID');
+        console.error('[BILLING] Expected ID:', PRODUCT_ID);
+      } else {
+        console.error('[BILLING] ✅ PRODUCT FOUND:', product.id);
+        console.error('[BILLING] canPurchase:', product.canPurchase);
+        console.error('[BILLING] owned:', product.owned);
+        console.error('[BILLING] offers:', product.offers);
+        console.error('[BILLING] title:', product.title);
+        console.error('[BILLING] pricing:', product.pricing);
+      }
+      
+      // 3. Loop products (safe)
+      if (store.products && store.products.length > 0) {
+        store.products.forEach((p, i) => {
+          console.error(`[BILLING] Product ${i}:`, p.id, 'owned:', p.owned, 'canPurchase:', p.canPurchase);
+        });
+      } else {
+        console.error('[BILLING] ❌ NO PRODUCTS RETURNED FROM GOOGLE PLAY');
+        console.error('[BILLING] Possible causes:');
+        console.error('[BILLING] 1. Product not active in Google Play Console');
+        console.error('[BILLING] 2. App not installed from Play Store (sideloaded)');
+        console.error('[BILLING] 3. Tester account not configured');
+        console.error('[BILLING] 4. Product ID mismatch');
+        console.error('[BILLING] 5. App version not published to testing track');
+      }
+      
+      // Save to global if product found
       if (product) {
-        console.log('[BILLING] ========================================');
-        console.log('[BILLING] PRODUCT FOUND!');
-        console.log('[BILLING] ========================================');
-        console.log('[BILLING] id:', product.id);
-        console.log('[BILLING] title:', product.title);
-        console.log('[BILLING] price:', product.pricing?.price);
-        console.log('[BILLING] owned:', product.owned);
-        console.log('[BILLING] canPurchase:', product.canPurchase);
-        console.log('[BILLING] offers:', product.offers?.length);
-        
-        // Save to global
         window.billingProduct = product;
         window.billingStoreInitialized = true;
         
         if (product.owned) {
-          console.log('[BILLING] Product already owned - granting premium');
+          console.error('[BILLING] Product already owned - granting premium');
           grantPremiumAccess();
         }
         
@@ -277,15 +266,7 @@ const initializeBillingStore = async () => {
         window.dispatchEvent(new CustomEvent('billingReady', { 
           detail: { product, ready: true } 
         }));
-        
       } else {
-        console.error('[BILLING] ========================================');
-        console.error('[BILLING] PRODUCT NOT FOUND AFTER READY!');
-        console.error('[BILLING] ========================================');
-        console.error('[BILLING] Expected Product ID:', PRODUCT_ID);
-        console.error('[BILLING] Available product IDs:', store.products?.map(p => p.id) || []);
-        console.error('[BILLING] Products array:', store.products);
-        
         window.billingInitError = 'Product not found in store';
         window.billingStoreInitialized = true;
         
@@ -296,7 +277,7 @@ const initializeBillingStore = async () => {
       }
     });
     
-    console.log('[BILLING] Initialization complete, waiting for ready callback...');
+    console.error('[BILLING] Initialization complete, waiting for ready callback...');
     
   } catch (error) {
     console.error('[BILLING] CRITICAL ERROR:', error);
@@ -309,15 +290,15 @@ const initializeBillingStore = async () => {
 // GLOBAL PURCHASE FUNCTION
 // ========================================
 window.purchasePremium = async () => {
-  console.log('[BILLING] ========================================');
-  console.log('[BILLING] PURCHASE REQUESTED');
-  console.log('[BILLING] ========================================');
+  console.error('[BILLING] ========================================');
+  console.error('[BILLING] PURCHASE REQUESTED');
+  console.error('[BILLING] ========================================');
   
   // Use the cached product from window.billingProduct
   const product = window.billingProduct;
   
-  console.log('[BILLING] window.billingProduct:', !!product);
-  console.log('[BILLING] window.billingStoreInitialized:', window.billingStoreInitialized);
+  console.error('[BILLING] window.billingProduct:', !!product);
+  console.error('[BILLING] window.billingStoreInitialized:', window.billingStoreInitialized);
   
   if (!product) {
     console.error('[BILLING] Product not loaded yet!');
@@ -326,7 +307,7 @@ window.purchasePremium = async () => {
     const store = window.billingStore || window.CdvPurchase?.store;
     if (store) {
       const freshProduct = store.get(PRODUCT_ID);
-      console.log('[BILLING] Fallback store.get() result:', freshProduct);
+      console.error('[BILLING] Fallback store.get() result:', freshProduct);
       
       if (freshProduct) {
         window.billingProduct = freshProduct;
@@ -345,14 +326,14 @@ window.purchasePremium = async () => {
 
 // Execute purchase helper
 async function executePurchase(product) {
-  console.log('[BILLING] Executing purchase for:', product.id);
-  console.log('[BILLING] Product title:', product.title);
-  console.log('[BILLING] Product owned:', product.owned);
-  console.log('[BILLING] Product canPurchase:', product.canPurchase);
-  console.log('[BILLING] Product offers:', product.offers?.length);
+  console.error('[BILLING] Executing purchase for:', product.id);
+  console.error('[BILLING] Product title:', product.title);
+  console.error('[BILLING] Product owned:', product.owned);
+  console.error('[BILLING] Product canPurchase:', product.canPurchase);
+  console.error('[BILLING] Product offers:', product.offers?.length);
   
   if (product.owned) {
-    console.log('[BILLING] Already owned!');
+    console.error('[BILLING] Already owned!');
     grantPremiumAccess();
     return { success: true, alreadyOwned: true };
   }
@@ -363,18 +344,18 @@ async function executePurchase(product) {
   }
   
   // Get offer
-  console.log('[BILLING] Getting offer...');
+  console.error('[BILLING] Getting offer...');
   const offer = product.getOffer();
   
-  console.log('[BILLING] Offer:', offer);
-  console.log('[BILLING] Offer id:', offer?.id);
+  console.error('[BILLING] Offer:', offer);
+  console.error('[BILLING] Offer id:', offer?.id);
   
   if (!offer) {
     console.error('[BILLING] No offer available!');
     
     // Try direct order as fallback
     if (typeof product.order === 'function') {
-      console.log('[BILLING] Trying product.order() directly...');
+      console.error('[BILLING] Trying product.order() directly...');
       try {
         await product.order();
         return { success: true };
@@ -387,11 +368,11 @@ async function executePurchase(product) {
   }
   
   // Execute order
-  console.log('[BILLING] Calling offer.order()...');
+  console.error('[BILLING] Calling offer.order()...');
   
   try {
     const result = await offer.order();
-    console.log('[BILLING] Order result:', result);
+    console.error('[BILLING] Order result:', result);
     return { success: true };
   } catch (error) {
     console.error('[BILLING] Order error:', error);
@@ -410,7 +391,7 @@ async function executePurchase(product) {
 // GLOBAL RESTORE FUNCTION
 // ========================================
 window.restorePurchases = async () => {
-  console.log('[BILLING] Restore requested');
+  console.error('[BILLING] Restore requested');
   
   const store = window.billingStore || window.CdvPurchase?.store;
   
@@ -435,7 +416,7 @@ window.restorePurchases = async () => {
     const product = store.get(PRODUCT_ID);
     
     if (product?.owned) {
-      console.log('[BILLING] Restore successful');
+      console.error('[BILLING] Restore successful');
       window.billingProduct = product;
       grantPremiumAccess();
       return { success: true };
@@ -452,7 +433,7 @@ window.restorePurchases = async () => {
 // GLOBAL REFRESH FUNCTION
 // ========================================
 window.refreshBillingStore = async () => {
-  console.log('[BILLING] Refreshing store...');
+  console.error('[BILLING] Refreshing store...');
   
   const store = window.billingStore || window.CdvPurchase?.store;
   
@@ -469,7 +450,7 @@ window.refreshBillingStore = async () => {
         const product = store.get(PRODUCT_ID);
         if (product) {
           window.billingProduct = product;
-          console.log('[BILLING] Product refreshed:', product.id);
+          console.error('[BILLING] Product refreshed:', product.id);
         }
         resolve();
       });
@@ -485,12 +466,12 @@ window.refreshBillingStore = async () => {
 // ========================================
 // START APP
 // ========================================
-console.log('[BILLING] Starting app...');
+console.error('[BILLING] Starting app...');
 
 initializeBillingStore()
   .catch(err => console.error('[BILLING] Init error:', err))
   .finally(() => {
-    console.log('[BILLING] Rendering React...');
+    console.error('[BILLING] Rendering React...');
     const root = ReactDOM.createRoot(document.getElementById("root"));
     root.render(
       <React.StrictMode>
