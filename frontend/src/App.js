@@ -2428,9 +2428,9 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
 };
 
 // Premium Page Component
-const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, paymentError, onRefresh }) => {
+const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, paymentError, onRefresh, isLoading, isStoreReady }) => {
   // Debug logging
-  console.log('[PremiumPage] Rendering with isPremium:', isPremium);
+  console.error('[PremiumPage] Rendering - isPremium:', isPremium, 'isLoading:', isLoading, 'isStoreReady:', isStoreReady);
   
   return (
     <div className="premium-page-v2" data-testid="premium-page">
@@ -2471,11 +2471,18 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
         </div>
       )}
 
+      {/* Loading State */}
+      {isLoading && !isProcessing && (
+        <div className="payment-error-banner" style={{ backgroundColor: '#f0f9ff', borderColor: '#0ea5e9', color: '#0369a1' }}>
+          <span>Loading billing information...</span>
+        </div>
+      )}
+
       {/* Payment Error */}
-      {paymentError && (
+      {paymentError && !isLoading && (
         <div className="payment-error-banner">
           <span>{paymentError}</span>
-          <button onClick={onRefresh || (() => window.location.reload())}>Try Again</button>
+          <button onClick={onRefresh || (() => window.refreshBillingStore?.())}>Try Again</button>
         </div>
       )}
 
@@ -3284,6 +3291,8 @@ function App() {
         isPremium={isPremium}
         isProcessing={isProcessingPayment}
         paymentError={paymentError}
+        isLoading={billingContext?.isLoading}
+        isStoreReady={billingContext?.isStoreReady}
       />
     );
   }
@@ -3305,6 +3314,8 @@ function App() {
         isPremium={isPremium}
         isProcessing={isProcessingPayment}
         paymentError={paymentError}
+        isLoading={billingContext?.isLoading}
+        isStoreReady={billingContext?.isStoreReady}
       />
     );
   }

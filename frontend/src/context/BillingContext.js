@@ -4,10 +4,6 @@
  * Product: "Premium Pregnancy Access"
  * Product ID: com.whattoeat.penx.premium.v2
  * Type: INAPP (NON_CONSUMABLE)
- * 
- * RULES:
- * - isPremium defaults to FALSE
- * - Only true after verified purchase
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
@@ -17,7 +13,6 @@ export const PRODUCTS = {
   PREMIUM: PRODUCT_ID
 };
 
-// Platform detection
 const isNativePlatform = () => {
   try {
     return window?.Capacitor?.isNativePlatform?.() || false;
@@ -37,25 +32,20 @@ const isAndroidPlatform = () => {
 const BillingContext = createContext(null);
 
 export function BillingProvider({ children }) {
-  // CRITICAL: Default to false
   const [isPremium, setIsPremium] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isStoreReady, setIsStoreReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [error, setError] = useState(null);
   const [productInfo, setProductInfo] = useState(null);
-
-  console.error('[BILLING-CTX] Provider mounting');
 
   // Check stored premium on mount
   useEffect(() => {
     const stored = localStorage.getItem('isPremium');
     const verified = localStorage.getItem('premiumPurchaseVerified');
     
-    console.error('[BILLING-CTX] Stored premium:', stored, 'verified:', verified);
-    
     if (stored === 'true' && verified === 'true') {
-      console.error('[BILLING-CTX] Verified premium found');
       setIsPremium(true);
     } else {
       if (stored === 'true') {
@@ -68,7 +58,6 @@ export function BillingProvider({ children }) {
   // Listen for premium status changes
   useEffect(() => {
     const handlePremiumChange = (e) => {
-      console.error('[BILLING-CTX] premiumStatusChanged:', e.detail);
       if (e.detail?.isPremium) {
         setIsPremium(true);
       }
@@ -78,65 +67,91 @@ export function BillingProvider({ children }) {
     return () => window.removeEventListener('premiumStatusChanged', handlePremiumChange);
   }, []);
 
-  // Listen for billingReady event
+  // Listen for billingReady event and poll for billing state
   useEffect(() => {
     if (!isNativePlatform() || !isAndroidPlatform()) {
-      console.error('[BILLING-CTX] Not Android native');
       setIsInitialized(true);
       setIsStoreReady(true);
+      setIsLoading(false);
       return;
     }
     
     const handleBillingReady = (e) => {
       console.error('[BILLING-CTX] billingReady event:', e.detail);
       
-      setIsStoreReady(true);
+      setIsLoading(false);
       setIsInitialized(true);
       
-      if (e.detail?.product) {
+      if (e.detail?.success && e.detail?.product) {
+        setIsStoreReady(true);
         setProductInfo({
           id: e.detail.product.identifier,
           title: e.detail.product.title,
-          price: e.detail.product.priceString || '$1.99',
-          description: e.detail.product.description
+          price: e.detail.product.priceString || '$1.99'
         });
-      }
-      
-      if (e.detail?.error) {
+        setError(null);
+      } else if (e.detail?.error) {
         setError(e.detail.error);
+        setIsStoreReady(false);
       }
     };
     
     window.addEventListener('billingReady', handleBillingReady);
     
-    // Check if already ready
-    if (window.billingStoreInitialized && window.billingProduct) {
-      console.error('[BILLING-CTX] Store already initialized');
-      setIsStoreReady(true);
-      setIsInitialized(true);
+    // Also poll for billing state (fallback)
+    const checkBillingState = () => {
+      if (window.billingReady && window.billingProduct) {
+        setIsStoreReady(true);
+        setIsInitialized(true);
+        setIsLoading(false);
+        setProductInfo({
+          id: window.billingProduct.identifier,
+          title: window.billingProduct.title,
+          price: window.billingProduct.priceString || '$1.99'
+        });
+        setError(null);
+        return true;
+      } else if (window.billingInitialized && !window.billingReady) {
+        setIsInitialized(true);
+        setIsLoading(false);
+        setError(window.billingInitError || 'Product not available');
+        return true;
+      }
+      return false;
+    };
+    
+    // Check immediately
+    if (!checkBillingState()) {
+      // Poll every 500ms for up to 15 seconds
+      let pollCount = 0;
+      const pollInterval = setInterval(() => {
+        pollCount++;
+        if (checkBillingState() || pollCount > 30) {
+          clearInterval(pollInterval);
+          if (pollCount > 30) {
+            setIsLoading(false);
+            setIsInitialized(true);
+            setError('Billing initialization timeout');
+          }
+        }
+      }, 500);
       
-      const product = window.billingProduct;
-      setProductInfo({
-        id: product.identifier,
-        title: product.title,
-        price: product.priceString || '$1.99',
-        description: product.description
-      });
+      return () => {
+        clearInterval(pollInterval);
+        window.removeEventListener('billingReady', handleBillingReady);
+      };
     }
     
     return () => window.removeEventListener('billingReady', handleBillingReady);
   }, []);
 
-  // Purchase function
   const purchase = useCallback(async () => {
-    console.error('[BILLING-CTX] purchase() called');
     setIsPurchasing(true);
     setError(null);
     
     try {
       if (typeof window.purchasePremium === 'function') {
         const result = await window.purchasePremium();
-        console.error('[BILLING-CTX] Purchase result:', result);
         
         if (result.success) {
           setIsPremium(true);
@@ -145,12 +160,10 @@ export function BillingProvider({ children }) {
         }
         
         return result.success;
-      } else {
-        setError('Purchase not available');
-        return false;
       }
+      setError('Purchase not available');
+      return false;
     } catch (err) {
-      console.error('[BILLING-CTX] Purchase error:', err);
       setError(err?.message || 'Purchase failed');
       return false;
     } finally {
@@ -158,9 +171,7 @@ export function BillingProvider({ children }) {
     }
   }, []);
 
-  // Restore function
   const restorePurchases = useCallback(async () => {
-    console.error('[BILLING-CTX] restorePurchases() called');
     setIsPurchasing(true);
     setError(null);
     
@@ -183,22 +194,28 @@ export function BillingProvider({ children }) {
     }
   }, []);
 
-  // Refresh function
   const refreshStore = useCallback(async () => {
-    console.error('[BILLING-CTX] refreshStore() called');
     setError(null);
+    setIsLoading(true);
     
     if (typeof window.refreshBillingStore === 'function') {
       const success = await window.refreshBillingStore();
       
+      setIsLoading(false);
+      
       if (success && window.billingProduct) {
+        setIsStoreReady(true);
         setProductInfo({
           id: window.billingProduct.identifier,
           title: window.billingProduct.title,
-          price: window.billingProduct.priceString || '$1.99',
-          description: window.billingProduct.description
+          price: window.billingProduct.priceString || '$1.99'
         });
+        setError(null);
+      } else {
+        setError('Failed to load product');
       }
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
@@ -206,6 +223,7 @@ export function BillingProvider({ children }) {
     isPremium,
     isInitialized,
     isStoreReady,
+    isLoading,
     isPurchasing,
     error,
     productInfo,
@@ -229,6 +247,7 @@ export function useBilling() {
       isPremium: false,
       isInitialized: true,
       isStoreReady: false,
+      isLoading: false,
       isPurchasing: false,
       error: null,
       productInfo: null,
