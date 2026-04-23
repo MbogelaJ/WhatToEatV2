@@ -10,6 +10,8 @@ import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
  * Product: "Premium Pregnancy Access"
  * Product ID: com.whattoeat.penx.premium.v2
  * Type: NON_CONSUMABLE (INAPP)
+ * 
+ * CRITICAL: Check ownership on startup and handle "ITEM_ALREADY_OWNED" error
  * ========================================================================================
  */
 
@@ -23,88 +25,103 @@ window.PURCHASE_TYPE = PURCHASE_TYPE;
 
 const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
-// Debug logs
 console.error('[DEBUG] INDEX.JS LOADED');
 console.error('[DEBUG] NativePurchases:', typeof NativePurchases);
-console.error('[DEBUG] PURCHASE_TYPE:', PURCHASE_TYPE);
 
-// ==================== MINIMAL BILLING TEST ====================
+// Grant premium access
+const grantPremiumAccess = () => {
+  console.error('[BILLING] ✅ GRANTING PREMIUM ACCESS');
+  localStorage.setItem('isPremium', 'true');
+  localStorage.setItem('premiumPurchaseVerified', 'true');
+  window.isPremiumGranted = true;
+  window.dispatchEvent(new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } }));
+};
+
+// Check if user already owns the product
+const checkExistingPurchases = async () => {
+  console.error('[BILLING] Checking existing purchases...');
+  
+  try {
+    // Method 1: Try getPurchases
+    try {
+      const result = await NativePurchases.getPurchases();
+      console.error('[BILLING] getPurchases result:', JSON.stringify(result));
+      
+      if (result?.purchases?.length > 0) {
+        const owned = result.purchases.find(p => p.productIdentifier === PRODUCT_ID);
+        if (owned) {
+          console.error('[BILLING] ✅ PRODUCT ALREADY OWNED (getPurchases)');
+          grantPremiumAccess();
+          return true;
+        }
+      }
+    } catch (e) {
+      console.error('[BILLING] getPurchases error:', e);
+    }
+    
+    // Method 2: Try restorePurchases
+    try {
+      const result = await NativePurchases.restorePurchases();
+      console.error('[BILLING] restorePurchases result:', JSON.stringify(result));
+      
+      if (result?.purchases?.length > 0) {
+        const owned = result.purchases.find(p => p.productIdentifier === PRODUCT_ID);
+        if (owned) {
+          console.error('[BILLING] ✅ PRODUCT ALREADY OWNED (restorePurchases)');
+          grantPremiumAccess();
+          return true;
+        }
+      }
+    } catch (e) {
+      console.error('[BILLING] restorePurchases error:', e);
+    }
+    
+    console.error('[BILLING] No existing purchases found');
+    return false;
+    
+  } catch (error) {
+    console.error('[BILLING] Check purchases error:', error);
+    return false;
+  }
+};
+
+// Test billing function
 window.testBilling = async () => {
   try {
     console.error("[TEST] ========================================");
     console.error("[TEST] STARTING BILLING TEST");
     console.error("[TEST] ========================================");
-    console.error("[TEST] NativePurchases:", typeof NativePurchases);
-    console.error("[TEST] Capacitor:", typeof window.Capacitor);
-    console.error("[TEST] isNativePlatform:", window.Capacitor?.isNativePlatform?.());
-    console.error("[TEST] platform:", window.Capacitor?.getPlatform?.());
-    console.error("[TEST] Product ID:", PRODUCT_ID);
     
-    console.error("[TEST] Calling getProducts...");
-    
-    const result = await NativePurchases.getProducts({
+    // Get products
+    const { products } = await NativePurchases.getProducts({
       productIdentifiers: [PRODUCT_ID],
       productType: PURCHASE_TYPE.INAPP
     });
     
-    console.error("[TEST] ========================================");
-    console.error("[TEST] RESULT");
-    console.error("[TEST] ========================================");
-    console.error("[TEST] Result:", JSON.stringify(result));
-    console.error("[TEST] Products count:", result?.products?.length || 0);
+    console.error("[TEST] Products:", products?.length || 0);
     
-    if (result?.products?.length > 0) {
-      result.products.forEach((p, i) => {
-        console.error(`[TEST] Product ${i}:`, JSON.stringify(p));
-      });
-      alert("✅ Products found: " + result.products.length + "\n\nTitle: " + result.products[0].title + "\nPrice: " + result.products[0].priceString);
+    if (products?.length > 0) {
+      alert("✅ Products found: " + products.length + "\n\nTitle: " + products[0].title + "\nPrice: " + products[0].priceString);
     } else {
-      console.error("[TEST] ❌ NO PRODUCTS RETURNED");
-      alert("❌ No products returned from Google Play");
+      alert("❌ No products found");
     }
     
-    return result;
+    // Check ownership
+    console.error("[TEST] Checking ownership...");
+    const owned = await checkExistingPurchases();
+    console.error("[TEST] Owned:", owned);
     
+    if (owned) {
+      alert("✅ You ALREADY OWN this product!\n\nPremium has been activated.");
+    }
+    
+    return { products, owned };
   } catch (e) {
-    console.error("[TEST] ========================================");
-    console.error("[TEST] ERROR");
-    console.error("[TEST] ========================================");
     console.error("[TEST] Error:", e);
-    console.error("[TEST] Message:", e?.message);
-    console.error("[TEST] Code:", e?.code);
     alert("❌ Error: " + (e?.message || JSON.stringify(e)));
     return null;
   }
 };
-
-// Test purchase function
-window.testPurchase = async () => {
-  try {
-    console.error("[TEST] STARTING PURCHASE TEST");
-    
-    const result = await NativePurchases.purchaseProduct({
-      productIdentifier: PRODUCT_ID,
-      productType: PURCHASE_TYPE.INAPP,
-      quantity: 1
-    });
-    
-    console.error("[TEST] Purchase result:", JSON.stringify(result));
-    alert("✅ Purchase successful!");
-    
-    // Grant premium
-    localStorage.setItem('isPremium', 'true');
-    localStorage.setItem('premiumPurchaseVerified', 'true');
-    window.dispatchEvent(new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } }));
-    
-    return result;
-  } catch (e) {
-    console.error("[TEST] Purchase error:", e);
-    alert("❌ Purchase error: " + (e?.message || JSON.stringify(e)));
-    return null;
-  }
-};
-
-console.error('[DEBUG] Test functions: window.testBilling(), window.testPurchase()');
 
 // Clear unverified premium
 const clearUnverifiedPremium = () => {
@@ -113,14 +130,6 @@ const clearUnverifiedPremium = () => {
   if (isPremium === 'true' && verified !== 'true') {
     localStorage.removeItem('isPremium');
   }
-};
-
-// Grant premium
-const grantPremiumAccess = () => {
-  console.error('[BILLING] ✅ GRANTING PREMIUM ACCESS');
-  localStorage.setItem('isPremium', 'true');
-  localStorage.setItem('premiumPurchaseVerified', 'true');
-  window.dispatchEvent(new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } }));
 };
 
 // Initialize billing
@@ -132,14 +141,12 @@ const initializeBilling = async (retryCount = 0) => {
   console.error('[BILLING] ========================================');
   
   try {
-    // Check Capacitor
     if (!window.Capacitor) {
       console.error('[BILLING] No Capacitor - web');
       window.billingInitialized = true;
       return;
     }
     
-    // Wait for Capacitor ready
     if (typeof window.Capacitor.ready === 'function') {
       await window.Capacitor.ready();
     }
@@ -155,8 +162,26 @@ const initializeBilling = async (retryCount = 0) => {
       return;
     }
     
-    // Get products
-    console.error('[BILLING] Getting products...');
+    // ========================================
+    // STEP 1: CHECK EXISTING PURCHASES FIRST
+    // ========================================
+    console.error('[BILLING] Step 1: Checking existing purchases...');
+    const alreadyOwned = await checkExistingPurchases();
+    
+    if (alreadyOwned) {
+      console.error('[BILLING] ✅ User already owns premium!');
+      window.billingReady = true;
+      window.billingInitialized = true;
+      window.dispatchEvent(new CustomEvent('billingReady', { 
+        detail: { product: null, ready: true, owned: true } 
+      }));
+      return;
+    }
+    
+    // ========================================
+    // STEP 2: GET PRODUCTS
+    // ========================================
+    console.error('[BILLING] Step 2: Getting products...');
     
     const { products } = await NativePurchases.getProducts({
       productIdentifiers: [PRODUCT_ID],
@@ -177,54 +202,47 @@ const initializeBilling = async (retryCount = 0) => {
         window.dispatchEvent(new CustomEvent('billingReady', { 
           detail: { product, ready: true } 
         }));
-      } else {
-        console.error('[BILLING] ❌ Product not in list');
-        window.billingInitError = 'Product not found';
       }
     } else {
       console.error('[BILLING] ❌ NO PRODUCTS');
       window.billingInitError = 'No products';
     }
     
-    // Check existing purchases
-    try {
-      const { purchases } = await NativePurchases.restorePurchases();
-      if (purchases?.some(p => p.productIdentifier === PRODUCT_ID)) {
-        console.error('[BILLING] ✅ Already purchased');
-        grantPremiumAccess();
-      }
-    } catch (e) {
-      console.error('[BILLING] Restore check error:', e);
-    }
-    
     window.billingInitialized = true;
-    console.error('[BILLING] Init complete, ready:', window.billingReady);
+    console.error('[BILLING] Init complete');
     
   } catch (error) {
     console.error('[BILLING] ❌ ERROR:', error);
     
     if (retryCount < MAX_RETRIES) {
-      console.error('[BILLING] Retrying in 2s...');
       setTimeout(() => initializeBilling(retryCount + 1), 2000);
     } else {
       window.billingInitError = error?.message;
       window.billingInitialized = true;
-      window.dispatchEvent(new CustomEvent('billingReady', { 
-        detail: { product: null, ready: false, error: error?.message } 
-      }));
     }
   }
 };
 
-// ==================== GLOBAL FUNCTIONS ====================
+// ==================== GLOBAL PURCHASE FUNCTION ====================
 window.purchasePremium = async () => {
+  console.error('[BILLING] ========================================');
   console.error('[BILLING] PURCHASE REQUESTED');
+  console.error('[BILLING] ========================================');
+  
+  // First check if already owned
+  const alreadyOwned = await checkExistingPurchases();
+  if (alreadyOwned) {
+    console.error('[BILLING] Already owned - no need to purchase!');
+    return { success: true, alreadyOwned: true };
+  }
   
   if (!window.billingReady) {
-    return { success: false, error: 'Billing not ready. Tap TEST BILLING first.' };
+    return { success: false, error: 'Billing not ready. Please try again.' };
   }
   
   try {
+    console.error('[BILLING] Calling purchaseProduct...');
+    
     const result = await NativePurchases.purchaseProduct({
       productIdentifier: PRODUCT_ID,
       productType: PURCHASE_TYPE.INAPP,
@@ -237,7 +255,20 @@ window.purchasePremium = async () => {
     
   } catch (error) {
     console.error('[BILLING] Purchase error:', error);
+    console.error('[BILLING] Error code:', error?.code);
+    console.error('[BILLING] Error message:', error?.message);
     
+    // Handle "ITEM_ALREADY_OWNED" - This is NOT an error!
+    if (error?.code === 'ITEM_ALREADY_OWNED' || 
+        error?.code === 7 ||
+        error?.message?.includes('already own') ||
+        error?.message?.includes('Already owned')) {
+      console.error('[BILLING] ✅ ITEM_ALREADY_OWNED - Granting premium!');
+      grantPremiumAccess();
+      return { success: true, alreadyOwned: true };
+    }
+    
+    // Handle user cancellation
     if (error?.code === 'USER_CANCELLED' || error?.code === 1) {
       return { success: false, cancelled: true };
     }
@@ -246,22 +277,40 @@ window.purchasePremium = async () => {
   }
 };
 
+// ==================== GLOBAL RESTORE FUNCTION ====================
 window.restorePurchases = async () => {
+  console.error('[BILLING] ========================================');
+  console.error('[BILLING] RESTORE REQUESTED');
+  console.error('[BILLING] ========================================');
+  
   try {
-    const { purchases } = await NativePurchases.restorePurchases();
+    // Check purchases
+    const owned = await checkExistingPurchases();
     
-    if (purchases?.some(p => p.productIdentifier === PRODUCT_ID)) {
-      grantPremiumAccess();
+    if (owned) {
+      console.error('[BILLING] ✅ Restore successful!');
       return { success: true };
     }
     
-    return { success: false, error: 'No previous purchase' };
+    console.error('[BILLING] No purchases found to restore');
+    return { success: false, error: 'No previous purchase found' };
+    
   } catch (error) {
+    console.error('[BILLING] Restore error:', error);
     return { success: false, error: error?.message };
   }
 };
 
+// ==================== GLOBAL REFRESH FUNCTION ====================
 window.refreshBillingStore = async () => {
+  console.error('[BILLING] Refresh requested');
+  
+  // Check ownership again
+  const owned = await checkExistingPurchases();
+  if (owned) {
+    return true;
+  }
+  
   window.billingReady = false;
   window.billingInitialized = false;
   await initializeBilling();
@@ -270,6 +319,16 @@ window.refreshBillingStore = async () => {
 
 // ==================== START ====================
 clearUnverifiedPremium();
+
+// Check if premium is already verified in storage
+const storedPremium = localStorage.getItem('isPremium');
+const storedVerified = localStorage.getItem('premiumPurchaseVerified');
+if (storedPremium === 'true' && storedVerified === 'true') {
+  console.error('[BILLING] Premium already verified in storage');
+  window.isPremiumGranted = true;
+}
+
+console.error('[BILLING] Starting initialization...');
 initializeBilling();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
