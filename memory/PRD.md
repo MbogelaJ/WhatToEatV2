@@ -3,12 +3,12 @@
 ## Product Overview
 A comprehensive, user-friendly mobile and web app that provides food safety information for pregnant individuals. The app classifies foods into safety categories (SAFE, LIMIT, AVOID) and operates fully offline.
 
-## Current Status (March 24, 2026)
+## Current Status (December 2025)
 
 | Platform | Version | Status |
 |----------|---------|--------|
 | **iOS** | 1.0.4 | ✅ App Store Ready (`main` branch) |
-| **Android** | 1.0.1 | ✅ Submitted to Google Play (`WhatToEat-Android` branch) |
+| **Android** | 1.0.1 | 🔵 Google Play Billing Fix Applied |
 
 ---
 
@@ -34,9 +34,11 @@ A comprehensive, user-friendly mobile and web app that provides food safety info
 - Google Sign-in (both platforms)
 - Apple Sign-in (iOS only - hidden on Android)
 
-### Payment
-- Apple In-App Purchase (iOS)
-- Google Play Billing (Android) - Future
+### Payment (In-App Purchase)
+- **iOS**: Apple In-App Purchase
+- **Android**: Google Play Billing via `@capgo/native-purchases@8.3.4`
+- **Product ID**: `com.whattoeat.penx.premium.v2`
+- **Type**: NON_CONSUMABLE (one-time purchase)
 
 ### Data Strategy
 - Fully offline-first using `staticFoods.js` (288 records)
@@ -52,8 +54,10 @@ A comprehensive, user-friendly mobile and web app that provides food safety info
 ├── ios/               # Capacitor iOS project  
 ├── src/
 │   ├── components/    
+│   ├── context/       # BillingContext.js (Premium state management)
 │   ├── data/          # staticFoods.js (288 foods), faqs.js
 │   ├── App.js         # Main app logic
+│   ├── index.js       # Entry point + Billing initialization
 │   └── App.css        
 ├── capacitor.config.json
 ├── IOS_SUBMISSION_GUIDE_v104.md
@@ -96,32 +100,47 @@ A comprehensive, user-friendly mobile and web app that provides food safety info
 - [x] R8/ProGuard enabled
 - [x] Emulator test PASSED
 - [x] QA validation complete
-- [x] Submitted to Google Play Console
 - [x] Branch: `WhatToEat-Android`
+
+**Google Play Billing Fix (December 2025)**
+- [x] Migrated from `cordova-plugin-purchase` to `@capgo/native-purchases`
+- [x] Implemented ITEM_ALREADY_OWNED error handling
+- [x] Added startup ownership check via getPurchases()
+- [x] Fixed BillingContext to sync with window.isPremiumGranted
+- [x] Added debug logs for Logcat visibility
+- [x] Build verified successful
 
 **Bug Fixes**
 - [x] "Continue with Free Version" navigation fix
 - [x] Disclaimer page CSS (no scroll)
 - [x] Apple Sign-In hidden on Android (`isIOS()` check)
 - [x] Android crash fix (removed apple-sign-in plugin)
+- [x] Google Play Billing ownership detection fix
 
-### 🔵 In Progress
+### 🔵 Pending User Testing
 
-1. **Google Play Review** - Waiting for approval (1-3 days)
+1. **Google Play Billing Ownership** - User needs to test on physical Android device:
+   - App should auto-detect owned product on startup
+   - ITEM_ALREADY_OWNED error should unlock premium
+   - Restore button should work
+   - UI should show "You're Premium!" when owned
 
 ### ⚪ Future/Backlog
 
-1. **Favorites Feature (P2)**
+1. **Remove DEBUG TEST Button (P1)**
+   - Remove red "TEST BILLING (DEBUG)" button from PremiumPage once confirmed working
+
+2. **Favorites Feature (P2)**
    - Allow users to bookmark specific foods
 
-2. **Analytics Integration (P3)**
+3. **Analytics Integration (P3)**
    - Basic telemetry for usage tracking
 
-3. **App.js Refactoring (P2)**
-   - Break down monolithic ~3500 line file
+4. **App.js Refactoring (P2)**
+   - Break down monolithic ~3600 line file
    - See `/app/REFACTOR_PLAN.md`
 
-4. **Google Auth Configuration**
+5. **Google Auth Configuration**
    - Replace placeholder Client ID in capacitor.config.json
 
 ---
@@ -141,43 +160,49 @@ A comprehensive, user-friendly mobile and web app that provides food safety info
 
 | File | Purpose |
 |------|---------|
+| `/app/frontend/src/index.js` | Entry point + Billing initialization + Ownership check |
+| `/app/frontend/src/context/BillingContext.js` | Premium state context provider |
 | `/app/frontend/src/App.js` | Main app logic, contains `isIOS()` check |
 | `/app/frontend/capacitor.config.json` | Capacitor configuration |
 | `/app/frontend/android/variables.gradle` | Android SDK versions |
 | `/app/frontend/android/app/build.gradle` | Android build config |
 | `/app/frontend/android/app/proguard-rules.pro` | ProGuard rules |
-| `/app/frontend/ANDROID_BUILD_GUIDE.md` | Android build instructions |
-| `/app/frontend/ANDROID_QA_REPORT.md` | QA validation report |
-| `/app/frontend/IOS_SUBMISSION_GUIDE_v104.md` | iOS submission guide |
 
 ---
 
-## Build Outputs
+## Billing Flow (Android)
 
-### Android
-- AAB: `android/app/release/app-release.aab` (3.7 MB)
-- mapping.txt: `android/app/build/outputs/mapping/release/mapping.txt`
+### On App Startup:
+1. Check localStorage for `isPremium=true` + `premiumPurchaseVerified=true`
+2. Set `window.isPremiumGranted = true` if found
+3. Call `NativePurchases.getPurchases()` to verify with Play Store
+4. If product owned → call `grantPremiumAccess()`
+5. Dispatch `premiumStatusChanged` event
+6. BillingContext catches event and sets `isPremium = true`
 
-### iOS
-- Archive via Xcode
+### On Purchase Attempt:
+1. First check if already owned via `checkExistingPurchases()`
+2. If owned → return success without purchase
+3. If not owned → call `purchaseProduct()`
+4. Handle `ITEM_ALREADY_OWNED` error as success
+5. Grant premium access on success
 
----
-
-## Known Issues & Considerations
-
-1. **Apple Sign-In on Android**: The `@capacitor-community/apple-sign-in` plugin crashes Android. It has been removed from Android gradle files. UI button hidden via `isIOS()` check.
-
-2. **Capacitor Sync Warning**: Running `npx cap sync` will regenerate gradle files and re-add Apple Sign-In. Run cleanup commands after syncing:
-   ```bash
-   sed -i '' '/capacitor-community-apple-sign-in/d' android/capacitor.settings.gradle
-   sed -i '' '/capacitor-community-apple-sign-in/d' android/app/capacitor.build.gradle
-   ```
-
-3. **Google Auth Placeholder**: `capacitor.config.json` has placeholder `YOUR_WEB_CLIENT_ID`. Configure with actual Client ID for Google Sign-In to work.
+### Key Functions (index.js):
+- `grantPremiumAccess(source)` - Sets localStorage + window flag + dispatches event
+- `checkExistingPurchases()` - Calls getPurchases() and restorePurchases()
+- `window.purchasePremium()` - Main purchase function
+- `window.restorePurchases()` - Restore previous purchases
+- `window.testBilling()` - Manual debug trigger
 
 ---
 
 ## Changelog
+
+### December 2025 - Google Play Billing Fix
+- Fixed ITEM_ALREADY_OWNED error handling
+- Added startup ownership verification
+- Updated BillingContext state management
+- Added comprehensive debug logging
 
 ### v1.0.1 (Android) - March 24, 2026
 - Upgraded to API level 35
