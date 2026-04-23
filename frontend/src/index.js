@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "@/index.css";
 import App from "@/App";
+import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
 
 /**
  * ==================== GOOGLE PLAY BILLING - @capgo/native-purchases ====================
@@ -19,14 +20,93 @@ window.billingReady = false;
 window.billingInitialized = false;
 window.billingInitError = null;
 window.billingProduct = null;
-window.NativePurchasesPlugin = null;
-window.PURCHASE_TYPE = null;
+window.NativePurchasesPlugin = NativePurchases;
+window.PURCHASE_TYPE = PURCHASE_TYPE;
 
 const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
 // Debug logs at startup
 console.error('[DEBUG] INDEX.JS LOADED');
 console.error('[DEBUG] Timestamp:', new Date().toISOString());
+console.error('[DEBUG] NativePurchases imported:', typeof NativePurchases);
+console.error('[DEBUG] PURCHASE_TYPE:', PURCHASE_TYPE);
+
+// ==================== MINIMAL BILLING TEST ====================
+window.testBilling = async () => {
+  try {
+    console.error("[TEST] ========================================");
+    console.error("[TEST] STARTING BILLING TEST");
+    console.error("[TEST] ========================================");
+    console.error("[TEST] NativePurchases:", typeof NativePurchases);
+    console.error("[TEST] Product ID:", PRODUCT_ID);
+    
+    // Check if Capacitor is available
+    console.error("[TEST] Capacitor:", typeof window.Capacitor);
+    console.error("[TEST] isNativePlatform:", window.Capacitor?.isNativePlatform?.());
+    console.error("[TEST] platform:", window.Capacitor?.getPlatform?.());
+    
+    console.error("[TEST] Calling getProducts...");
+    
+    const result = await NativePurchases.getProducts({
+      productIdentifiers: [PRODUCT_ID],
+      productType: PURCHASE_TYPE.INAPP
+    });
+    
+    console.error("[TEST] ========================================");
+    console.error("[TEST] PRODUCTS RESULT");
+    console.error("[TEST] ========================================");
+    console.error("[TEST] Result:", JSON.stringify(result));
+    console.error("[TEST] Products count:", result?.products?.length || 0);
+    
+    if (result?.products?.length > 0) {
+      result.products.forEach((p, i) => {
+        console.error(`[TEST] Product ${i}:`, JSON.stringify(p));
+      });
+      alert("✅ Products found: " + result.products.length);
+    } else {
+      console.error("[TEST] ❌ NO PRODUCTS RETURNED");
+      alert("❌ No products returned from Google Play");
+    }
+    
+    return result;
+    
+  } catch (e) {
+    console.error("[TEST] ========================================");
+    console.error("[TEST] ERROR");
+    console.error("[TEST] ========================================");
+    console.error("[TEST] Error:", e);
+    console.error("[TEST] Message:", e?.message);
+    console.error("[TEST] Code:", e?.code);
+    alert("❌ Error: " + (e?.message || e));
+    return null;
+  }
+};
+
+// ==================== MINIMAL PURCHASE TEST ====================
+window.testPurchase = async () => {
+  try {
+    console.error("[TEST] ========================================");
+    console.error("[TEST] STARTING PURCHASE TEST");
+    console.error("[TEST] ========================================");
+    
+    const result = await NativePurchases.purchaseProduct({
+      productIdentifier: PRODUCT_ID,
+      productType: PURCHASE_TYPE.INAPP,
+      quantity: 1
+    });
+    
+    console.error("[TEST] Purchase result:", JSON.stringify(result));
+    alert("✅ Purchase successful!");
+    return result;
+    
+  } catch (e) {
+    console.error("[TEST] Purchase error:", e);
+    alert("❌ Purchase error: " + (e?.message || e));
+    return null;
+  }
+};
+
+console.error('[DEBUG] Test functions registered: window.testBilling(), window.testPurchase()');
 
 // Clear unverified premium
 const clearUnverifiedPremium = () => {
@@ -88,30 +168,14 @@ const initializeBilling = async (retryCount = 0) => {
       return;
     }
     
-    // Step 4: Import the plugin
-    console.error('[BILLING] Step 4: Importing @capgo/native-purchases...');
-    
-    let NativePurchases, PURCHASE_TYPE;
-    try {
-      const module = await import('@capgo/native-purchases');
-      NativePurchases = module.NativePurchases;
-      PURCHASE_TYPE = module.PURCHASE_TYPE;
-      
-      console.error('[BILLING] Plugin imported successfully');
-      console.error('[BILLING] NativePurchases:', typeof NativePurchases);
-      console.error('[BILLING] PURCHASE_TYPE:', PURCHASE_TYPE);
-    } catch (importError) {
-      console.error('[BILLING] ❌ Failed to import plugin:', importError);
-      throw new Error('Failed to import billing plugin');
-    }
+    // Step 4: Plugin already imported at top of file
+    console.error('[BILLING] Step 4: Using pre-imported NativePurchases');
+    console.error('[BILLING] NativePurchases:', typeof NativePurchases);
+    console.error('[BILLING] PURCHASE_TYPE:', PURCHASE_TYPE);
     
     if (!NativePurchases) {
-      throw new Error('NativePurchases is undefined after import');
+      throw new Error('NativePurchases is not available');
     }
-    
-    // Save globally
-    window.NativePurchasesPlugin = NativePurchases;
-    window.PURCHASE_TYPE = PURCHASE_TYPE;
     
     // Step 5: Get products from Google Play
     console.error('[BILLING] Step 5: Fetching products from Google Play...');

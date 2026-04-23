@@ -2575,10 +2575,19 @@ const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, p
           <button 
             className="premium-buy-btn"
             onClick={onPurchase}
-            disabled={isProcessing}
+            disabled={isProcessing || isLoading}
             data-testid="premium-purchase-btn"
           >
-            {isProcessing ? 'Processing...' : 'Get Premium for $1.99'}
+            {isProcessing ? 'Processing...' : isLoading ? 'Loading...' : 'Get Premium for $1.99'}
+          </button>
+
+          {/* DEBUG TEST BUTTON - TEMPORARY */}
+          <button 
+            className="premium-restore-btn"
+            onClick={() => window.testBilling?.()}
+            style={{ backgroundColor: '#ef4444', marginTop: '10px' }}
+          >
+            🔧 TEST BILLING (DEBUG)
           </button>
 
           <button className="premium-free-btn" onClick={onBack}>
