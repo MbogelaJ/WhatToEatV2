@@ -1,14 +1,13 @@
 /**
- * Billing Context - Google Play Billing for Android
+ * Billing Context - Google Play Billing using @capgo/native-purchases
  * 
  * Product: "Premium Pregnancy Access"
  * Product ID: com.whattoeat.penx.premium.v2
- * Type: NON_CONSUMABLE (One-time purchase)
+ * Type: INAPP (NON_CONSUMABLE)
  * 
  * RULES:
  * - isPremium defaults to FALSE
  * - Only true after verified purchase
- * - Uses billingReady event instead of setTimeout
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
@@ -46,17 +45,17 @@ export function BillingProvider({ children }) {
   const [error, setError] = useState(null);
   const [productInfo, setProductInfo] = useState(null);
 
-  console.log('[BILLING-CTX] Provider mounting');
+  console.error('[BILLING-CTX] Provider mounting');
 
   // Check stored premium on mount
   useEffect(() => {
     const stored = localStorage.getItem('isPremium');
     const verified = localStorage.getItem('premiumPurchaseVerified');
     
-    console.log('[BILLING-CTX] Stored premium:', stored, 'verified:', verified);
+    console.error('[BILLING-CTX] Stored premium:', stored, 'verified:', verified);
     
     if (stored === 'true' && verified === 'true') {
-      console.log('[BILLING-CTX] Verified premium found');
+      console.error('[BILLING-CTX] Verified premium found');
       setIsPremium(true);
     } else {
       if (stored === 'true') {
@@ -69,7 +68,7 @@ export function BillingProvider({ children }) {
   // Listen for premium status changes
   useEffect(() => {
     const handlePremiumChange = (e) => {
-      console.log('[BILLING-CTX] premiumStatusChanged:', e.detail);
+      console.error('[BILLING-CTX] premiumStatusChanged:', e.detail);
       if (e.detail?.isPremium) {
         setIsPremium(true);
       }
@@ -79,32 +78,28 @@ export function BillingProvider({ children }) {
     return () => window.removeEventListener('premiumStatusChanged', handlePremiumChange);
   }, []);
 
-  // Listen for billingReady event (instead of setTimeout!)
+  // Listen for billingReady event
   useEffect(() => {
     if (!isNativePlatform() || !isAndroidPlatform()) {
-      console.log('[BILLING-CTX] Not Android native');
+      console.error('[BILLING-CTX] Not Android native');
       setIsInitialized(true);
       setIsStoreReady(true);
       return;
     }
     
     const handleBillingReady = (e) => {
-      console.log('[BILLING-CTX] billingReady event received:', e.detail);
+      console.error('[BILLING-CTX] billingReady event:', e.detail);
       
       setIsStoreReady(true);
       setIsInitialized(true);
       
       if (e.detail?.product) {
         setProductInfo({
-          id: e.detail.product.id,
+          id: e.detail.product.identifier,
           title: e.detail.product.title,
-          price: e.detail.product.pricing?.price || '$1.99',
-          owned: e.detail.product.owned
+          price: e.detail.product.priceString || '$1.99',
+          description: e.detail.product.description
         });
-        
-        if (e.detail.product.owned) {
-          setIsPremium(true);
-        }
       }
       
       if (e.detail?.error) {
@@ -116,21 +111,17 @@ export function BillingProvider({ children }) {
     
     // Check if already ready
     if (window.billingStoreInitialized && window.billingProduct) {
-      console.log('[BILLING-CTX] Store already initialized');
+      console.error('[BILLING-CTX] Store already initialized');
       setIsStoreReady(true);
       setIsInitialized(true);
       
       const product = window.billingProduct;
       setProductInfo({
-        id: product.id,
+        id: product.identifier,
         title: product.title,
-        price: product.pricing?.price || '$1.99',
-        owned: product.owned
+        price: product.priceString || '$1.99',
+        description: product.description
       });
-      
-      if (product.owned) {
-        setIsPremium(true);
-      }
     }
     
     return () => window.removeEventListener('billingReady', handleBillingReady);
@@ -138,22 +129,22 @@ export function BillingProvider({ children }) {
 
   // Purchase function
   const purchase = useCallback(async () => {
-    console.log('[BILLING-CTX] purchase() called');
+    console.error('[BILLING-CTX] purchase() called');
     setIsPurchasing(true);
     setError(null);
     
     try {
       if (typeof window.purchasePremium === 'function') {
         const result = await window.purchasePremium();
-        console.log('[BILLING-CTX] Purchase result:', result);
+        console.error('[BILLING-CTX] Purchase result:', result);
         
-        if (result.alreadyOwned || result.success) {
-          // Premium will be set via event
+        if (result.success) {
+          setIsPremium(true);
         } else if (result.error && !result.cancelled) {
           setError(result.error);
         }
         
-        return result.success || result.alreadyOwned;
+        return result.success;
       } else {
         setError('Purchase not available');
         return false;
@@ -169,7 +160,7 @@ export function BillingProvider({ children }) {
 
   // Restore function
   const restorePurchases = useCallback(async () => {
-    console.log('[BILLING-CTX] restorePurchases() called');
+    console.error('[BILLING-CTX] restorePurchases() called');
     setIsPurchasing(true);
     setError(null);
     
@@ -194,7 +185,7 @@ export function BillingProvider({ children }) {
 
   // Refresh function
   const refreshStore = useCallback(async () => {
-    console.log('[BILLING-CTX] refreshStore() called');
+    console.error('[BILLING-CTX] refreshStore() called');
     setError(null);
     
     if (typeof window.refreshBillingStore === 'function') {
@@ -202,15 +193,11 @@ export function BillingProvider({ children }) {
       
       if (success && window.billingProduct) {
         setProductInfo({
-          id: window.billingProduct.id,
+          id: window.billingProduct.identifier,
           title: window.billingProduct.title,
-          price: window.billingProduct.pricing?.price || '$1.99',
-          owned: window.billingProduct.owned
+          price: window.billingProduct.priceString || '$1.99',
+          description: window.billingProduct.description
         });
-        
-        if (window.billingProduct.owned) {
-          setIsPremium(true);
-        }
       }
     }
   }, []);
