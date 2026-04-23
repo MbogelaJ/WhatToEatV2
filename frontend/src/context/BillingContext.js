@@ -1,9 +1,9 @@
 /**
- * Billing Context - Google Play Billing using @capgo/native-purchases
+ * Billing Context - Google Play Billing using cordova-plugin-purchase
  * 
  * Product: "Premium Pregnancy Access"
  * Product ID: com.whattoeat.penx.premium.v2
- * Type: INAPP (NON_CONSUMABLE)
+ * Type: NON_CONSUMABLE
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
@@ -67,7 +67,7 @@ export function BillingProvider({ children }) {
     return () => window.removeEventListener('premiumStatusChanged', handlePremiumChange);
   }, []);
 
-  // Listen for billingReady event and poll for billing state
+  // Listen for billingReady event
   useEffect(() => {
     if (!isNativePlatform() || !isAndroidPlatform()) {
       setIsInitialized(true);
@@ -82,67 +82,55 @@ export function BillingProvider({ children }) {
       setIsLoading(false);
       setIsInitialized(true);
       
-      if (e.detail?.success && e.detail?.product) {
+      if (e.detail?.product) {
         setIsStoreReady(true);
         setProductInfo({
-          id: e.detail.product.identifier,
+          id: e.detail.product.id,
           title: e.detail.product.title,
-          price: e.detail.product.priceString || '$1.99'
+          price: e.detail.product.pricing?.price || '$1.99'
         });
         setError(null);
       } else if (e.detail?.error) {
         setError(e.detail.error);
-        setIsStoreReady(false);
       }
     };
     
     window.addEventListener('billingReady', handleBillingReady);
     
-    // Also poll for billing state (fallback)
-    const checkBillingState = () => {
+    // Poll for state
+    let pollCount = 0;
+    const pollInterval = setInterval(() => {
+      pollCount++;
+      
       if (window.billingReady && window.billingProduct) {
         setIsStoreReady(true);
         setIsInitialized(true);
         setIsLoading(false);
         setProductInfo({
-          id: window.billingProduct.identifier,
+          id: window.billingProduct.id,
           title: window.billingProduct.title,
-          price: window.billingProduct.priceString || '$1.99'
+          price: window.billingProduct.pricing?.price || '$1.99'
         });
-        setError(null);
-        return true;
-      } else if (window.billingInitialized && !window.billingReady) {
+        clearInterval(pollInterval);
+      } else if (window.billingInitialized) {
         setIsInitialized(true);
         setIsLoading(false);
-        setError(window.billingInitError || 'Product not available');
-        return true;
-      }
-      return false;
-    };
-    
-    // Check immediately
-    if (!checkBillingState()) {
-      // Poll every 500ms for up to 15 seconds
-      let pollCount = 0;
-      const pollInterval = setInterval(() => {
-        pollCount++;
-        if (checkBillingState() || pollCount > 30) {
-          clearInterval(pollInterval);
-          if (pollCount > 30) {
-            setIsLoading(false);
-            setIsInitialized(true);
-            setError('Billing initialization timeout');
-          }
+        if (window.billingInitError) {
+          setError(window.billingInitError);
         }
-      }, 500);
-      
-      return () => {
         clearInterval(pollInterval);
-        window.removeEventListener('billingReady', handleBillingReady);
-      };
-    }
+      } else if (pollCount > 30) {
+        setIsLoading(false);
+        setIsInitialized(true);
+        setError('Billing timeout');
+        clearInterval(pollInterval);
+      }
+    }, 500);
     
-    return () => window.removeEventListener('billingReady', handleBillingReady);
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('billingReady', handleBillingReady);
+    };
   }, []);
 
   const purchase = useCallback(async () => {
@@ -206,9 +194,9 @@ export function BillingProvider({ children }) {
       if (success && window.billingProduct) {
         setIsStoreReady(true);
         setProductInfo({
-          id: window.billingProduct.identifier,
+          id: window.billingProduct.id,
           title: window.billingProduct.title,
-          price: window.billingProduct.priceString || '$1.99'
+          price: window.billingProduct.pricing?.price || '$1.99'
         });
         setError(null);
       } else {

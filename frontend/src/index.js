@@ -2,16 +2,15 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "@/index.css";
 import App from "@/App";
-import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
 
 /**
- * ==================== GOOGLE PLAY BILLING - @capgo/native-purchases ====================
+ * ==================== GOOGLE PLAY BILLING - cordova-plugin-purchase ====================
  * 
  * Product: "Premium Pregnancy Access"
  * Product ID: com.whattoeat.penx.premium.v2
  * Type: NON_CONSUMABLE (INAPP)
  * 
- * CRITICAL: Wait for Capacitor to be ready before initializing billing
+ * Using cordova-plugin-purchase (CdvPurchase)
  * ========================================================================================
  */
 
@@ -20,16 +19,12 @@ window.billingReady = false;
 window.billingInitialized = false;
 window.billingInitError = null;
 window.billingProduct = null;
-window.NativePurchasesPlugin = NativePurchases;
-window.PURCHASE_TYPE = PURCHASE_TYPE;
 
 const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 
 // Debug logs at startup
 console.error('[DEBUG] INDEX.JS LOADED');
 console.error('[DEBUG] Timestamp:', new Date().toISOString());
-console.error('[DEBUG] NativePurchases imported:', typeof NativePurchases);
-console.error('[DEBUG] PURCHASE_TYPE:', PURCHASE_TYPE);
 
 // ==================== MINIMAL BILLING TEST ====================
 window.testBilling = async () => {
@@ -37,38 +32,85 @@ window.testBilling = async () => {
     console.error("[TEST] ========================================");
     console.error("[TEST] STARTING BILLING TEST");
     console.error("[TEST] ========================================");
-    console.error("[TEST] NativePurchases:", typeof NativePurchases);
-    console.error("[TEST] Product ID:", PRODUCT_ID);
     
-    // Check if Capacitor is available
+    // Check Capacitor
     console.error("[TEST] Capacitor:", typeof window.Capacitor);
     console.error("[TEST] isNativePlatform:", window.Capacitor?.isNativePlatform?.());
     console.error("[TEST] platform:", window.Capacitor?.getPlatform?.());
     
-    console.error("[TEST] Calling getProducts...");
+    // Check CdvPurchase
+    console.error("[TEST] CdvPurchase:", typeof window.CdvPurchase);
+    console.error("[TEST] CdvPurchase.store:", typeof window.CdvPurchase?.store);
     
-    const result = await NativePurchases.getProducts({
-      productIdentifiers: [PRODUCT_ID],
-      productType: PURCHASE_TYPE.INAPP
-    });
-    
-    console.error("[TEST] ========================================");
-    console.error("[TEST] PRODUCTS RESULT");
-    console.error("[TEST] ========================================");
-    console.error("[TEST] Result:", JSON.stringify(result));
-    console.error("[TEST] Products count:", result?.products?.length || 0);
-    
-    if (result?.products?.length > 0) {
-      result.products.forEach((p, i) => {
-        console.error(`[TEST] Product ${i}:`, JSON.stringify(p));
-      });
-      alert("✅ Products found: " + result.products.length);
-    } else {
-      console.error("[TEST] ❌ NO PRODUCTS RETURNED");
-      alert("❌ No products returned from Google Play");
+    if (!window.CdvPurchase || !window.CdvPurchase.store) {
+      console.error("[TEST] ❌ CdvPurchase not available!");
+      alert("❌ CdvPurchase not available. Make sure app is installed from Play Store.");
+      return null;
     }
     
-    return result;
+    const store = window.CdvPurchase.store;
+    const ProductType = window.CdvPurchase.ProductType;
+    const Platform = window.CdvPurchase.Platform;
+    
+    console.error("[TEST] Store verbosity:", store.verbosity);
+    console.error("[TEST] ProductType:", ProductType);
+    console.error("[TEST] Platform:", Platform);
+    
+    // Set max verbosity
+    store.verbosity = 4;
+    
+    // Check current products
+    console.error("[TEST] Current products in store:", store.products?.length || 0);
+    console.error("[TEST] Products:", store.products);
+    
+    // Register product
+    console.error("[TEST] Registering product:", PRODUCT_ID);
+    store.register({
+      id: PRODUCT_ID,
+      type: ProductType.NON_CONSUMABLE,
+      platform: Platform.GOOGLE_PLAY
+    });
+    
+    // Initialize
+    console.error("[TEST] Initializing store...");
+    await store.initialize([Platform.GOOGLE_PLAY]);
+    console.error("[TEST] Store initialized");
+    
+    // Update
+    console.error("[TEST] Calling update...");
+    await store.update();
+    console.error("[TEST] Store updated");
+    
+    // Wait for ready
+    console.error("[TEST] Waiting for ready...");
+    
+    return new Promise((resolve) => {
+      store.ready(() => {
+        console.error("[TEST] ========================================");
+        console.error("[TEST] STORE IS READY");
+        console.error("[TEST] ========================================");
+        console.error("[TEST] Products count:", store.products?.length || 0);
+        console.error("[TEST] Products:", JSON.stringify(store.products));
+        
+        const product = store.get(PRODUCT_ID);
+        console.error("[TEST] store.get() result:", product);
+        
+        if (product) {
+          console.error("[TEST] ✅ PRODUCT FOUND:", product.id);
+          console.error("[TEST] Title:", product.title);
+          console.error("[TEST] Price:", product.pricing?.price);
+          console.error("[TEST] Owned:", product.owned);
+          console.error("[TEST] CanPurchase:", product.canPurchase);
+          alert("✅ Product found!\n\nTitle: " + product.title + "\nPrice: " + product.pricing?.price);
+        } else {
+          console.error("[TEST] ❌ PRODUCT NOT FOUND");
+          console.error("[TEST] Available IDs:", store.products?.map(p => p.id));
+          alert("❌ Product NOT found!\n\nProducts in store: " + (store.products?.length || 0));
+        }
+        
+        resolve(product);
+      });
+    });
     
   } catch (e) {
     console.error("[TEST] ========================================");
@@ -82,31 +124,7 @@ window.testBilling = async () => {
   }
 };
 
-// ==================== MINIMAL PURCHASE TEST ====================
-window.testPurchase = async () => {
-  try {
-    console.error("[TEST] ========================================");
-    console.error("[TEST] STARTING PURCHASE TEST");
-    console.error("[TEST] ========================================");
-    
-    const result = await NativePurchases.purchaseProduct({
-      productIdentifier: PRODUCT_ID,
-      productType: PURCHASE_TYPE.INAPP,
-      quantity: 1
-    });
-    
-    console.error("[TEST] Purchase result:", JSON.stringify(result));
-    alert("✅ Purchase successful!");
-    return result;
-    
-  } catch (e) {
-    console.error("[TEST] Purchase error:", e);
-    alert("❌ Purchase error: " + (e?.message || e));
-    return null;
-  }
-};
-
-console.error('[DEBUG] Test functions registered: window.testBilling(), window.testPurchase()');
+console.error('[DEBUG] Test function registered: window.testBilling()');
 
 // Clear unverified premium
 const clearUnverifiedPremium = () => {
@@ -128,7 +146,7 @@ const grantPremiumAccess = () => {
   window.dispatchEvent(new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } }));
 };
 
-// Initialize billing with retry logic
+// Initialize billing with cordova-plugin-purchase
 const initializeBilling = async (retryCount = 0) => {
   const MAX_RETRIES = 3;
   
@@ -139,15 +157,14 @@ const initializeBilling = async (retryCount = 0) => {
   try {
     // Step 1: Check Capacitor
     console.error('[BILLING] Step 1: Checking Capacitor...');
-    console.error('[BILLING] window.Capacitor:', typeof window.Capacitor);
     
     if (!window.Capacitor) {
-      console.error('[BILLING] No Capacitor - web environment, skipping');
+      console.error('[BILLING] No Capacitor - web environment');
       window.billingInitialized = true;
       return;
     }
     
-    // Step 2: Wait for Capacitor to be ready
+    // Step 2: Wait for Capacitor ready
     console.error('[BILLING] Step 2: Waiting for Capacitor.ready()...');
     if (typeof window.Capacitor.ready === 'function') {
       await window.Capacitor.ready();
@@ -163,112 +180,133 @@ const initializeBilling = async (retryCount = 0) => {
     console.error('[BILLING] platform:', platform);
     
     if (!isNative || platform !== 'android') {
-      console.error('[BILLING] Not Android native, skipping Google Play Billing');
+      console.error('[BILLING] Not Android native, skipping');
       window.billingInitialized = true;
       return;
     }
     
-    // Step 4: Plugin already imported at top of file
-    console.error('[BILLING] Step 4: Using pre-imported NativePurchases');
-    console.error('[BILLING] NativePurchases:', typeof NativePurchases);
-    console.error('[BILLING] PURCHASE_TYPE:', PURCHASE_TYPE);
+    // Step 4: Wait for CdvPurchase
+    console.error('[BILLING] Step 4: Waiting for CdvPurchase...');
     
-    if (!NativePurchases) {
-      throw new Error('NativePurchases is not available');
+    let attempts = 0;
+    const maxAttempts = 50;
+    
+    const cdvAvailable = await new Promise((resolve) => {
+      const check = () => {
+        attempts++;
+        if (window.CdvPurchase?.store) {
+          console.error('[BILLING] CdvPurchase found after', attempts, 'attempts');
+          resolve(true);
+        } else if (attempts >= maxAttempts) {
+          console.error('[BILLING] CdvPurchase NOT found after', maxAttempts, 'attempts');
+          resolve(false);
+        } else {
+          setTimeout(check, 200);
+        }
+      };
+      check();
+    });
+    
+    if (!cdvAvailable) {
+      throw new Error('CdvPurchase not available');
     }
     
-    // Step 5: Get products from Google Play
-    console.error('[BILLING] Step 5: Fetching products from Google Play...');
-    console.error('[BILLING] Product ID:', PRODUCT_ID);
-    console.error('[BILLING] Product Type: INAPP');
+    const store = window.CdvPurchase.store;
+    const ProductType = window.CdvPurchase.ProductType;
+    const Platform = window.CdvPurchase.Platform;
     
-    let products = [];
-    try {
-      const result = await NativePurchases.getProducts({
-        productIdentifiers: [PRODUCT_ID],
-        productType: PURCHASE_TYPE.INAPP
+    // Step 5: Setup store
+    console.error('[BILLING] Step 5: Setting up store...');
+    store.verbosity = 4;
+    
+    // Event listeners
+    store.when()
+      .productUpdated((product) => {
+        console.error('[BILLING] Product updated:', product?.id);
+        if (product?.id === PRODUCT_ID) {
+          window.billingProduct = product;
+          if (product.owned) {
+            grantPremiumAccess();
+          }
+        }
+      })
+      .approved((transaction) => {
+        console.error('[BILLING] Approved:', transaction?.transactionId);
+        transaction.verify();
+      })
+      .verified((receipt) => {
+        console.error('[BILLING] Verified');
+        grantPremiumAccess();
+        receipt.finish();
+      })
+      .finished((transaction) => {
+        console.error('[BILLING] Finished:', transaction?.transactionId);
+      })
+      .error((err) => {
+        console.error('[BILLING] Error:', err?.code, err?.message);
       });
-      products = result.products || [];
-      
-      console.error('[BILLING] Products response:', JSON.stringify(result));
-      console.error('[BILLING] Products count:', products.length);
-    } catch (productsError) {
-      console.error('[BILLING] ❌ getProducts error:', productsError);
-      console.error('[BILLING] Error code:', productsError?.code);
-      console.error('[BILLING] Error message:', productsError?.message);
-      throw productsError;
-    }
     
-    // Step 6: Process products
-    console.error('[BILLING] Step 6: Processing products...');
+    // Register product
+    console.error('[BILLING] Registering product:', PRODUCT_ID);
+    store.register({
+      id: PRODUCT_ID,
+      type: ProductType.NON_CONSUMABLE,
+      platform: Platform.GOOGLE_PLAY
+    });
     
-    if (products.length > 0) {
-      products.forEach((p, i) => {
-        console.error(`[BILLING] Product ${i}:`, JSON.stringify(p));
-      });
+    // Initialize
+    console.error('[BILLING] Initializing store...');
+    await store.initialize([Platform.GOOGLE_PLAY]);
+    
+    // Update
+    console.error('[BILLING] Updating store...');
+    await store.update();
+    
+    // Wait for ready
+    console.error('[BILLING] Waiting for ready...');
+    store.ready(() => {
+      console.error('[BILLING] ========================================');
+      console.error('[BILLING] STORE IS READY');
+      console.error('[BILLING] ========================================');
+      console.error('[BILLING] Products count:', store.products?.length || 0);
       
-      const product = products.find(p => p.identifier === PRODUCT_ID);
+      const product = store.get(PRODUCT_ID);
       
       if (product) {
-        console.error('[BILLING] ✅ PRODUCT FOUND:', product.identifier);
-        console.error('[BILLING] Title:', product.title);
-        console.error('[BILLING] Price:', product.priceString);
-        
+        console.error('[BILLING] ✅ Product found:', product.id);
         window.billingProduct = product;
         window.billingReady = true;
-        window.billingInitialized = true;
         
-        // Dispatch success event
-        window.dispatchEvent(new CustomEvent('billingReady', { 
-          detail: { product, ready: true, success: true } 
-        }));
-      } else {
-        console.error('[BILLING] ❌ Product not in response, expected:', PRODUCT_ID);
-        window.billingInitError = 'Product not found in store';
-      }
-    } else {
-      console.error('[BILLING] ❌ NO PRODUCTS RETURNED');
-      window.billingInitError = 'No products available';
-    }
-    
-    // Step 7: Check existing purchases
-    console.error('[BILLING] Step 7: Checking existing purchases...');
-    try {
-      const { purchases } = await NativePurchases.restorePurchases();
-      console.error('[BILLING] Existing purchases:', purchases?.length || 0);
-      
-      if (purchases && purchases.length > 0) {
-        const hasPremium = purchases.some(p => p.productIdentifier === PRODUCT_ID);
-        if (hasPremium) {
-          console.error('[BILLING] ✅ User already has premium!');
+        if (product.owned) {
           grantPremiumAccess();
         }
+        
+        window.dispatchEvent(new CustomEvent('billingReady', { 
+          detail: { product, ready: true } 
+        }));
+      } else {
+        console.error('[BILLING] ❌ Product NOT found');
+        window.billingInitError = 'Product not found';
+        window.dispatchEvent(new CustomEvent('billingReady', { 
+          detail: { product: null, ready: true, error: 'Product not found' } 
+        }));
       }
-    } catch (restoreError) {
-      console.error('[BILLING] Restore check error (non-fatal):', restoreError);
-    }
+      
+      window.billingInitialized = true;
+    });
     
-    window.billingInitialized = true;
-    console.error('[BILLING] ========================================');
-    console.error('[BILLING] INITIALIZATION COMPLETE');
-    console.error('[BILLING] billingReady:', window.billingReady);
-    console.error('[BILLING] billingProduct:', !!window.billingProduct);
-    console.error('[BILLING] ========================================');
+    console.error('[BILLING] Initialization started, waiting for ready callback...');
     
   } catch (error) {
-    console.error('[BILLING] ❌ INITIALIZATION ERROR:', error);
-    console.error('[BILLING] Error message:', error?.message);
+    console.error('[BILLING] ❌ Error:', error);
     
-    window.billingInitError = error?.message || 'Initialization failed';
-    
-    // Retry logic
     if (retryCount < MAX_RETRIES) {
-      console.error('[BILLING] Retrying in 2 seconds... (attempt', retryCount + 2, 'of', MAX_RETRIES + 1, ')');
+      console.error('[BILLING] Retrying in 2 seconds...');
       setTimeout(() => initializeBilling(retryCount + 1), 2000);
     } else {
-      console.error('[BILLING] ❌ Max retries reached, giving up');
+      console.error('[BILLING] Max retries reached');
+      window.billingInitError = error?.message;
       window.billingInitialized = true;
-      
       window.dispatchEvent(new CustomEvent('billingReady', { 
         detail: { product: null, ready: false, error: error?.message } 
       }));
@@ -283,57 +321,35 @@ window.purchasePremium = async () => {
   console.error('[BILLING] ========================================');
   console.error('[BILLING] PURCHASE REQUESTED');
   console.error('[BILLING] ========================================');
-  console.error('[BILLING] billingReady:', window.billingReady);
-  console.error('[BILLING] billingProduct:', !!window.billingProduct);
-  console.error('[BILLING] NativePurchasesPlugin:', !!window.NativePurchasesPlugin);
   
-  // Check if billing is ready
-  if (!window.billingReady || !window.NativePurchasesPlugin) {
-    console.error('[BILLING] ❌ Billing not ready, attempting to initialize...');
-    
-    // Try to initialize if not done
-    if (!window.billingInitialized) {
-      await initializeBilling();
-    }
-    
-    // Check again
-    if (!window.billingReady || !window.NativePurchasesPlugin) {
-      return { 
-        success: false, 
-        error: 'Billing not initialized. Please try again or restart the app.' 
-      };
-    }
+  if (!window.billingReady || !window.billingProduct) {
+    console.error('[BILLING] Not ready, billingReady:', window.billingReady);
+    return { success: false, error: 'Billing not ready. Please try again.' };
   }
   
-  const NativePurchases = window.NativePurchasesPlugin;
-  const PURCHASE_TYPE = window.PURCHASE_TYPE;
-  
   try {
-    console.error('[BILLING] Starting purchase...');
-    console.error('[BILLING] Product:', PRODUCT_ID);
-    console.error('[BILLING] Type: INAPP');
+    const product = window.billingProduct;
+    console.error('[BILLING] Product:', product.id);
     
-    const transaction = await NativePurchases.purchaseProduct({
-      productIdentifier: PRODUCT_ID,
-      productType: PURCHASE_TYPE.INAPP,
-      quantity: 1
-    });
+    if (product.owned) {
+      grantPremiumAccess();
+      return { success: true, alreadyOwned: true };
+    }
     
-    console.error('[BILLING] ✅ PURCHASE SUCCESSFUL');
-    console.error('[BILLING] Transaction:', JSON.stringify(transaction));
+    const offer = product.getOffer();
+    if (!offer) {
+      return { success: false, error: 'No offer available' };
+    }
     
-    grantPremiumAccess();
+    console.error('[BILLING] Calling offer.order()...');
+    await offer.order();
     
-    return { success: true, transaction };
+    return { success: true };
     
   } catch (error) {
-    console.error('[BILLING] ❌ PURCHASE ERROR:', error);
-    console.error('[BILLING] Code:', error?.code);
-    console.error('[BILLING] Message:', error?.message);
+    console.error('[BILLING] Purchase error:', error);
     
-    if (error?.code === 'USER_CANCELLED' || 
-        error?.code === 1 ||
-        error?.message?.toLowerCase().includes('cancel')) {
+    if (error?.code === 'E_USER_CANCELLED' || error?.code === 6777010) {
       return { success: false, cancelled: true };
     }
     
@@ -345,27 +361,26 @@ window.purchasePremium = async () => {
 // GLOBAL RESTORE FUNCTION
 // ========================================
 window.restorePurchases = async () => {
-  console.error('[BILLING] RESTORE REQUESTED');
+  console.error('[BILLING] Restore requested');
   
-  if (!window.NativePurchasesPlugin) {
-    return { success: false, error: 'Billing not initialized' };
+  const store = window.CdvPurchase?.store;
+  if (!store) {
+    return { success: false, error: 'Store not available' };
   }
   
   try {
-    const { purchases } = await window.NativePurchasesPlugin.restorePurchases();
-    console.error('[BILLING] Restored purchases:', purchases?.length || 0);
+    await store.restorePurchases();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await store.update();
     
-    if (purchases && purchases.length > 0) {
-      const hasPremium = purchases.some(p => p.productIdentifier === PRODUCT_ID);
-      if (hasPremium) {
-        grantPremiumAccess();
-        return { success: true };
-      }
+    const product = store.get(PRODUCT_ID);
+    if (product?.owned) {
+      grantPremiumAccess();
+      return { success: true };
     }
     
     return { success: false, error: 'No previous purchase found' };
   } catch (error) {
-    console.error('[BILLING] Restore error:', error);
     return { success: false, error: error?.message };
   }
 };
@@ -374,14 +389,10 @@ window.restorePurchases = async () => {
 // GLOBAL REFRESH FUNCTION
 // ========================================
 window.refreshBillingStore = async () => {
-  console.error('[BILLING] REFRESH REQUESTED');
-  
-  // Re-initialize billing
+  console.error('[BILLING] Refresh requested');
   window.billingReady = false;
   window.billingInitialized = false;
-  
   await initializeBilling();
-  
   return window.billingReady;
 };
 
@@ -390,13 +401,10 @@ window.refreshBillingStore = async () => {
 // ========================================
 clearUnverifiedPremium();
 
-console.error('[BILLING] Starting billing initialization...');
-
-// Start initialization immediately
+console.error('[BILLING] Starting initialization...');
 initializeBilling();
 
-// Render React app (don't wait for billing)
-console.error('[BILLING] Rendering React app...');
+console.error('[BILLING] Rendering React...');
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
