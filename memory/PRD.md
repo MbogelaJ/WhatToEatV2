@@ -110,6 +110,14 @@ A comprehensive, user-friendly mobile and web app that provides food safety info
 - [x] Added debug logs for Logcat visibility
 - [x] Build verified successful
 
+**Security Fix (December 2025)**
+- [x] Fixed critical billing security issue - premium was granted without payment
+- [x] Renamed function to `verifyOwnershipWithPlayStore()` for clarity
+- [x] Premium ONLY granted after verified purchase or ownership from Play Store
+- [x] Removed unsafe fallback that trusted ITEM_ALREADY_OWNED error alone
+- [x] BillingContext defaults to `isPremium = false` until verified
+- [x] All grantPremiumAccess calls now require prior verification
+
 **Bug Fixes**
 - [x] "Continue with Free Version" navigation fix
 - [x] Disclaimer page CSS (no scroll)
@@ -172,27 +180,36 @@ A comprehensive, user-friendly mobile and web app that provides food safety info
 
 ## Billing Flow (Android)
 
+### Security Model:
+- Premium access is NEVER granted without verification from Google Play
+- `grantPremiumAccess()` is ONLY called after `verifyOwnershipWithPlayStore()` returns true
+- localStorage is a cache only - not trusted without Play Store verification
+
 ### On App Startup:
-1. Check localStorage for `isPremium=true` + `premiumPurchaseVerified=true`
-2. Set `window.isPremiumGranted = true` if found
-3. Call `NativePurchases.getPurchases()` to verify with Play Store
-4. If product owned → call `grantPremiumAccess()`
-5. Dispatch `premiumStatusChanged` event
-6. BillingContext catches event and sets `isPremium = true`
+1. Clear any unverified premium claims from localStorage
+2. Call `verifyOwnershipWithPlayStore()` which uses:
+   - `NativePurchases.getPurchases()` 
+   - `NativePurchases.restorePurchases()`
+3. If verified → call `grantPremiumAccess()`
+4. If not verified → premium remains locked
 
 ### On Purchase Attempt:
-1. First check if already owned via `checkExistingPurchases()`
-2. If owned → return success without purchase
+1. First verify if already owned via `verifyOwnershipWithPlayStore()`
+2. If owned → grant access, skip purchase
 3. If not owned → call `purchaseProduct()`
-4. Handle `ITEM_ALREADY_OWNED` error as success
-5. Grant premium access on success
+4. After purchase completes → verify again with Play Store
+5. Only grant access if verification succeeds
+
+### On ITEM_ALREADY_OWNED Error:
+1. Call `verifyOwnershipWithPlayStore()` 
+2. If verified → grant access
+3. If NOT verified → DO NOT grant access, show error
 
 ### Key Functions (index.js):
-- `grantPremiumAccess(source)` - Sets localStorage + window flag + dispatches event
-- `checkExistingPurchases()` - Calls getPurchases() and restorePurchases()
-- `window.purchasePremium()` - Main purchase function
-- `window.restorePurchases()` - Restore previous purchases
-- `window.testBilling()` - Manual debug trigger
+- `verifyOwnershipWithPlayStore()` - ONLY way to verify ownership
+- `grantPremiumAccess(source)` - Sets state after verification
+- `window.purchasePremium()` - Main purchase function (verifies before granting)
+- `window.restorePurchases()` - Restore purchases (verifies before granting)
 
 ---
 

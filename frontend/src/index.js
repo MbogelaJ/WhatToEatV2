@@ -11,16 +11,20 @@ import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
  * Product ID: com.whattoeat.penx.premium.v2
  * Type: NON_CONSUMABLE (INAPP)
  * 
- * CRITICAL: Check ownership on startup and handle "ITEM_ALREADY_OWNED" error
+ * SECURITY: Premium access is ONLY granted after:
+ * 1. Successful purchase via NativePurchases.purchaseProduct()
+ * 2. Verified ownership via NativePurchases.getPurchases()
+ * 
+ * NEVER grant premium access without verification from Google Play!
  * ========================================================================================
  */
 
-// Global state
+// Global state - Default to NOT premium
 window.billingReady = false;
 window.billingInitialized = false;
 window.billingInitError = null;
 window.billingProduct = null;
-window.isPremiumGranted = false;
+window.isPremiumGranted = false; // ALWAYS starts false
 window.NativePurchasesPlugin = NativePurchases;
 window.PURCHASE_TYPE = PURCHASE_TYPE;
 
@@ -29,11 +33,14 @@ const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 console.error('[BILLING] INDEX.JS LOADED');
 console.error('[BILLING] NativePurchases available:', typeof NativePurchases !== 'undefined');
 
-// Grant premium access - CRITICAL FUNCTION
-const grantPremiumAccess = (source = 'unknown') => {
+/**
+ * Grant premium access - ONLY call after verified purchase/ownership
+ * @param {string} source - Where the verification came from (for logging)
+ */
+const grantPremiumAccess = (source) => {
   console.error('[BILLING] ========================================');
-  console.error('[BILLING] ✅ GRANTING PREMIUM ACCESS');
-  console.error('[BILLING] Source:', source);
+  console.error('[BILLING] GRANTING PREMIUM ACCESS');
+  console.error('[BILLING] Verification source:', source);
   console.error('[BILLING] ========================================');
   
   // Set localStorage
@@ -44,36 +51,39 @@ const grantPremiumAccess = (source = 'unknown') => {
   window.isPremiumGranted = true;
   
   // Dispatch event for BillingContext to catch
-  console.error('[BILLING] Dispatching premiumStatusChanged event...');
   window.dispatchEvent(new CustomEvent('premiumStatusChanged', { 
     detail: { isPremium: true, source: source } 
   }));
   
-  console.error('[BILLING] Premium access granted successfully!');
+  console.error('[BILLING] Premium access granted!');
 };
 
-// Check if user already owns the product - CRITICAL FOR OWNERSHIP HANDLING
-const checkExistingPurchases = async () => {
+/**
+ * Check if user owns the product via Google Play
+ * This is the ONLY way to verify ownership
+ * @returns {boolean} true if ownership verified, false otherwise
+ */
+const verifyOwnershipWithPlayStore = async () => {
   console.error('[BILLING] ========================================');
-  console.error('[BILLING] Checking ownership...');
+  console.error('[BILLING] VERIFYING OWNERSHIP WITH PLAY STORE');
   console.error('[BILLING] Product ID:', PRODUCT_ID);
   console.error('[BILLING] ========================================');
   
   try {
-    // Method 1: Try getPurchases() - Main method
-    console.error('[BILLING] Method 1: Calling getPurchases()...');
+    // Method 1: getPurchases() - Check current purchases
+    console.error('[BILLING] Calling getPurchases()...');
     try {
       const result = await NativePurchases.getPurchases();
       const purchaseCount = result?.purchases?.length || 0;
       console.error('[BILLING] Purchases found:', purchaseCount);
       
       if (purchaseCount > 0) {
-        console.error('[BILLING] Purchase list:', JSON.stringify(result.purchases.map(p => ({
+        console.error('[BILLING] Purchase details:', JSON.stringify(result.purchases.map(p => ({
           id: p.productIdentifier || p.productId || p.sku,
           state: p.purchaseState
         }))));
         
-        // Check for our product - try multiple identifier fields
+        // Check for our product
         const owned = result.purchases.find(p => 
           p.productIdentifier === PRODUCT_ID || 
           p.productId === PRODUCT_ID || 
@@ -81,25 +91,23 @@ const checkExistingPurchases = async () => {
         );
         
         if (owned) {
-          console.error('[BILLING] ✅ PRODUCT ALREADY OWNED (getPurchases)');
-          console.error('[BILLING] Premium owned: true');
-          grantPremiumAccess('getPurchases');
+          console.error('[BILLING] VERIFIED: Product owned via getPurchases()');
           return true;
         }
       }
     } catch (e) {
-      console.error('[BILLING] getPurchases error:', e?.message || e);
+      console.error('[BILLING] getPurchases() error:', e?.message || e);
     }
     
-    // Method 2: Try restorePurchases() - Backup method
-    console.error('[BILLING] Method 2: Calling restorePurchases()...');
+    // Method 2: restorePurchases() - Restore from Google account
+    console.error('[BILLING] Calling restorePurchases()...');
     try {
       const result = await NativePurchases.restorePurchases();
       const purchaseCount = result?.purchases?.length || 0;
       console.error('[BILLING] Restored purchases found:', purchaseCount);
       
       if (purchaseCount > 0) {
-        console.error('[BILLING] Restored list:', JSON.stringify(result.purchases.map(p => ({
+        console.error('[BILLING] Restored details:', JSON.stringify(result.purchases.map(p => ({
           id: p.productIdentifier || p.productId || p.sku,
           state: p.purchaseState
         }))));
@@ -111,69 +119,26 @@ const checkExistingPurchases = async () => {
         );
         
         if (owned) {
-          console.error('[BILLING] ✅ PRODUCT ALREADY OWNED (restorePurchases)');
-          console.error('[BILLING] Premium owned: true');
-          grantPremiumAccess('restorePurchases');
+          console.error('[BILLING] VERIFIED: Product owned via restorePurchases()');
           return true;
         }
       }
     } catch (e) {
-      console.error('[BILLING] restorePurchases error:', e?.message || e);
+      console.error('[BILLING] restorePurchases() error:', e?.message || e);
     }
     
-    console.error('[BILLING] Premium owned: false');
-    console.error('[BILLING] No existing purchases found for:', PRODUCT_ID);
+    console.error('[BILLING] NOT VERIFIED: No ownership found');
     return false;
     
   } catch (error) {
-    console.error('[BILLING] Check ownership error:', error?.message || error);
+    console.error('[BILLING] Verification error:', error?.message || error);
     return false;
   }
 };
 
-// Test billing function - Manual trigger for debugging
-window.testBilling = async () => {
-  try {
-    console.error("[BILLING] ========================================");
-    console.error("[BILLING] MANUAL TEST BILLING STARTED");
-    console.error("[BILLING] ========================================");
-    
-    // Step 1: Get products
-    console.error("[BILLING] Step 1: Getting products...");
-    const { products } = await NativePurchases.getProducts({
-      productIdentifiers: [PRODUCT_ID],
-      productType: PURCHASE_TYPE.INAPP
-    });
-    
-    console.error("[BILLING] Products found:", products?.length || 0);
-    
-    if (products?.length > 0) {
-      console.error("[BILLING] Product details:", JSON.stringify(products[0]));
-      alert("✅ Product found!\n\nTitle: " + products[0].title + "\nPrice: " + products[0].priceString);
-    } else {
-      alert("❌ No products found");
-      return { products: [], owned: false };
-    }
-    
-    // Step 2: Check ownership
-    console.error("[BILLING] Step 2: Checking ownership...");
-    const owned = await checkExistingPurchases();
-    
-    if (owned) {
-      alert("✅ You ALREADY OWN this product!\n\nPremium has been activated.");
-    } else {
-      alert("ℹ️ Product not owned yet.\n\nYou can purchase to unlock premium.");
-    }
-    
-    return { products, owned };
-  } catch (e) {
-    console.error("[BILLING] Test error:", e?.message || e);
-    alert("❌ Error: " + (e?.message || JSON.stringify(e)));
-    return null;
-  }
-};
-
-// Initialize billing
+/**
+ * Initialize billing and check ownership
+ */
 const initializeBilling = async (retryCount = 0) => {
   const MAX_RETRIES = 3;
   
@@ -182,12 +147,14 @@ const initializeBilling = async (retryCount = 0) => {
   console.error('[BILLING] ========================================');
   
   try {
+    // Check if running in Capacitor
     if (!window.Capacitor) {
-      console.error('[BILLING] No Capacitor - web');
+      console.error('[BILLING] No Capacitor - running in web browser');
       window.billingInitialized = true;
       return;
     }
     
+    // Wait for Capacitor to be ready
     if (typeof window.Capacitor.ready === 'function') {
       await window.Capacitor.ready();
     }
@@ -197,20 +164,22 @@ const initializeBilling = async (retryCount = 0) => {
     
     console.error('[BILLING] isNative:', isNative, 'platform:', platform);
     
+    // Only proceed for Android native
     if (!isNative || platform !== 'android') {
-      console.error('[BILLING] Not Android native');
+      console.error('[BILLING] Not Android native - skipping billing');
       window.billingInitialized = true;
       return;
     }
     
     // ========================================
-    // STEP 1: CHECK EXISTING PURCHASES FIRST
+    // STEP 1: VERIFY OWNERSHIP WITH PLAY STORE
     // ========================================
-    console.error('[BILLING] Step 1: Checking existing purchases...');
-    const alreadyOwned = await checkExistingPurchases();
+    console.error('[BILLING] Step 1: Verifying ownership with Play Store...');
+    const isOwned = await verifyOwnershipWithPlayStore();
     
-    if (alreadyOwned) {
-      console.error('[BILLING] ✅ User already owns premium!');
+    if (isOwned) {
+      console.error('[BILLING] User owns premium - granting access');
+      grantPremiumAccess('startup_verification');
       window.billingReady = true;
       window.billingInitialized = true;
       window.dispatchEvent(new CustomEvent('billingReady', { 
@@ -219,43 +188,46 @@ const initializeBilling = async (retryCount = 0) => {
       return;
     }
     
+    console.error('[BILLING] User does not own premium');
+    
     // ========================================
-    // STEP 2: GET PRODUCTS
+    // STEP 2: GET PRODUCT INFO FOR PURCHASE
     // ========================================
-    console.error('[BILLING] Step 2: Getting products...');
+    console.error('[BILLING] Step 2: Getting product info...');
     
     const { products } = await NativePurchases.getProducts({
       productIdentifiers: [PRODUCT_ID],
       productType: PURCHASE_TYPE.INAPP
     });
     
-    console.error('[BILLING] Products:', products?.length || 0);
+    console.error('[BILLING] Products found:', products?.length || 0);
     
     if (products && products.length > 0) {
       const product = products.find(p => p.identifier === PRODUCT_ID);
       
       if (product) {
-        console.error('[BILLING] ✅ PRODUCT FOUND:', product.identifier);
+        console.error('[BILLING] Product available:', product.identifier, product.priceString);
         window.billingProduct = product;
         window.billingReady = true;
         window.billingInitialized = true;
         
         window.dispatchEvent(new CustomEvent('billingReady', { 
-          detail: { product, ready: true } 
+          detail: { product, ready: true, owned: false } 
         }));
       }
     } else {
-      console.error('[BILLING] ❌ NO PRODUCTS');
-      window.billingInitError = 'No products';
+      console.error('[BILLING] No products found');
+      window.billingInitError = 'No products available';
     }
     
     window.billingInitialized = true;
     console.error('[BILLING] Init complete');
     
   } catch (error) {
-    console.error('[BILLING] ❌ ERROR:', error);
+    console.error('[BILLING] Init error:', error?.message || error);
     
     if (retryCount < MAX_RETRIES) {
+      console.error('[BILLING] Retrying in 2 seconds...');
       setTimeout(() => initializeBilling(retryCount + 1), 2000);
     } else {
       window.billingInitError = error?.message;
@@ -264,30 +236,33 @@ const initializeBilling = async (retryCount = 0) => {
   }
 };
 
-// ==================== GLOBAL PURCHASE FUNCTION ====================
+/**
+ * Purchase premium - ONLY grants access after successful purchase
+ */
 window.purchasePremium = async () => {
   console.error('[BILLING] ========================================');
   console.error('[BILLING] PURCHASE REQUESTED');
   console.error('[BILLING] ========================================');
   
-  // STEP 1: First check if already owned (avoid unnecessary purchase attempt)
+  // STEP 1: First verify if already owned (skip purchase if so)
   console.error('[BILLING] Step 1: Checking if already owned...');
-  const alreadyOwned = await checkExistingPurchases();
+  const alreadyOwned = await verifyOwnershipWithPlayStore();
+  
   if (alreadyOwned) {
-    console.error('[BILLING] Already owned - skipping purchase!');
+    console.error('[BILLING] Already owned - granting access');
+    grantPremiumAccess('purchase_ownership_check');
     return { success: true, alreadyOwned: true };
   }
   
   // STEP 2: Check billing readiness
   if (!window.billingReady) {
-    console.error('[BILLING] Billing not ready!');
+    console.error('[BILLING] Billing not ready');
     return { success: false, error: 'Billing not ready. Please try again.' };
   }
   
   // STEP 3: Attempt purchase
   try {
     console.error('[BILLING] Step 2: Calling purchaseProduct()...');
-    console.error('[BILLING] Product:', PRODUCT_ID);
     
     const result = await NativePurchases.purchaseProduct({
       productIdentifier: PRODUCT_ID,
@@ -295,24 +270,42 @@ window.purchasePremium = async () => {
       quantity: 1
     });
     
-    console.error('[BILLING] ✅ PURCHASE SUCCESS!');
+    console.error('[BILLING] Purchase completed!');
     console.error('[BILLING] Result:', JSON.stringify(result));
-    grantPremiumAccess('purchaseProduct');
-    return { success: true, transaction: result };
+    
+    // STEP 4: VERIFY the purchase before granting access
+    console.error('[BILLING] Step 3: Verifying purchase...');
+    const verified = await verifyOwnershipWithPlayStore();
+    
+    if (verified) {
+      console.error('[BILLING] Purchase VERIFIED - granting access');
+      grantPremiumAccess('purchase_verified');
+      return { success: true, transaction: result };
+    } else {
+      // Purchase succeeded but verification failed - unusual, retry once
+      console.error('[BILLING] Purchase succeeded but verification failed, retrying...');
+      await new Promise(r => setTimeout(r, 1000));
+      const retryVerify = await verifyOwnershipWithPlayStore();
+      
+      if (retryVerify) {
+        console.error('[BILLING] Retry verification succeeded');
+        grantPremiumAccess('purchase_verified_retry');
+        return { success: true, transaction: result };
+      }
+      
+      console.error('[BILLING] Could not verify purchase - NOT granting access');
+      return { success: false, error: 'Purchase completed but verification failed. Please tap Restore.' };
+    }
     
   } catch (error) {
-    console.error('[BILLING] ========================================');
-    console.error('[BILLING] Purchase error caught!');
+    console.error('[BILLING] Purchase error!');
     console.error('[BILLING] Error code:', error?.code);
     console.error('[BILLING] Error message:', error?.message);
-    console.error('[BILLING] Full error:', JSON.stringify(error));
-    console.error('[BILLING] ========================================');
     
-    // CRITICAL: Handle "ITEM_ALREADY_OWNED" - This is NOT an error!
-    // Google Play returns this when user already owns the NON_CONSUMABLE product
     const errorCode = error?.code;
     const errorMsg = error?.message?.toLowerCase() || '';
     
+    // Handle ITEM_ALREADY_OWNED - verify before granting
     if (errorCode === 'ITEM_ALREADY_OWNED' || 
         errorCode === 7 ||
         errorCode === '7' ||
@@ -320,55 +313,55 @@ window.purchasePremium = async () => {
         errorMsg.includes('already owned') ||
         errorMsg.includes('item_already_owned')) {
       
-      console.error('[BILLING] ✅ ITEM_ALREADY_OWNED detected!');
-      console.error('[BILLING] This is NOT an error - user owns the product!');
+      console.error('[BILLING] ITEM_ALREADY_OWNED error - verifying ownership...');
       
-      // Verify ownership via getPurchases
-      console.error('[BILLING] Verifying ownership via getPurchases...');
-      const verified = await checkExistingPurchases();
+      // MUST verify before granting - DO NOT trust the error alone
+      const verified = await verifyOwnershipWithPlayStore();
       
       if (verified) {
-        console.error('[BILLING] ✅ Ownership verified! Premium granted.');
+        console.error('[BILLING] Ownership VERIFIED - granting access');
+        grantPremiumAccess('item_already_owned_verified');
         return { success: true, alreadyOwned: true };
       } else {
-        // Even if getPurchases fails, trust the ITEM_ALREADY_OWNED error
-        console.error('[BILLING] getPurchases failed but trusting ITEM_ALREADY_OWNED');
-        grantPremiumAccess('ITEM_ALREADY_OWNED_error');
-        return { success: true, alreadyOwned: true };
+        // Cannot verify - DO NOT grant access
+        console.error('[BILLING] Could NOT verify ownership - NOT granting access');
+        return { success: false, error: 'Could not verify ownership. Please try Restore.' };
       }
     }
     
-    // Handle user cancellation - Not an error
+    // Handle user cancellation
     if (errorCode === 'USER_CANCELLED' || 
         errorCode === 1 || 
         errorCode === '1' ||
         errorMsg.includes('cancel')) {
-      console.error('[BILLING] User cancelled purchase');
+      console.error('[BILLING] User cancelled');
       return { success: false, cancelled: true };
     }
     
-    // Actual error
-    console.error('[BILLING] ❌ Actual purchase error');
+    // Other errors
+    console.error('[BILLING] Purchase failed');
     return { success: false, error: error?.message || 'Purchase failed' };
   }
 };
 
-// ==================== GLOBAL RESTORE FUNCTION ====================
+/**
+ * Restore purchases - verifies ownership with Play Store
+ */
 window.restorePurchases = async () => {
   console.error('[BILLING] ========================================');
   console.error('[BILLING] RESTORE PURCHASES REQUESTED');
   console.error('[BILLING] ========================================');
   
   try {
-    // Call checkExistingPurchases which tries both getPurchases and restorePurchases
-    const owned = await checkExistingPurchases();
+    const verified = await verifyOwnershipWithPlayStore();
     
-    if (owned) {
-      console.error('[BILLING] ✅ Restore successful! Premium unlocked.');
+    if (verified) {
+      console.error('[BILLING] Restore: Ownership VERIFIED');
+      grantPremiumAccess('restore_verified');
       return { success: true };
     }
     
-    console.error('[BILLING] No purchases found to restore');
+    console.error('[BILLING] Restore: No purchases found');
     return { success: false, error: 'No previous purchase found for this account' };
     
   } catch (error) {
@@ -377,52 +370,101 @@ window.restorePurchases = async () => {
   }
 };
 
-// ==================== GLOBAL REFRESH FUNCTION ====================
+/**
+ * Refresh billing store
+ */
 window.refreshBillingStore = async () => {
   console.error('[BILLING] Refresh store requested');
   
-  // First check ownership
-  const owned = await checkExistingPurchases();
-  if (owned) {
-    console.error('[BILLING] Ownership verified during refresh');
+  // Verify ownership
+  const verified = await verifyOwnershipWithPlayStore();
+  if (verified) {
+    grantPremiumAccess('refresh_verified');
     return true;
   }
   
-  // Re-initialize if not owned
+  // Re-initialize
   window.billingReady = false;
   window.billingInitialized = false;
   await initializeBilling();
   return window.billingReady;
 };
 
+/**
+ * Manual test function for debugging
+ */
+window.testBilling = async () => {
+  try {
+    console.error("[BILLING] ========================================");
+    console.error("[BILLING] MANUAL TEST");
+    console.error("[BILLING] ========================================");
+    
+    // Get products
+    const { products } = await NativePurchases.getProducts({
+      productIdentifiers: [PRODUCT_ID],
+      productType: PURCHASE_TYPE.INAPP
+    });
+    
+    console.error("[BILLING] Products:", products?.length || 0);
+    
+    if (products?.length > 0) {
+      alert("Product found!\n\nTitle: " + products[0].title + "\nPrice: " + products[0].priceString);
+    } else {
+      alert("No products found");
+    }
+    
+    // Check ownership
+    const owned = await verifyOwnershipWithPlayStore();
+    console.error("[BILLING] Owned:", owned);
+    
+    if (owned) {
+      alert("You OWN this product!\n\nPremium activated.");
+    } else {
+      alert("Product NOT owned.\n\nPurchase to unlock.");
+    }
+    
+    return { products, owned };
+  } catch (e) {
+    console.error("[BILLING] Test error:", e?.message || e);
+    alert("Error: " + (e?.message || JSON.stringify(e)));
+    return null;
+  }
+};
+
 // ==================== STARTUP ====================
-// Step 1: Clear any unverified premium claims
+
+// Clear any unverified premium claims from localStorage
 const clearUnverifiedPremium = () => {
   const isPremium = localStorage.getItem('isPremium');
   const verified = localStorage.getItem('premiumPurchaseVerified');
+  
+  // Only keep premium if BOTH flags are set
   if (isPremium === 'true' && verified !== 'true') {
     console.error('[BILLING] Clearing unverified premium claim');
     localStorage.removeItem('isPremium');
+    localStorage.removeItem('premiumPurchaseVerified');
   }
 };
 
 clearUnverifiedPremium();
 
-// Step 2: Check if premium is already verified in storage
+// Check localStorage - but this is just a cache, will verify with Play Store
 const storedPremium = localStorage.getItem('isPremium');
 const storedVerified = localStorage.getItem('premiumPurchaseVerified');
-console.error('[BILLING] Stored isPremium:', storedPremium);
-console.error('[BILLING] Stored premiumPurchaseVerified:', storedVerified);
+console.error('[BILLING] localStorage isPremium:', storedPremium);
+console.error('[BILLING] localStorage verified:', storedVerified);
 
+// If localStorage says premium, set temporary flag (will be verified)
 if (storedPremium === 'true' && storedVerified === 'true') {
-  console.error('[BILLING] ✅ Premium already verified in localStorage');
-  window.isPremiumGranted = true;
+  console.error('[BILLING] localStorage indicates premium - will verify with Play Store');
+  // Note: NOT setting window.isPremiumGranted here - must verify first
 }
 
-// Step 3: Initialize billing (will verify with Play Store)
+// Initialize billing (will verify with Play Store)
 console.error('[BILLING] Starting billing initialization...');
 initializeBilling();
 
+// Render app
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>

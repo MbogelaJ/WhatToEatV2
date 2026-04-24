@@ -3,10 +3,11 @@
  * Product ID: com.whattoeat.penx.premium.v2
  * Type: NON_CONSUMABLE (INAPP)
  * 
- * This context manages premium state and syncs with:
- * 1. localStorage (for persistence)
- * 2. window.isPremiumGranted (for cross-component sync)
- * 3. premiumStatusChanged events (for real-time updates)
+ * SECURITY: Premium state is ONLY set when:
+ * 1. window.isPremiumGranted is true (set by verified purchase in index.js)
+ * 2. premiumStatusChanged event is dispatched (after verification)
+ * 
+ * localStorage is used as a cache but is NOT trusted without verification.
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
@@ -20,6 +21,7 @@ const isAndroidPlatform = () => isNativePlatform() && window.Capacitor.getPlatfo
 const BillingContext = createContext(null);
 
 export function BillingProvider({ children }) {
+  // IMPORTANT: Default to false - premium requires verification
   const [isPremium, setIsPremium] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isStoreReady, setIsStoreReady] = useState(false);
@@ -28,45 +30,34 @@ export function BillingProvider({ children }) {
   const [error, setError] = useState(null);
   const [productInfo, setProductInfo] = useState(null);
 
-  // ==================== PREMIUM STATE INITIALIZATION ====================
-  // Check multiple sources on mount
+  // ==================== PREMIUM STATE FROM VERIFIED SOURCES ====================
   useEffect(() => {
-    console.error('[BillingContext] Initializing premium state...');
+    console.error('[BillingContext] Initializing...');
     
-    // Source 1: Check localStorage
-    const storedPremium = localStorage.getItem('isPremium');
-    const storedVerified = localStorage.getItem('premiumPurchaseVerified');
-    console.error('[BillingContext] localStorage.isPremium:', storedPremium);
-    console.error('[BillingContext] localStorage.premiumPurchaseVerified:', storedVerified);
-    
-    if (storedPremium === 'true' && storedVerified === 'true') {
-      console.error('[BillingContext] ✅ Premium verified from localStorage');
-      setIsPremium(true);
-    }
-    
-    // Source 2: Check window.isPremiumGranted (set by index.js)
+    // ONLY trust window.isPremiumGranted (set after Play Store verification)
     if (window.isPremiumGranted === true) {
-      console.error('[BillingContext] ✅ Premium verified from window.isPremiumGranted');
+      console.error('[BillingContext] window.isPremiumGranted is true - setting premium');
       setIsPremium(true);
+    } else {
+      console.error('[BillingContext] window.isPremiumGranted is false - premium locked');
+      setIsPremium(false);
     }
-    
   }, []);
 
-  // ==================== LISTEN FOR PREMIUM STATUS CHANGES ====================
-  // This catches events from index.js when ownership is verified
+  // ==================== LISTEN FOR VERIFIED PREMIUM CHANGES ====================
   useEffect(() => {
     const handlePremiumChange = (e) => {
-      console.error('[BillingContext] premiumStatusChanged event received!');
-      console.error('[BillingContext] Event detail:', JSON.stringify(e.detail));
+      console.error('[BillingContext] premiumStatusChanged event received');
+      console.error('[BillingContext] Detail:', JSON.stringify(e.detail));
       
       if (e.detail?.isPremium === true) {
-        console.error('[BillingContext] ✅ Setting isPremium = true from event');
+        console.error('[BillingContext] Setting isPremium = true');
         setIsPremium(true);
       }
     };
     
     window.addEventListener('premiumStatusChanged', handlePremiumChange);
-    console.error('[BillingContext] premiumStatusChanged listener registered');
+    console.error('[BillingContext] Event listener registered');
     
     return () => {
       window.removeEventListener('premiumStatusChanged', handlePremiumChange);
@@ -75,31 +66,30 @@ export function BillingProvider({ children }) {
 
   // ==================== BILLING READY LISTENER ====================
   useEffect(() => {
-    // Non-native platforms don't need billing
+    // Non-native platforms
     if (!isNativePlatform() || !isAndroidPlatform()) {
-      console.error('[BillingContext] Not Android native - skipping billing init');
+      console.error('[BillingContext] Not Android native');
       setIsInitialized(true);
       setIsStoreReady(true);
       setIsLoading(false);
       return;
     }
     
-    console.error('[BillingContext] Setting up billing ready listener...');
+    console.error('[BillingContext] Setting up billing listener...');
     
     const handleBillingReady = (e) => {
-      console.error('[BillingContext] billingReady event received!');
-      console.error('[BillingContext] Event detail:', JSON.stringify(e.detail));
+      console.error('[BillingContext] billingReady event received');
       
       setIsLoading(false);
       setIsInitialized(true);
       
-      // Check if user already owns (from ownership check)
+      // Check if ownership was verified
       if (e.detail?.owned === true) {
-        console.error('[BillingContext] ✅ User owns product (from billingReady)');
+        console.error('[BillingContext] Ownership verified');
         setIsPremium(true);
       }
       
-      // Set product info if available
+      // Set product info
       if (e.detail?.product) {
         setIsStoreReady(true);
         setProductInfo({
@@ -107,49 +97,46 @@ export function BillingProvider({ children }) {
           title: e.detail.product.title,
           price: e.detail.product.priceString || '$1.99'
         });
-        console.error('[BillingContext] Product info set:', e.detail.product.identifier);
-      } else if (e.detail?.error) {
-        setError(e.detail.error);
-        console.error('[BillingContext] Billing error:', e.detail.error);
       }
     };
     
     window.addEventListener('billingReady', handleBillingReady);
     
-    // Poll for state in case we missed the event
+    // Poll for state (in case we missed events)
     const pollInterval = setInterval(() => {
-      // Check window.isPremiumGranted
+      // Check for verified premium
       if (window.isPremiumGranted === true && !isPremium) {
-        console.error('[BillingContext] ✅ Detected window.isPremiumGranted = true');
+        console.error('[BillingContext] Detected verified premium');
         setIsPremium(true);
       }
       
-      // Check billing ready state
-      if (window.billingReady && window.billingProduct) {
-        setIsStoreReady(true);
+      // Check billing state
+      if (window.billingInitialized) {
         setIsInitialized(true);
         setIsLoading(false);
-        setProductInfo({
-          id: window.billingProduct.identifier,
-          title: window.billingProduct.title,
-          price: window.billingProduct.priceString || '$1.99'
-        });
-        clearInterval(pollInterval);
-      } else if (window.billingInitialized) {
-        setIsInitialized(true);
-        setIsLoading(false);
+        
+        if (window.billingProduct) {
+          setIsStoreReady(true);
+          setProductInfo({
+            id: window.billingProduct.identifier,
+            title: window.billingProduct.title,
+            price: window.billingProduct.priceString || '$1.99'
+          });
+        }
+        
         if (window.billingInitError) {
           setError(window.billingInitError);
         }
+        
         clearInterval(pollInterval);
       }
     }, 500);
     
-    // Timeout after 15 seconds
+    // Timeout
     const timeout = setTimeout(() => {
       clearInterval(pollInterval);
       setIsLoading(false);
-      console.error('[BillingContext] Billing init timeout');
+      setIsInitialized(true);
     }, 15000);
     
     return () => {
@@ -170,21 +157,22 @@ export function BillingProvider({ children }) {
       console.error('[BillingContext] Purchase result:', JSON.stringify(result));
       
       if (result?.success) {
-        console.error('[BillingContext] ✅ Purchase successful!');
-        setIsPremium(true);
+        // Premium will be set via premiumStatusChanged event
+        // But also check window flag
+        if (window.isPremiumGranted) {
+          setIsPremium(true);
+        }
         return true;
       } else if (result?.cancelled) {
-        console.error('[BillingContext] Purchase cancelled by user');
         return false;
       } else if (result?.error) {
-        console.error('[BillingContext] Purchase error:', result.error);
         setError(result.error);
         return false;
       }
       
       return false;
     } catch (err) {
-      console.error('[BillingContext] Purchase exception:', err?.message);
+      console.error('[BillingContext] Purchase error:', err?.message);
       setError(err?.message || 'Purchase failed');
       return false;
     } finally {
@@ -192,9 +180,9 @@ export function BillingProvider({ children }) {
     }
   }, []);
 
-  // ==================== RESTORE PURCHASES FUNCTION ====================
+  // ==================== RESTORE FUNCTION ====================
   const restorePurchases = useCallback(async () => {
-    console.error('[BillingContext] Restore purchases requested');
+    console.error('[BillingContext] Restore requested');
     setIsPurchasing(true);
     setError(null);
     
@@ -203,18 +191,18 @@ export function BillingProvider({ children }) {
       console.error('[BillingContext] Restore result:', JSON.stringify(result));
       
       if (result?.success) {
-        console.error('[BillingContext] ✅ Restore successful!');
-        setIsPremium(true);
+        if (window.isPremiumGranted) {
+          setIsPremium(true);
+        }
         return true;
       } else if (result?.error) {
-        console.error('[BillingContext] Restore error:', result.error);
         setError(result.error);
         return false;
       }
       
       return false;
     } catch (err) {
-      console.error('[BillingContext] Restore exception:', err?.message);
+      console.error('[BillingContext] Restore error:', err?.message);
       setError(err?.message || 'Restore failed');
       return false;
     } finally {
@@ -222,27 +210,26 @@ export function BillingProvider({ children }) {
     }
   }, []);
 
-  // ==================== REFRESH STORE FUNCTION ====================
+  // ==================== REFRESH FUNCTION ====================
   const refreshStore = useCallback(async () => {
-    console.error('[BillingContext] Refresh store requested');
+    console.error('[BillingContext] Refresh requested');
     setIsLoading(true);
     setError(null);
     
     try {
-      const success = await window.refreshBillingStore?.();
+      await window.refreshBillingStore?.();
       
-      if (success && window.billingProduct) {
+      if (window.isPremiumGranted) {
+        setIsPremium(true);
+      }
+      
+      if (window.billingProduct) {
         setIsStoreReady(true);
         setProductInfo({
           id: window.billingProduct.identifier,
           title: window.billingProduct.title,
           price: window.billingProduct.priceString || '$1.99'
         });
-      }
-      
-      // Check if premium was granted during refresh
-      if (window.isPremiumGranted === true) {
-        setIsPremium(true);
       }
     } catch (err) {
       console.error('[BillingContext] Refresh error:', err?.message);
@@ -254,8 +241,8 @@ export function BillingProvider({ children }) {
 
   // Log state changes
   useEffect(() => {
-    console.error('[BillingContext] State: isPremium=' + isPremium + ', isStoreReady=' + isStoreReady + ', isLoading=' + isLoading);
-  }, [isPremium, isStoreReady, isLoading]);
+    console.error('[BillingContext] State: isPremium=' + isPremium + ', isLoading=' + isLoading);
+  }, [isPremium, isLoading]);
 
   return (
     <BillingContext.Provider value={{
@@ -279,7 +266,6 @@ export function BillingProvider({ children }) {
 export function useBilling() {
   const context = useContext(BillingContext);
   
-  // Return safe defaults if used outside provider
   if (!context) {
     return {
       isPremium: false,
