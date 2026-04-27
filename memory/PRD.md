@@ -110,13 +110,16 @@ A comprehensive, user-friendly mobile and web app that provides food safety info
 - [x] Added debug logs for Logcat visibility
 - [x] Build verified successful
 
-**Security Fix (December 2025)**
-- [x] Fixed critical billing security issue - premium was granted without payment
-- [x] Renamed function to `verifyOwnershipWithPlayStore()` for clarity
-- [x] Premium ONLY granted after verified purchase or ownership from Play Store
-- [x] Removed unsafe fallback that trusted ITEM_ALREADY_OWNED error alone
-- [x] BillingContext defaults to `isPremium = false` until verified
-- [x] All grantPremiumAccess calls now require prior verification
+**Security Fix v2 (December 2025)**
+- [x] CRITICAL: Fixed premium being granted without payment
+- [x] On startup: Clear ALL premium localStorage (fresh start every time)
+- [x] Premium is LOCKED by default - no exceptions
+- [x] Removed auto-verification on startup that was granting premium
+- [x] Premium ONLY unlocked after:
+  - Successful `purchaseProduct()` call to Google Play
+  - Verified ownership via `getPurchases()` after ITEM_ALREADY_OWNED
+  - Verified restore via `restorePurchases()`
+- [x] BillingContext defaults to `isPremium = false`
 
 **Bug Fixes**
 - [x] "Continue with Free Version" navigation fix
