@@ -36,12 +36,10 @@ export function BillingProvider({ children }) {
   const [offerings, setOfferings] = useState(null);
   const [currentPackage, setCurrentPackage] = useState(null);
 
-  console.error('[REVENUECAT] BillingProvider initializing...');
-
   /**
    * CHECK PREMIUM STATUS FROM CUSTOMER INFO
    */
-  const checkPremiumFromCustomerInfo = (customerInfo) => {
+  const checkPremiumFromCustomerInfo = useCallback((customerInfo) => {
     console.error('[REVENUECAT] Checking entitlements...');
     console.error('[REVENUECAT] Active entitlements:', JSON.stringify(customerInfo?.entitlements?.active || {}));
     
@@ -49,7 +47,7 @@ export function BillingProvider({ children }) {
     console.error('[REVENUECAT] Has "premium" entitlement:', hasPremium);
     
     return hasPremium;
-  };
+  }, []);
 
   /**
    * INITIALIZE REVENUECAT
@@ -135,6 +133,50 @@ export function BillingProvider({ children }) {
   }, []);
 
   /**
+   * RESTORE PURCHASES
+   */
+  const restorePurchases = useCallback(async () => {
+    console.error('[REVENUECAT] ========================================');
+    console.error('[REVENUECAT] Restore purchases requested');
+    console.error('[REVENUECAT] ========================================');
+
+    if (!isNativePlatform()) {
+      console.error('[REVENUECAT] Not native platform');
+      setError('Restore only available on mobile devices');
+      return false;
+    }
+
+    setIsPurchasing(true);
+    setError(null);
+
+    try {
+      console.error('[REVENUECAT] Calling restorePurchases()...');
+      const { customerInfo } = await Purchases.restorePurchases();
+      
+      console.error('[REVENUECAT] Restore completed');
+      const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
+
+      if (hasPremium) {
+        console.error('[REVENUECAT] ✅ Premium entitlement restored');
+        setIsPremium(true);
+        return true;
+      } else {
+        console.error('[REVENUECAT] No premium entitlement found');
+        setError('No previous purchase found for this account');
+        return false;
+      }
+
+    } catch (error) {
+      console.error('[REVENUECAT] Restore error:', error?.message);
+      setError(error?.message || 'Restore failed');
+      return false;
+
+    } finally {
+      setIsPurchasing(false);
+    }
+  }, [checkPremiumFromCustomerInfo]);
+
+  /**
    * PURCHASE PREMIUM
    */
   const purchase = useCallback(async () => {
@@ -202,51 +244,7 @@ export function BillingProvider({ children }) {
     } finally {
       setIsPurchasing(false);
     }
-  }, [currentPackage]);
-
-  /**
-   * RESTORE PURCHASES
-   */
-  const restorePurchases = useCallback(async () => {
-    console.error('[REVENUECAT] ========================================');
-    console.error('[REVENUECAT] Restore purchases requested');
-    console.error('[REVENUECAT] ========================================');
-
-    if (!isNativePlatform()) {
-      console.error('[REVENUECAT] Not native platform');
-      setError('Restore only available on mobile devices');
-      return false;
-    }
-
-    setIsPurchasing(true);
-    setError(null);
-
-    try {
-      console.error('[REVENUECAT] Calling restorePurchases()...');
-      const { customerInfo } = await Purchases.restorePurchases();
-      
-      console.error('[REVENUECAT] Restore completed');
-      const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
-
-      if (hasPremium) {
-        console.error('[REVENUECAT] ✅ Premium entitlement restored');
-        setIsPremium(true);
-        return true;
-      } else {
-        console.error('[REVENUECAT] No premium entitlement found');
-        setError('No previous purchase found for this account');
-        return false;
-      }
-
-    } catch (error) {
-      console.error('[REVENUECAT] Restore error:', error?.message);
-      setError(error?.message || 'Restore failed');
-      return false;
-
-    } finally {
-      setIsPurchasing(false);
-    }
-  }, []);
+  }, [currentPackage, checkPremiumFromCustomerInfo, restorePurchases]);
 
   /**
    * CHECK PREMIUM STATUS (manual check)
@@ -262,16 +260,14 @@ export function BillingProvider({ children }) {
       const { customerInfo } = await Purchases.getCustomerInfo();
       const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
       
-      if (hasPremium !== isPremium) {
-        setIsPremium(hasPremium);
-      }
+      setIsPremium(hasPremium);
       
       return { isPremium: hasPremium };
     } catch (error) {
       console.error('[REVENUECAT] checkPremiumStatus error:', error?.message);
       return { isPremium: false, error: error?.message };
     }
-  }, [isPremium]);
+  }, [checkPremiumFromCustomerInfo]);
 
   /**
    * REFRESH OFFERINGS
@@ -307,7 +303,7 @@ export function BillingProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [checkPremiumFromCustomerInfo]);
 
   // Get product info for display
   const productInfo = currentPackage ? {
