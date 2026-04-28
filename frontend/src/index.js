@@ -6,19 +6,13 @@ import App from "@/App";
 /**
  * WhatToEat App Entry Point
  * 
- * Billing is handled entirely by BillingContext.js
- * No window flags or global state for premium
+ * Billing is handled by BillingContext.js using RevenueCat
  */
 
 console.error('[APP] ========================================');
 console.error('[APP] WhatToEat starting...');
+console.error('[APP] Billing: RevenueCat');
 console.error('[APP] ========================================');
-
-// Clear any cached premium state from previous sessions
-localStorage.removeItem('isPremium');
-localStorage.removeItem('premiumPurchaseVerified');
-
-console.error('[APP] Cleared localStorage premium cache');
 
 // Render app
 const root = ReactDOM.createRoot(document.getElementById("root"));

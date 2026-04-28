@@ -1,176 +1,156 @@
 /**
- * Billing Context - Premium Entitlement Logic
+ * Billing Context - RevenueCat Implementation
  * 
- * isPremium is ONLY set to true when:
- * 1. restorePurchases() returns a valid owned purchase
- * 2. A new purchase succeeds (and is consumed)
+ * Product: Premium Pregnancy Access (Lifetime / Non-subscription)
+ * Entitlement ID: "premium"
  * 
- * NO auto-granting, NO window flags, NO aggressive polling.
+ * isPremium is determined by checking:
+ * customerInfo.entitlements.active['premium']
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
+import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
+import { Capacitor } from '@capacitor/core';
 
-const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
-export const PRODUCTS = { PREMIUM: PRODUCT_ID };
+// RevenueCat API Keys - Replace with your actual keys from RevenueCat dashboard
+const REVENUECAT_ANDROID_KEY = 'YOUR_REVENUECAT_ANDROID_PUBLIC_KEY';
+const REVENUECAT_IOS_KEY = 'YOUR_REVENUECAT_IOS_PUBLIC_KEY';
+
+// Entitlement ID configured in RevenueCat dashboard
+const PREMIUM_ENTITLEMENT_ID = 'premium';
+
+export const PRODUCTS = { PREMIUM: PREMIUM_ENTITLEMENT_ID };
 
 const BillingContext = createContext(null);
 
 // Platform detection
-const isNativePlatform = () => window?.Capacitor?.isNativePlatform?.() || false;
-const isAndroidPlatform = () => isNativePlatform() && window.Capacitor?.getPlatform?.() === 'android';
+const isNativePlatform = () => Capacitor.isNativePlatform();
+const getPlatform = () => Capacitor.getPlatform();
 
 export function BillingProvider({ children }) {
-  // CRITICAL: isPremium starts FALSE - only set true after verified purchase/restore
   const [isPremium, setIsPremium] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isStoreReady, setIsStoreReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [error, setError] = useState(null);
-  const [productInfo, setProductInfo] = useState(null);
+  const [offerings, setOfferings] = useState(null);
+  const [currentPackage, setCurrentPackage] = useState(null);
 
-  console.error('[BILLING] BillingProvider initializing...');
-  console.error('[BILLING] Initial isPremium:', false);
+  console.error('[REVENUECAT] BillingProvider initializing...');
 
   /**
-   * CONSUME PURCHASE
-   * Required for one-time products during testing
+   * CHECK PREMIUM STATUS FROM CUSTOMER INFO
    */
-  const consumePurchase = async (purchase) => {
-    console.error('[BILLING] consumePurchase called');
-    try {
-      const token = purchase?.purchaseToken || purchase?.transactionId;
-      if (token) {
-        console.error('[BILLING] Consuming purchase with token:', token.substring(0, 20) + '...');
-        await NativePurchases.consumePurchase({ purchaseToken: token });
-        console.error('[BILLING] Purchase consumed successfully');
-      } else {
-        console.error('[BILLING] No purchase token found to consume');
-      }
-    } catch (e) {
-      console.error('[BILLING] consumePurchase error:', e?.message);
-      // Don't throw - consumption failure shouldn't block premium access
-    }
+  const checkPremiumFromCustomerInfo = (customerInfo) => {
+    console.error('[REVENUECAT] Checking entitlements...');
+    console.error('[REVENUECAT] Active entitlements:', JSON.stringify(customerInfo?.entitlements?.active || {}));
+    
+    const hasPremium = customerInfo?.entitlements?.active?.[PREMIUM_ENTITLEMENT_ID] !== undefined;
+    console.error('[REVENUECAT] Has "premium" entitlement:', hasPremium);
+    
+    return hasPremium;
   };
 
   /**
-   * CHECK PREMIUM STATUS
-   * The ONLY reliable way to check if user owns the product
-   * Calls restorePurchases() and checks for our product
-   */
-  const checkPremiumStatus = useCallback(async () => {
-    console.error('[BILLING] ========================================');
-    console.error('[BILLING] checkPremiumStatus() called');
-    console.error('[BILLING] ========================================');
-
-    if (!isAndroidPlatform()) {
-      console.error('[BILLING] Not Android - skipping premium check');
-      return { isPremium: false, purchase: null };
-    }
-
-    try {
-      // Call restorePurchases to get all owned products
-      console.error('[BILLING] Calling restorePurchases()...');
-      const result = await NativePurchases.restorePurchases();
-      const purchases = result?.purchases || [];
-      
-      console.error('[BILLING] restorePurchases returned', purchases.length, 'purchase(s)');
-
-      if (purchases.length > 0) {
-        // Log all purchases
-        purchases.forEach((p, i) => {
-          const id = p.productIdentifier || p.productId || p.sku;
-          console.error(`[BILLING] Purchase ${i + 1}: productId=${id}`);
-        });
-
-        // Find our product
-        const ownedPurchase = purchases.find(p => {
-          const id = p.productIdentifier || p.productId || p.sku;
-          return id === PRODUCT_ID;
-        });
-
-        if (ownedPurchase) {
-          console.error('[BILLING] ✅ Found owned purchase for:', PRODUCT_ID);
-          return { isPremium: true, purchase: ownedPurchase };
-        }
-      }
-
-      console.error('[BILLING] No owned purchase found for:', PRODUCT_ID);
-      return { isPremium: false, purchase: null };
-
-    } catch (error) {
-      console.error('[BILLING] checkPremiumStatus error:', error?.message);
-      return { isPremium: false, purchase: null, error: error?.message };
-    }
-  }, []);
-
-  /**
-   * INITIALIZE BILLING
-   * Gets product info but does NOT auto-grant premium
+   * INITIALIZE REVENUECAT
    */
   useEffect(() => {
-    const initialize = async () => {
-      console.error('[BILLING] ========================================');
-      console.error('[BILLING] Initializing BillingProvider...');
-      console.error('[BILLING] ========================================');
+    const initializeRevenueCat = async () => {
+      console.error('[REVENUECAT] ========================================');
+      console.error('[REVENUECAT] Initializing RevenueCat...');
+      console.error('[REVENUECAT] ========================================');
 
-      if (!isAndroidPlatform()) {
-        console.error('[BILLING] Not Android native - billing disabled');
+      if (!isNativePlatform()) {
+        console.error('[REVENUECAT] Not native platform - skipping init');
         setIsInitialized(true);
         setIsLoading(false);
         return;
       }
 
       try {
-        // Get product info
-        console.error('[BILLING] Getting product info...');
-        const { products } = await NativePurchases.getProducts({
-          productIdentifiers: [PRODUCT_ID],
-          productType: PURCHASE_TYPE.INAPP
-        });
+        // Set log level for debugging
+        await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
+        console.error('[REVENUECAT] Log level set to DEBUG');
 
-        if (products?.length > 0) {
-          const product = products.find(p => p.identifier === PRODUCT_ID);
-          if (product) {
-            console.error('[BILLING] ✅ Product found:', product.identifier, product.priceString);
-            setProductInfo({
-              id: product.identifier,
-              title: product.title,
-              price: product.priceString || '$1.99'
-            });
-            setIsStoreReady(true);
-          }
+        // Get platform-specific API key
+        const platform = getPlatform();
+        const apiKey = platform === 'ios' ? REVENUECAT_IOS_KEY : REVENUECAT_ANDROID_KEY;
+        
+        console.error('[REVENUECAT] Platform:', platform);
+        console.error('[REVENUECAT] Configuring with API key...');
+
+        // Configure RevenueCat
+        await Purchases.configure({ apiKey });
+        console.error('[REVENUECAT] ✅ RevenueCat configured successfully');
+
+        // Get customer info to check existing entitlements
+        console.error('[REVENUECAT] Getting customer info...');
+        const { customerInfo } = await Purchases.getCustomerInfo();
+        console.error('[REVENUECAT] Customer info retrieved');
+        
+        const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
+        if (hasPremium) {
+          console.error('[REVENUECAT] ✅ User already has premium entitlement');
+          setIsPremium(true);
         } else {
-          console.error('[BILLING] No products found');
+          console.error('[REVENUECAT] User does not have premium entitlement');
         }
 
-        // DO NOT call checkPremiumStatus() here - don't auto-grant
-        console.error('[BILLING] Init complete - isPremium remains:', false);
+        // Get offerings
+        console.error('[REVENUECAT] Getting offerings...');
+        const { offerings: fetchedOfferings } = await Purchases.getOfferings();
+        console.error('[REVENUECAT] Offerings retrieved:', JSON.stringify(fetchedOfferings?.current?.identifier || 'none'));
+
+        if (fetchedOfferings?.current) {
+          setOfferings(fetchedOfferings);
+          setIsStoreReady(true);
+          
+          // Get the first package (our lifetime product)
+          const packages = fetchedOfferings.current.availablePackages;
+          console.error('[REVENUECAT] Available packages:', packages?.length || 0);
+          
+          if (packages && packages.length > 0) {
+            setCurrentPackage(packages[0]);
+            console.error('[REVENUECAT] Current package:', packages[0].identifier);
+            console.error('[REVENUECAT] Product:', packages[0].product?.identifier);
+            console.error('[REVENUECAT] Price:', packages[0].product?.priceString);
+          }
+        } else {
+          console.error('[REVENUECAT] No current offering found');
+        }
+
+        setIsInitialized(true);
+        console.error('[REVENUECAT] Init complete. isPremium:', hasPremium);
 
       } catch (error) {
-        console.error('[BILLING] Init error:', error?.message);
+        console.error('[REVENUECAT] Init error:', error?.message || error);
         setError(error?.message);
-      } finally {
         setIsInitialized(true);
+      } finally {
         setIsLoading(false);
       }
     };
 
-    initialize();
+    initializeRevenueCat();
   }, []);
 
   /**
    * PURCHASE PREMIUM
-   * Handles the purchase flow including ITEM_ALREADY_OWNED
    */
   const purchase = useCallback(async () => {
-    console.error('[BILLING] ========================================');
-    console.error('[BILLING] purchase() called');
-    console.error('[BILLING] ========================================');
+    console.error('[REVENUECAT] ========================================');
+    console.error('[REVENUECAT] Purchase requested');
+    console.error('[REVENUECAT] ========================================');
 
-    if (!isAndroidPlatform()) {
-      console.error('[BILLING] Not Android - purchase unavailable');
-      setError('Purchases only available on Android');
+    if (!isNativePlatform()) {
+      console.error('[REVENUECAT] Not native platform');
+      setError('Purchases only available on mobile devices');
+      return false;
+    }
+
+    if (!currentPackage) {
+      console.error('[REVENUECAT] No package available');
+      setError('Product not available. Please try again.');
       return false;
     }
 
@@ -178,94 +158,63 @@ export function BillingProvider({ children }) {
     setError(null);
 
     try {
-      console.error('[BILLING] Starting purchaseProduct...');
-      console.error('[BILLING] Product ID:', PRODUCT_ID);
+      console.error('[REVENUECAT] Purchasing package:', currentPackage.identifier);
+      console.error('[REVENUECAT] Product:', currentPackage.product?.identifier);
 
-      const result = await NativePurchases.purchaseProduct({
-        productIdentifier: PRODUCT_ID,
-        productType: PURCHASE_TYPE.INAPP,
-        quantity: 1
-      });
+      const { customerInfo } = await Purchases.purchasePackage({ aPackage: currentPackage });
+      
+      console.error('[REVENUECAT] ✅ Purchase completed!');
+      console.error('[REVENUECAT] Checking entitlements after purchase...');
 
-      console.error('[BILLING] ✅ Purchase successful!');
-      console.error('[BILLING] Purchase result:', JSON.stringify(result));
-
-      // Consume the purchase (for testing one-time products)
-      if (result) {
-        await consumePurchase(result);
-      }
-
-      // Grant premium
-      console.error('[BILLING] Setting isPremium = true');
-      setIsPremium(true);
-      return true;
-
-    } catch (error) {
-      console.error('[BILLING] Purchase error caught');
-      console.error('[BILLING] Error code:', error?.code);
-      console.error('[BILLING] Error message:', error?.message);
-
-      const errorCode = error?.code;
-      const errorMsg = (error?.message || '').toLowerCase();
-
-      // Handle ITEM_ALREADY_OWNED
-      if (errorCode === 'ITEM_ALREADY_OWNED' || 
-          errorCode === 7 || 
-          errorCode === '7' ||
-          errorMsg.includes('already own') ||
-          errorMsg.includes('already owned')) {
-        
-        console.error('[BILLING] ITEM_ALREADY_OWNED detected');
-        console.error('[BILLING] Calling checkPremiumStatus to verify...');
-
-        // Verify ownership via restorePurchases
-        const { isPremium: verified, purchase: ownedPurchase } = await checkPremiumStatus();
-        
-        if (verified) {
-          console.error('[BILLING] ✅ Ownership verified - granting premium');
-          
-          // Consume the existing purchase
-          if (ownedPurchase) {
-            await consumePurchase(ownedPurchase);
-          }
-          
-          setIsPremium(true);
-          return true;
-        } else {
-          console.error('[BILLING] Could not verify ownership');
-          setError('Could not verify ownership. Please try Restore.');
-          return false;
-        }
-      }
-
-      // Handle user cancellation
-      if (errorCode === 'USER_CANCELLED' || errorCode === 1 || errorMsg.includes('cancel')) {
-        console.error('[BILLING] User cancelled purchase');
+      const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
+      
+      if (hasPremium) {
+        console.error('[REVENUECAT] ✅ Premium entitlement granted');
+        setIsPremium(true);
+        return true;
+      } else {
+        console.error('[REVENUECAT] Purchase succeeded but no premium entitlement found');
+        setError('Purchase completed but entitlement not found. Please restore.');
         return false;
       }
 
-      // Other errors
-      console.error('[BILLING] Purchase failed with error');
+    } catch (error) {
+      console.error('[REVENUECAT] Purchase error:', error?.code, error?.message);
+
+      // Check if user cancelled
+      if (error?.code === 'PURCHASE_CANCELLED' || 
+          error?.code === 1 || 
+          error?.message?.toLowerCase().includes('cancel')) {
+        console.error('[REVENUECAT] User cancelled purchase');
+        return false;
+      }
+
+      // Check if already purchased (for lifetime products)
+      if (error?.code === 'PRODUCT_ALREADY_PURCHASED' ||
+          error?.message?.toLowerCase().includes('already')) {
+        console.error('[REVENUECAT] Product already purchased - restoring...');
+        return await restorePurchases();
+      }
+
       setError(error?.message || 'Purchase failed');
       return false;
 
     } finally {
       setIsPurchasing(false);
     }
-  }, [checkPremiumStatus]);
+  }, [currentPackage]);
 
   /**
    * RESTORE PURCHASES
-   * Checks for existing purchases and grants premium if found
    */
   const restorePurchases = useCallback(async () => {
-    console.error('[BILLING] ========================================');
-    console.error('[BILLING] restorePurchases() called');
-    console.error('[BILLING] ========================================');
+    console.error('[REVENUECAT] ========================================');
+    console.error('[REVENUECAT] Restore purchases requested');
+    console.error('[REVENUECAT] ========================================');
 
-    if (!isAndroidPlatform()) {
-      console.error('[BILLING] Not Android - restore unavailable');
-      setError('Restore only available on Android');
+    if (!isNativePlatform()) {
+      console.error('[REVENUECAT] Not native platform');
+      setError('Restore only available on mobile devices');
       return false;
     }
 
@@ -273,72 +222,101 @@ export function BillingProvider({ children }) {
     setError(null);
 
     try {
-      const { isPremium: verified, purchase: ownedPurchase } = await checkPremiumStatus();
+      console.error('[REVENUECAT] Calling restorePurchases()...');
+      const { customerInfo } = await Purchases.restorePurchases();
+      
+      console.error('[REVENUECAT] Restore completed');
+      const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
 
-      if (verified) {
-        console.error('[BILLING] ✅ Restore successful - owned purchase found');
-        
-        // Consume the purchase
-        if (ownedPurchase) {
-          await consumePurchase(ownedPurchase);
-        }
-        
-        console.error('[BILLING] Setting isPremium = true');
+      if (hasPremium) {
+        console.error('[REVENUECAT] ✅ Premium entitlement restored');
         setIsPremium(true);
         return true;
       } else {
-        console.error('[BILLING] No purchases found to restore');
+        console.error('[REVENUECAT] No premium entitlement found');
         setError('No previous purchase found for this account');
         return false;
       }
 
     } catch (error) {
-      console.error('[BILLING] Restore error:', error?.message);
+      console.error('[REVENUECAT] Restore error:', error?.message);
       setError(error?.message || 'Restore failed');
       return false;
 
     } finally {
       setIsPurchasing(false);
     }
-  }, [checkPremiumStatus]);
+  }, []);
 
   /**
-   * REFRESH STORE
+   * CHECK PREMIUM STATUS (manual check)
+   */
+  const checkPremiumStatus = useCallback(async () => {
+    console.error('[REVENUECAT] checkPremiumStatus() called');
+
+    if (!isNativePlatform()) {
+      return { isPremium: false };
+    }
+
+    try {
+      const { customerInfo } = await Purchases.getCustomerInfo();
+      const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
+      
+      if (hasPremium !== isPremium) {
+        setIsPremium(hasPremium);
+      }
+      
+      return { isPremium: hasPremium };
+    } catch (error) {
+      console.error('[REVENUECAT] checkPremiumStatus error:', error?.message);
+      return { isPremium: false, error: error?.message };
+    }
+  }, [isPremium]);
+
+  /**
+   * REFRESH OFFERINGS
    */
   const refreshStore = useCallback(async () => {
-    console.error('[BILLING] refreshStore() called');
+    console.error('[REVENUECAT] refreshStore() called');
     setIsLoading(true);
     setError(null);
 
     try {
-      if (!isAndroidPlatform()) return;
+      if (!isNativePlatform()) return;
 
-      const { products } = await NativePurchases.getProducts({
-        productIdentifiers: [PRODUCT_ID],
-        productType: PURCHASE_TYPE.INAPP
-      });
-
-      if (products?.length > 0) {
-        const product = products.find(p => p.identifier === PRODUCT_ID);
-        if (product) {
-          setProductInfo({
-            id: product.identifier,
-            title: product.title,
-            price: product.priceString || '$1.99'
-          });
-          setIsStoreReady(true);
+      const { offerings: fetchedOfferings } = await Purchases.getOfferings();
+      
+      if (fetchedOfferings?.current) {
+        setOfferings(fetchedOfferings);
+        setIsStoreReady(true);
+        
+        const packages = fetchedOfferings.current.availablePackages;
+        if (packages && packages.length > 0) {
+          setCurrentPackage(packages[0]);
         }
       }
+
+      // Also refresh customer info
+      const { customerInfo } = await Purchases.getCustomerInfo();
+      const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
+      setIsPremium(hasPremium);
+
     } catch (error) {
-      console.error('[BILLING] Refresh error:', error?.message);
+      console.error('[REVENUECAT] Refresh error:', error?.message);
       setError(error?.message);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Log state on every render for debugging
-  console.error('[BILLING] Current state - isPremium:', isPremium, 'isLoading:', isLoading, 'isInitialized:', isInitialized);
+  // Get product info for display
+  const productInfo = currentPackage ? {
+    id: currentPackage.product?.identifier,
+    title: currentPackage.product?.title || 'Premium Access',
+    price: currentPackage.product?.priceString || '$1.99'
+  } : null;
+
+  console.error('[REVENUECAT] Render state - isPremium:', isPremium, 'isLoading:', isLoading);
 
   return (
     <BillingContext.Provider value={{
@@ -349,6 +327,7 @@ export function BillingProvider({ children }) {
       isPurchasing,
       error,
       productInfo,
+      offerings,
       purchase,
       restorePurchases,
       refreshStore,
@@ -364,7 +343,7 @@ export function useBilling() {
   const context = useContext(BillingContext);
   
   if (!context) {
-    console.error('[BILLING] useBilling called outside provider - returning defaults');
+    console.error('[REVENUECAT] useBilling called outside provider');
     return {
       isPremium: false,
       isInitialized: true,
@@ -373,6 +352,7 @@ export function useBilling() {
       isPurchasing: false,
       error: null,
       productInfo: null,
+      offerings: null,
       purchase: () => Promise.resolve(false),
       restorePurchases: () => Promise.resolve(false),
       refreshStore: () => Promise.resolve(),
