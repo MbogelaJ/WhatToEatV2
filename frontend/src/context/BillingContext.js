@@ -1,21 +1,23 @@
 /**
  * Billing Context
- * Manages premium state and syncs with billing system
+ * 
+ * IMPORTANT: isPremium starts as FALSE and is only set to TRUE when:
+ * 1. User clicks "Get Premium" and purchase succeeds
+ * 2. User clicks "Restore" and ownership is verified  
+ * 3. User clicks "TEST BILLING" and ownership is verified
+ * 
+ * Premium is NEVER auto-granted on app startup.
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const PRODUCT_ID = 'com.whattoeat.penx.premium.v2';
 export const PRODUCTS = { PREMIUM: PRODUCT_ID };
 
-const isNativePlatform = () => window?.Capacitor?.isNativePlatform?.() || false;
-const isAndroidPlatform = () => isNativePlatform() && window.Capacitor.getPlatform() === 'android';
-
 const BillingContext = createContext(null);
 
 export function BillingProvider({ children }) {
-  // CRITICAL: Start with false - only set true after Play Store verification
+  // CRITICAL: Always start as false
   const [isPremium, setIsPremium] = useState(false);
-  
   const [isInitialized, setIsInitialized] = useState(false);
   const [isStoreReady, setIsStoreReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,47 +25,34 @@ export function BillingProvider({ children }) {
   const [error, setError] = useState(null);
   const [productInfo, setProductInfo] = useState(null);
 
-  // Listen for premium status changes from index.js
+  // Debug log on every render
+  console.error('[BillingContext] Render - isPremium:', isPremium, 'isLoading:', isLoading);
+
+  // Listen for premium status changes (from purchase/restore/test)
   useEffect(() => {
     const handlePremiumChange = (e) => {
-      console.error('[BillingContext] Premium status changed:', e.detail);
+      console.error('[BillingContext] premiumStatusChanged event received');
+      console.error('[BillingContext] Detail:', e.detail);
       if (e.detail?.isPremium === true) {
+        console.error('[BillingContext] Setting isPremium = true');
         setIsPremium(true);
       }
     };
     
     window.addEventListener('premiumStatusChanged', handlePremiumChange);
-    
-    // Also check window flag periodically in case we missed the event
-    const checkInterval = setInterval(() => {
-      if (window.isPremiumGranted === true && !isPremium) {
-        console.error('[BillingContext] Detected premium from window flag');
-        setIsPremium(true);
-      }
-    }, 1000);
-    
-    return () => {
-      window.removeEventListener('premiumStatusChanged', handlePremiumChange);
-      clearInterval(checkInterval);
-    };
-  }, [isPremium]);
+    return () => window.removeEventListener('premiumStatusChanged', handlePremiumChange);
+  }, []);
 
   // Listen for billing ready
   useEffect(() => {
-    if (!isNativePlatform() || !isAndroidPlatform()) {
-      setIsInitialized(true);
-      setIsLoading(false);
-      return;
-    }
-    
     const handleBillingReady = (e) => {
-      console.error('[BillingContext] Billing ready:', e.detail);
+      console.error('[BillingContext] billingReady event received');
+      console.error('[BillingContext] Detail:', e.detail);
+      
       setIsLoading(false);
       setIsInitialized(true);
       
-      if (e.detail?.isPremium) {
-        setIsPremium(true);
-      }
+      // DO NOT set isPremium from this event - it should always be false on init
       
       if (e.detail?.product) {
         setIsStoreReady(true);
@@ -73,45 +62,29 @@ export function BillingProvider({ children }) {
           price: e.detail.product.priceString || '$1.99'
         });
       }
+      
+      if (e.detail?.ready === false) {
+        // Billing not available (web mode or non-Android)
+        setIsStoreReady(false);
+      }
     };
     
     window.addEventListener('billingReady', handleBillingReady);
     
-    // Poll for state
-    const poll = setInterval(() => {
-      if (window.billingInitialized) {
-        setIsInitialized(true);
-        setIsLoading(false);
-        
-        if (window.isPremiumGranted) {
-          setIsPremium(true);
-        }
-        
-        if (window.billingProduct) {
-          setIsStoreReady(true);
-          setProductInfo({
-            id: window.billingProduct.identifier,
-            title: window.billingProduct.title,
-            price: window.billingProduct.priceString || '$1.99'
-          });
-        }
-        
-        clearInterval(poll);
-      }
-    }, 500);
-    
+    // Timeout fallback
     const timeout = setTimeout(() => {
-      clearInterval(poll);
-      setIsLoading(false);
-      setIsInitialized(true);
+      if (!isInitialized) {
+        console.error('[BillingContext] Init timeout');
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
     }, 10000);
     
     return () => {
-      clearInterval(poll);
-      clearTimeout(timeout);
       window.removeEventListener('billingReady', handleBillingReady);
+      clearTimeout(timeout);
     };
-  }, []);
+  }, [isInitialized]);
 
   // Purchase function
   const purchase = useCallback(async () => {
@@ -177,10 +150,6 @@ export function BillingProvider({ children }) {
     try {
       await window.refreshBillingStore?.();
       
-      if (window.isPremiumGranted) {
-        setIsPremium(true);
-      }
-      
       if (window.billingProduct) {
         setIsStoreReady(true);
         setProductInfo({
@@ -195,8 +164,6 @@ export function BillingProvider({ children }) {
       setIsLoading(false);
     }
   }, []);
-
-  console.error('[BillingContext] Render: isPremium =', isPremium);
 
   return (
     <BillingContext.Provider value={{
