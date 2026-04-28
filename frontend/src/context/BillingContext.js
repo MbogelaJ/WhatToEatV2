@@ -11,11 +11,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { Capacitor } from '@capacitor/core';
 
-// RevenueCat API Keys - Replace with your actual keys from RevenueCat dashboard
-const REVENUECAT_ANDROID_KEY = 'YOUR_REVENUECAT_ANDROID_PUBLIC_KEY';
-const REVENUECAT_IOS_KEY = 'YOUR_REVENUECAT_IOS_PUBLIC_KEY';
+// RevenueCat API Keys
+const REVENUECAT_ANDROID_KEY = 'test_JuGpWhnyUlepibRivbtxwMPAAgp';
+const REVENUECAT_IOS_KEY = 'YOUR_REVENUECAT_IOS_PUBLIC_KEY'; // Update when you have iOS key
 
-// Entitlement ID configured in RevenueCat dashboard
+// Entitlement ID configured in RevenueCat dashboard - MUST match exactly
 const PREMIUM_ENTITLEMENT_ID = 'premium';
 
 export const PRODUCTS = { PREMIUM: PREMIUM_ENTITLEMENT_ID };
@@ -38,13 +38,29 @@ export function BillingProvider({ children }) {
 
   /**
    * CHECK PREMIUM STATUS FROM CUSTOMER INFO
+   * Checks customerInfo.entitlements.active['premium']
    */
   const checkPremiumFromCustomerInfo = useCallback((customerInfo) => {
-    console.error('[REVENUECAT] Checking entitlements...');
-    console.error('[REVENUECAT] Active entitlements:', JSON.stringify(customerInfo?.entitlements?.active || {}));
+    console.error('[REVENUECAT] ========================================');
+    console.error('[REVENUECAT] Checking premium entitlement...');
+    console.error('[REVENUECAT] Entitlement ID to check:', PREMIUM_ENTITLEMENT_ID);
+    console.error('[REVENUECAT] customerInfo received:', customerInfo ? 'YES' : 'NO');
     
-    const hasPremium = customerInfo?.entitlements?.active?.[PREMIUM_ENTITLEMENT_ID] !== undefined;
+    if (customerInfo?.entitlements) {
+      console.error('[REVENUECAT] All entitlements:', JSON.stringify(customerInfo.entitlements));
+      console.error('[REVENUECAT] Active entitlements:', JSON.stringify(customerInfo.entitlements.active || {}));
+      console.error('[REVENUECAT] Active entitlement keys:', Object.keys(customerInfo.entitlements.active || {}));
+    } else {
+      console.error('[REVENUECAT] No entitlements object found in customerInfo');
+    }
+    
+    // Check if 'premium' entitlement exists in active entitlements
+    const premiumEntitlement = customerInfo?.entitlements?.active?.[PREMIUM_ENTITLEMENT_ID];
+    const hasPremium = premiumEntitlement !== undefined;
+    
+    console.error('[REVENUECAT] premium entitlement object:', JSON.stringify(premiumEntitlement || null));
     console.error('[REVENUECAT] Has "premium" entitlement:', hasPremium);
+    console.error('[REVENUECAT] ========================================');
     
     return hasPremium;
   }, []);
@@ -55,49 +71,59 @@ export function BillingProvider({ children }) {
   useEffect(() => {
     const initializeRevenueCat = async () => {
       console.error('[REVENUECAT] ========================================');
-      console.error('[REVENUECAT] Initializing RevenueCat...');
+      console.error('[REVENUECAT] INITIALIZATION STARTING');
       console.error('[REVENUECAT] ========================================');
+      console.error('[REVENUECAT] Checking platform...');
 
       if (!isNativePlatform()) {
-        console.error('[REVENUECAT] Not native platform - skipping init');
+        console.error('[REVENUECAT] Platform: WEB (not native)');
+        console.error('[REVENUECAT] Skipping RevenueCat init - not supported on web');
         setIsInitialized(true);
         setIsLoading(false);
         return;
       }
 
+      const platform = getPlatform();
+      console.error('[REVENUECAT] Platform:', platform);
+      console.error('[REVENUECAT] Is native:', true);
+
       try {
         // Set log level for debugging
+        console.error('[REVENUECAT] Setting log level to DEBUG...');
         await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
-        console.error('[REVENUECAT] Log level set to DEBUG');
+        console.error('[REVENUECAT] ✅ Log level set');
 
         // Get platform-specific API key
-        const platform = getPlatform();
         const apiKey = platform === 'ios' ? REVENUECAT_IOS_KEY : REVENUECAT_ANDROID_KEY;
-        
-        console.error('[REVENUECAT] Platform:', platform);
-        console.error('[REVENUECAT] Configuring with API key...');
+        console.error('[REVENUECAT] API Key to use:', apiKey.substring(0, 10) + '...');
 
         // Configure RevenueCat
+        console.error('[REVENUECAT] Calling Purchases.configure()...');
         await Purchases.configure({ apiKey });
         console.error('[REVENUECAT] ✅ RevenueCat configured successfully');
 
         // Get customer info to check existing entitlements
+        console.error('[REVENUECAT] ----------------------------------------');
         console.error('[REVENUECAT] Getting customer info...');
         const { customerInfo } = await Purchases.getCustomerInfo();
-        console.error('[REVENUECAT] Customer info retrieved');
+        console.error('[REVENUECAT] ✅ Customer info retrieved');
+        console.error('[REVENUECAT] Customer ID:', customerInfo?.originalAppUserId);
         
         const hasPremium = checkPremiumFromCustomerInfo(customerInfo);
         if (hasPremium) {
-          console.error('[REVENUECAT] ✅ User already has premium entitlement');
+          console.error('[REVENUECAT] ✅ USER HAS PREMIUM - setting isPremium = true');
           setIsPremium(true);
         } else {
-          console.error('[REVENUECAT] User does not have premium entitlement');
+          console.error('[REVENUECAT] User does NOT have premium entitlement');
+          console.error('[REVENUECAT] isPremium remains false');
         }
 
         // Get offerings
+        console.error('[REVENUECAT] ----------------------------------------');
         console.error('[REVENUECAT] Getting offerings...');
         const { offerings: fetchedOfferings } = await Purchases.getOfferings();
-        console.error('[REVENUECAT] Offerings retrieved:', JSON.stringify(fetchedOfferings?.current?.identifier || 'none'));
+        console.error('[REVENUECAT] ✅ Offerings retrieved');
+        console.error('[REVENUECAT] Current offering:', fetchedOfferings?.current?.identifier || 'NONE');
 
         if (fetchedOfferings?.current) {
           setOfferings(fetchedOfferings);
@@ -109,19 +135,30 @@ export function BillingProvider({ children }) {
           
           if (packages && packages.length > 0) {
             setCurrentPackage(packages[0]);
-            console.error('[REVENUECAT] Current package:', packages[0].identifier);
-            console.error('[REVENUECAT] Product:', packages[0].product?.identifier);
-            console.error('[REVENUECAT] Price:', packages[0].product?.priceString);
+            console.error('[REVENUECAT] Selected package:', packages[0].identifier);
+            console.error('[REVENUECAT] Product ID:', packages[0].product?.identifier);
+            console.error('[REVENUECAT] Product price:', packages[0].product?.priceString);
+          } else {
+            console.error('[REVENUECAT] ⚠️ No packages found in current offering');
           }
         } else {
-          console.error('[REVENUECAT] No current offering found');
+          console.error('[REVENUECAT] ⚠️ No current offering found');
+          console.error('[REVENUECAT] Make sure you have configured an offering in RevenueCat dashboard');
         }
 
         setIsInitialized(true);
-        console.error('[REVENUECAT] Init complete. isPremium:', hasPremium);
+        console.error('[REVENUECAT] ========================================');
+        console.error('[REVENUECAT] INITIALIZATION COMPLETE');
+        console.error('[REVENUECAT] isPremium:', hasPremium);
+        console.error('[REVENUECAT] isStoreReady:', fetchedOfferings?.current ? true : false);
+        console.error('[REVENUECAT] ========================================');
 
       } catch (error) {
-        console.error('[REVENUECAT] Init error:', error?.message || error);
+        console.error('[REVENUECAT] ========================================');
+        console.error('[REVENUECAT] ❌ INITIALIZATION ERROR');
+        console.error('[REVENUECAT] Error:', error?.message || error);
+        console.error('[REVENUECAT] Error code:', error?.code);
+        console.error('[REVENUECAT] ========================================');
         setError(error?.message);
         setIsInitialized(true);
       } finally {
@@ -130,7 +167,7 @@ export function BillingProvider({ children }) {
     };
 
     initializeRevenueCat();
-  }, []);
+  }, [checkPremiumFromCustomerInfo]);
 
   /**
    * RESTORE PURCHASES
