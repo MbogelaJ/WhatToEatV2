@@ -425,18 +425,16 @@ window.isUserPremium = () => {
 
 // ==================== STARTUP ====================
 
-// Check localStorage for cached premium status
-const cachedPremium = localStorage.getItem('isPremium');
-const cachedVerified = localStorage.getItem('premiumPurchaseVerified');
-console.error('[BILLING] Cached premium:', cachedPremium);
-console.error('[BILLING] Cached verified:', cachedVerified);
+// CRITICAL: Clear localStorage on startup - don't trust cached values
+// Premium will ONLY be granted after Play Store verification
+console.error('[BILLING] Clearing cached premium state...');
+localStorage.removeItem('isPremium');
+localStorage.removeItem('premiumPurchaseVerified');
+window.isPremiumGranted = false;
 
-if (cachedPremium === 'true' && cachedVerified === 'true') {
-  console.error('[BILLING] Found cached premium - setting flag (will verify)');
-  window.isPremiumGranted = true;
-}
+console.error('[BILLING] Premium state cleared - will verify with Play Store');
 
-// Initialize billing
+// Initialize billing (will check Play Store for ownership)
 console.error('[BILLING] Starting initialization...');
 initializeBilling();
 

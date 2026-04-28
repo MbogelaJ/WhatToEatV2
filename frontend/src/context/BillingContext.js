@@ -13,14 +13,8 @@ const isAndroidPlatform = () => isNativePlatform() && window.Capacitor.getPlatfo
 const BillingContext = createContext(null);
 
 export function BillingProvider({ children }) {
-  const [isPremium, setIsPremium] = useState(() => {
-    // Check window flag first (set by index.js)
-    if (window.isPremiumGranted === true) return true;
-    // Check localStorage cache
-    const cached = localStorage.getItem('isPremium');
-    const verified = localStorage.getItem('premiumPurchaseVerified');
-    return cached === 'true' && verified === 'true';
-  });
+  // CRITICAL: Start with false - only set true after Play Store verification
+  const [isPremium, setIsPremium] = useState(false);
   
   const [isInitialized, setIsInitialized] = useState(false);
   const [isStoreReady, setIsStoreReady] = useState(false);
