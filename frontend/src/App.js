@@ -2429,8 +2429,12 @@ const AgePregnancyPage = ({ onNext, onBack, userAge, setUserAge, trimester, setT
 
 // Premium Page Component
 const PremiumPage = ({ onBack, onPurchase, onRestore, isPremium, isProcessing, paymentError, onRefresh, isLoading, isStoreReady }) => {
-  // Debug logging
-  console.error('[PremiumPage] Rendering - isPremium:', isPremium, 'isLoading:', isLoading, 'isStoreReady:', isStoreReady);
+  // Debug logging for navigation decision
+  console.error('[BILLING] ========================================');
+  console.error('[BILLING] PremiumPage rendering');
+  console.error('[BILLING] isPremium prop:', isPremium);
+  console.error('[BILLING] Will show:', isPremium ? '"You\'re Premium!" screen' : 'Purchase screen');
+  console.error('[BILLING] ========================================');
   
   return (
     <div className="premium-page-v2" data-testid="premium-page">
@@ -2818,7 +2822,10 @@ function App() {
   const billingContext = useBilling();
   const isPremium = billingContext?.isPremium || false;
   
-  console.log('App: isPremium from BillingContext:', isPremium);
+  // Log premium status for debugging navigation decisions
+  console.error('[BILLING] App.js - isPremium from BillingContext:', isPremium);
+  console.error('[BILLING] App.js - billingContext.isInitialized:', billingContext?.isInitialized);
+  console.error('[BILLING] App.js - billingContext.isLoading:', billingContext?.isLoading);
 
   // ==================== GOOGLE PLAY BILLING STATUS CHECK ====================
   // Listen for billingReady event (instead of setTimeout!)
@@ -3291,6 +3298,12 @@ function App() {
 
   // Onboarding Flow: Step 4 = Premium Offer
   if (onboardingStep === 4) {
+    console.error('[BILLING] ========================================');
+    console.error('[BILLING] Rendering Premium Page (onboardingStep 4)');
+    console.error('[BILLING] isPremium at navigation:', isPremium);
+    console.error('[BILLING] This determines if user sees purchase screen or success screen');
+    console.error('[BILLING] ========================================');
+    
     return (
       <PremiumPage 
         onBack={handlePremiumClose}
