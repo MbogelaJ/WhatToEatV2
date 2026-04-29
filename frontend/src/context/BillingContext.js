@@ -12,7 +12,7 @@ import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { Capacitor } from '@capacitor/core';
 
 // RevenueCat API Keys
-const REVENUECAT_ANDROID_KEY = 'test_JuGpWhnyUlepibRivbtxwMPAAgp';
+const REVENUECAT_ANDROID_KEY = 'goog_RJdIRPPMZLwWUzpBziJQuQmMUHW';
 const REVENUECAT_IOS_KEY = 'YOUR_REVENUECAT_IOS_PUBLIC_KEY'; // Update when you have iOS key
 
 // Entitlement ID configured in RevenueCat dashboard - MUST match exactly
