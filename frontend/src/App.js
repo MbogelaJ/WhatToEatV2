@@ -2977,43 +2977,37 @@ function App() {
   const [paymentError, setPaymentError] = useState(null);
 
   const handlePremiumPurchase = async () => {
-    console.log('[APP] =====================================');
-    console.log('[APP] PURCHASE BUTTON HANDLER CALLED');
-    console.log('[APP] =====================================');
+    console.error('[BILLING] =====================================');
+    console.error('[BILLING] PURCHASE BUTTON HANDLER CALLED');
+    console.error('[BILLING] Using BillingContext.purchase()');
+    console.error('[BILLING] =====================================');
     
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      // Use global purchase function defined in index.js
-      if (typeof window.purchasePremium === 'function') {
-        console.log('[APP] Calling window.purchasePremium()...');
-        const result = await window.purchasePremium();
-        console.log('[APP] Purchase result:', result);
+      // Use BillingContext purchase function (RevenueCat)
+      if (billingContext?.purchase) {
+        console.error('[BILLING] Calling billingContext.purchase()...');
+        const success = await billingContext.purchase();
+        console.error('[BILLING] Purchase result:', success);
         
-        if (result.cancelled) {
-          // User cancelled - no error
+        if (success) {
+          console.error('[BILLING] ✅ Purchase successful!');
           setPaymentError(null);
-        } else if (result.error) {
-          setPaymentError(result.error);
-        } else if (result.success || result.alreadyOwned) {
-          // Success - premium will be updated via event
-          setPaymentError(null);
+        } else {
+          // Could be cancelled or failed
+          if (billingContext.error) {
+            setPaymentError(billingContext.error);
+          }
         }
       } else {
-        // Fallback to BillingContext
-        console.log('[APP] Using BillingContext.purchase()...');
-        if (billingContext?.purchase) {
-          await billingContext.purchase();
-        } else {
-          throw new Error('Purchase not available. Please restart the app.');
-        }
+        console.error('[BILLING] ❌ billingContext.purchase not available');
+        throw new Error('Purchase not available. Please restart the app.');
       }
     } catch (error) {
-      console.error('[APP] Purchase error:', error);
-      if (!error?.cancelled) {
-        setPaymentError(error?.message || 'Purchase failed. Please try again.');
-      }
+      console.error('[BILLING] Purchase error:', error);
+      setPaymentError(error?.message || 'Purchase failed. Please try again.');
     } finally {
       setIsProcessingPayment(false);
     }
@@ -3021,35 +3015,31 @@ function App() {
 
   // Handle restore purchases - Uses global window.restorePurchases
   const handleRestorePurchases = async () => {
-    console.log('[APP] =====================================');
-    console.log('[APP] RESTORE BUTTON HANDLER CALLED');
-    console.log('[APP] =====================================');
+    console.error('[BILLING] =====================================');
+    console.error('[BILLING] RESTORE BUTTON HANDLER CALLED');
+    console.error('[BILLING] Using BillingContext.restorePurchases()');
+    console.error('[BILLING] =====================================');
     
     setIsProcessingPayment(true);
     setPaymentError(null);
     
     try {
-      // Use global restore function defined in index.js
-      if (typeof window.restorePurchases === 'function') {
-        console.log('[APP] Calling window.restorePurchases()...');
-        const result = await window.restorePurchases();
-        console.log('[APP] Restore result:', result);
-        
-        if (!result.success) {
-          setPaymentError('No previous purchase found for this account.');
-        }
-      } else if (billingContext?.restorePurchases) {
-        // Fallback to BillingContext
-        console.log('[APP] Using BillingContext.restorePurchases()...');
+      if (billingContext?.restorePurchases) {
+        console.error('[BILLING] Calling billingContext.restorePurchases()...');
         const success = await billingContext.restorePurchases();
+        console.error('[BILLING] Restore result:', success);
+        
         if (!success) {
-          setPaymentError('No previous purchase found.');
+          setPaymentError('No previous purchase found for this account.');
+        } else {
+          console.error('[BILLING] ✅ Restore successful!');
         }
       } else {
+        console.error('[BILLING] ❌ billingContext.restorePurchases not available');
         throw new Error('Restore not available. Please restart the app.');
       }
     } catch (error) {
-      console.error('[APP] Restore error:', error);
+      console.error('[BILLING] Restore error:', error);
       setPaymentError(error?.message || 'Restore failed. Please try again.');
     } finally {
       setIsProcessingPayment(false);

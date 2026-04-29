@@ -18,7 +18,11 @@ const REVENUECAT_IOS_KEY = 'YOUR_REVENUECAT_IOS_PUBLIC_KEY'; // Update when you 
 // Entitlement ID configured in RevenueCat dashboard - MUST match exactly
 const PREMIUM_ENTITLEMENT_ID = 'premium';
 
-export const PRODUCTS = { PREMIUM: PREMIUM_ENTITLEMENT_ID };
+// Product constants - for use in components
+export const PRODUCTS = { 
+  PREMIUM: PREMIUM_ENTITLEMENT_ID,
+  PREMIUM_LIFETIME: 'com.whattoeat.penx.premium.v2'  // Google Play Product ID
+};
 
 const BillingContext = createContext(null);
 
@@ -35,6 +39,7 @@ export function BillingProvider({ children }) {
   const [error, setError] = useState(null);
   const [offerings, setOfferings] = useState(null);
   const [currentPackage, setCurrentPackage] = useState(null);
+  const [products, setProducts] = useState([]);  // Products array for UI
 
   /**
    * CHECK PREMIUM STATUS FROM CUSTOMER INFO
@@ -138,6 +143,17 @@ export function BillingProvider({ children }) {
             console.error('[REVENUECAT] Selected package:', packages[0].identifier);
             console.error('[REVENUECAT] Product ID:', packages[0].product?.identifier);
             console.error('[REVENUECAT] Product price:', packages[0].product?.priceString);
+            
+            // Build products array for UI
+            const productsArray = packages.map(pkg => ({
+              id: pkg.product?.identifier || PRODUCTS.PREMIUM_LIFETIME,
+              title: pkg.product?.title || 'Premium Access',
+              price: pkg.product?.priceString || '$1.99',
+              description: pkg.product?.description || 'Lifetime premium access',
+              package: pkg
+            }));
+            setProducts(productsArray);
+            console.error('[REVENUECAT] Products array built:', productsArray.length, 'products');
           } else {
             console.error('[REVENUECAT] ⚠️ No packages found in current offering');
           }
@@ -360,6 +376,8 @@ export function BillingProvider({ children }) {
       isPurchasing,
       error,
       productInfo,
+      products,
+      currentPackage,
       offerings,
       purchase,
       restorePurchases,
@@ -385,6 +403,8 @@ export function useBilling() {
       isPurchasing: false,
       error: null,
       productInfo: null,
+      products: [],
+      currentPackage: null,
       offerings: null,
       purchase: () => Promise.resolve(false),
       restorePurchases: () => Promise.resolve(false),

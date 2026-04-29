@@ -1,6 +1,6 @@
 /**
  * Premium Upgrade Component
- * Displays lifetime premium purchase option
+ * Displays lifetime premium purchase option using RevenueCat
  */
 import React from 'react';
 import { useBilling, PRODUCTS } from '../context/BillingContext';
@@ -22,23 +22,59 @@ const CrownIcon = () => (
 export function PremiumUpgrade({ onClose }) {
   const { 
     products, 
+    productInfo,
+    currentPackage,
     isPurchasing, 
     isPremium, 
     error, 
     purchase,
     restorePurchases,
-    isInitialized
+    isInitialized,
+    isStoreReady
   } = useBilling();
 
+  console.error('[BILLING] ========================================');
+  console.error('[BILLING] PremiumUpgrade component rendered');
+  console.error('[BILLING] isInitialized:', isInitialized);
+  console.error('[BILLING] isStoreReady:', isStoreReady);
+  console.error('[BILLING] isPremium:', isPremium);
+  console.error('[BILLING] isPurchasing:', isPurchasing);
+  console.error('[BILLING] products:', products);
+  console.error('[BILLING] productInfo:', productInfo);
+  console.error('[BILLING] currentPackage:', currentPackage?.identifier);
+  console.error('[BILLING] PRODUCTS.PREMIUM_LIFETIME:', PRODUCTS.PREMIUM_LIFETIME);
+  console.error('[BILLING] ========================================');
+
   const handlePurchase = async () => {
-    const success = await purchase(PRODUCTS.PREMIUM_LIFETIME);
-    if (success) {
-      console.log('Purchase initiated for lifetime premium');
+    console.error('[BILLING] ========================================');
+    console.error('[BILLING] handlePurchase CLICKED!');
+    console.error('[BILLING] Calling purchase()...');
+    console.error('[BILLING] ========================================');
+    
+    try {
+      const success = await purchase();
+      console.error('[BILLING] Purchase result:', success);
+      if (success) {
+        console.error('[BILLING] ✅ Purchase successful!');
+      } else {
+        console.error('[BILLING] ❌ Purchase failed or cancelled');
+      }
+    } catch (err) {
+      console.error('[BILLING] ❌ Purchase error:', err);
     }
   };
 
   const handleRestore = async () => {
-    await restorePurchases();
+    console.error('[BILLING] ========================================');
+    console.error('[BILLING] handleRestore CLICKED!');
+    console.error('[BILLING] ========================================');
+    
+    try {
+      const success = await restorePurchases();
+      console.error('[BILLING] Restore result:', success);
+    } catch (err) {
+      console.error('[BILLING] Restore error:', err);
+    }
   };
 
   // Premium features list
@@ -52,8 +88,10 @@ export function PremiumUpgrade({ onClose }) {
     'Lifetime access - pay once, use forever'
   ];
 
-  // Get lifetime product details
-  const lifetimeProduct = products.find(p => p.id === PRODUCTS.PREMIUM_LIFETIME);
+  // Get product details from productInfo or products array
+  const lifetimeProduct = productInfo || (products && products.length > 0 ? products[0] : null);
+  
+  console.error('[BILLING] lifetimeProduct for display:', lifetimeProduct);
 
   if (isPremium) {
     return (
@@ -95,21 +133,40 @@ export function PremiumUpgrade({ onClose }) {
       {/* Lifetime Purchase Option */}
       <div className="premium-products">
         {!isInitialized ? (
-          <div className="loading-products">Loading...</div>
-        ) : !lifetimeProduct ? (
+          <div className="loading-products">Loading store...</div>
+        ) : !isStoreReady || !lifetimeProduct ? (
           <div className="no-products">
-            <p>Premium upgrade will be available soon.</p>
+            <p>Loading premium options...</p>
+            <p style={{fontSize: '12px', color: '#888'}}>
+              Store ready: {isStoreReady ? 'Yes' : 'No'} | 
+              Product: {lifetimeProduct ? 'Yes' : 'No'}
+            </p>
+            {/* Fallback purchase button */}
+            <button 
+              className="premium-product-card featured"
+              onClick={handlePurchase}
+              disabled={isPurchasing}
+              style={{marginTop: '16px'}}
+            >
+              <span className="product-badge">Best Value</span>
+              <div className="product-info">
+                <span className="product-title">Lifetime Premium</span>
+                <span className="product-price">$1.99</span>
+                <span className="product-period">One-time payment • Forever yours</span>
+              </div>
+            </button>
           </div>
         ) : (
           <button 
             className="premium-product-card featured"
             onClick={handlePurchase}
             disabled={isPurchasing}
+            data-testid="purchase-premium-button"
           >
             <span className="product-badge">Best Value</span>
             <div className="product-info">
-              <span className="product-title">Lifetime Premium</span>
-              <span className="product-price">{lifetimeProduct.price}</span>
+              <span className="product-title">{lifetimeProduct.title || 'Lifetime Premium'}</span>
+              <span className="product-price">{lifetimeProduct.price || '$1.99'}</span>
               <span className="product-period">One-time payment • Forever yours</span>
             </div>
           </button>
@@ -128,6 +185,7 @@ export function PremiumUpgrade({ onClose }) {
         className="restore-purchases-button"
         onClick={handleRestore}
         disabled={isPurchasing}
+        data-testid="restore-purchases-button"
       >
         Restore Purchases
       </button>
