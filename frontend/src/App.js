@@ -2972,44 +2972,35 @@ function App() {
     }
   };
 
-  // Handle premium purchase - Uses global window.purchasePremium
+  // Handle premium purchase - Direct RevenueCat call for debugging
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
 
   const handlePremiumPurchase = async () => {
-    console.error('[BILLING] =====================================');
-    console.error('[BILLING] PURCHASE BUTTON HANDLER CALLED');
-    console.error('[BILLING] Using BillingContext.purchase()');
-    console.error('[BILLING] =====================================');
-    
-    setIsProcessingPayment(true);
-    setPaymentError(null);
-    
+    console.error('[BILLING] CLICKED');
+
     try {
-      // Use BillingContext purchase function (RevenueCat)
-      if (billingContext?.purchase) {
-        console.error('[BILLING] Calling billingContext.purchase()...');
-        const success = await billingContext.purchase();
-        console.error('[BILLING] Purchase result:', success);
-        
-        if (success) {
-          console.error('[BILLING] ✅ Purchase successful!');
-          setPaymentError(null);
-        } else {
-          // Could be cancelled or failed
-          if (billingContext.error) {
-            setPaymentError(billingContext.error);
-          }
-        }
-      } else {
-        console.error('[BILLING] ❌ billingContext.purchase not available');
-        throw new Error('Purchase not available. Please restart the app.');
+      const { Purchases } = await import('@revenuecat/purchases-capacitor');
+      
+      const offerings = await Purchases.getOfferings();
+      console.error('[BILLING] offerings:', JSON.stringify(offerings));
+
+      const currentOffering = offerings.current;
+      console.error('[BILLING] currentOffering:', currentOffering);
+
+      const pkg = currentOffering?.availablePackages?.[0];
+      console.error('[BILLING] selected package:', pkg);
+
+      if (!pkg) {
+        console.error('[BILLING] ERROR: No package available');
+        return;
       }
+
+      const purchaseResult = await Purchases.purchasePackage({ aPackage: pkg });
+      console.error('[BILLING] SUCCESS:', JSON.stringify(purchaseResult));
+
     } catch (error) {
-      console.error('[BILLING] Purchase error:', error);
-      setPaymentError(error?.message || 'Purchase failed. Please try again.');
-    } finally {
-      setIsProcessingPayment(false);
+      console.error('[BILLING] ERROR:', JSON.stringify(error));
     }
   };
 

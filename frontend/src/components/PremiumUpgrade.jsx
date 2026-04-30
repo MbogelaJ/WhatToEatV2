@@ -46,21 +46,30 @@ export function PremiumUpgrade({ onClose }) {
   console.error('[BILLING] ========================================');
 
   const handlePurchase = async () => {
-    console.error('[BILLING] ========================================');
-    console.error('[BILLING] handlePurchase CLICKED!');
-    console.error('[BILLING] Calling purchase()...');
-    console.error('[BILLING] ========================================');
-    
+    console.error('[BILLING] CLICKED');
+
     try {
-      const success = await purchase();
-      console.error('[BILLING] Purchase result:', success);
-      if (success) {
-        console.error('[BILLING] ✅ Purchase successful!');
-      } else {
-        console.error('[BILLING] ❌ Purchase failed or cancelled');
+      const { Purchases } = await import('@revenuecat/purchases-capacitor');
+      
+      const offerings = await Purchases.getOfferings();
+      console.error('[BILLING] offerings:', JSON.stringify(offerings));
+
+      const currentOffering = offerings.current;
+      console.error('[BILLING] currentOffering:', currentOffering);
+
+      const pkg = currentOffering?.availablePackages?.[0];
+      console.error('[BILLING] selected package:', pkg);
+
+      if (!pkg) {
+        console.error('[BILLING] ERROR: No package available');
+        return;
       }
-    } catch (err) {
-      console.error('[BILLING] ❌ Purchase error:', err);
+
+      const purchaseResult = await Purchases.purchasePackage({ aPackage: pkg });
+      console.error('[BILLING] SUCCESS:', JSON.stringify(purchaseResult));
+
+    } catch (error) {
+      console.error('[BILLING] ERROR:', JSON.stringify(error));
     }
   };
 
