@@ -46,30 +46,51 @@ export function PremiumUpgrade({ onClose }) {
   console.error('[BILLING] ========================================');
 
   const handlePurchase = async () => {
-    console.error('[BILLING] CLICKED');
+    console.error('[BILLING] ========================================');
+    console.error('[BILLING] handlePurchase CLICKED');
+    console.error('[BILLING] ========================================');
 
     try {
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
       
-      const offerings = await Purchases.getOfferings();
+      // Step 1: Get offerings
+      console.error('[BILLING] Getting offerings...');
+      const { offerings } = await Purchases.getOfferings();
       console.error('[BILLING] offerings:', JSON.stringify(offerings));
 
-      const currentOffering = offerings.current;
-      console.error('[BILLING] currentOffering:', currentOffering);
-
-      const pkg = currentOffering?.availablePackages?.[0];
-      console.error('[BILLING] selected package:', pkg);
-
-      if (!pkg) {
-        console.error('[BILLING] ERROR: No package available');
+      if (!offerings?.current) {
+        console.error('[BILLING] ❌ No offerings available');
         return;
       }
 
-      const purchaseResult = await Purchases.purchasePackage({ aPackage: pkg });
-      console.error('[BILLING] SUCCESS:', JSON.stringify(purchaseResult));
+      // Step 2: Get package
+      const pkg = offerings.current.availablePackages?.[0];
+      console.error('[BILLING] selected package:', pkg?.identifier);
+
+      if (!pkg) {
+        console.error('[BILLING] ❌ No package available');
+        return;
+      }
+
+      // Step 3: Purchase
+      console.error('[BILLING] Calling purchasePackage...');
+      const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
+      console.error('[BILLING] Purchase response received');
+
+      // Step 4: VERIFY entitlement
+      if (
+        customerInfo &&
+        customerInfo.entitlements &&
+        customerInfo.entitlements.active &&
+        customerInfo.entitlements.active["premium"]
+      ) {
+        console.error('[BILLING] ✅ VERIFIED PURCHASE SUCCESS');
+      } else {
+        console.error('[BILLING] ❌ Purchase not verified');
+      }
 
     } catch (error) {
-      console.error('[BILLING] ERROR:', JSON.stringify(error));
+      console.error('[BILLING] ❌ ERROR:', JSON.stringify(error));
     }
   };
 

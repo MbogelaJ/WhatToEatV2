@@ -2972,35 +2972,77 @@ function App() {
     }
   };
 
-  // Handle premium purchase - Direct RevenueCat call for debugging
+  // Handle premium purchase - SECURE: Only grant after verified purchase
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
 
   const handlePremiumPurchase = async () => {
-    console.error('[BILLING] CLICKED');
+    console.error('[BILLING] ========================================');
+    console.error('[BILLING] PURCHASE BUTTON CLICKED');
+    console.error('[BILLING] ========================================');
+
+    setIsProcessingPayment(true);
+    setPaymentError(null);
 
     try {
+      // Import Purchases directly for debugging
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
       
-      const offerings = await Purchases.getOfferings();
+      // Step 1: Get offerings
+      console.error('[BILLING] Getting offerings...');
+      const { offerings } = await Purchases.getOfferings();
       console.error('[BILLING] offerings:', JSON.stringify(offerings));
 
-      const currentOffering = offerings.current;
-      console.error('[BILLING] currentOffering:', currentOffering);
-
-      const pkg = currentOffering?.availablePackages?.[0];
-      console.error('[BILLING] selected package:', pkg);
-
-      if (!pkg) {
-        console.error('[BILLING] ERROR: No package available');
+      if (!offerings?.current) {
+        console.error('[BILLING] ❌ No offerings available');
+        setPaymentError('No products available. Please try again later.');
         return;
       }
 
-      const purchaseResult = await Purchases.purchasePackage({ aPackage: pkg });
-      console.error('[BILLING] SUCCESS:', JSON.stringify(purchaseResult));
+      // Step 2: Get package
+      const pkg = offerings.current.availablePackages?.[0];
+      console.error('[BILLING] selected package:', pkg?.identifier);
+
+      if (!pkg) {
+        console.error('[BILLING] ❌ No package available');
+        setPaymentError('No package available. Please try again.');
+        return;
+      }
+
+      // Step 3: Purchase
+      console.error('[BILLING] Calling purchasePackage...');
+      const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
+      console.error('[BILLING] Purchase completed');
+      console.error('[BILLING] customerInfo:', JSON.stringify(customerInfo));
+
+      // Step 4: VERIFY entitlement
+      if (
+        customerInfo &&
+        customerInfo.entitlements &&
+        customerInfo.entitlements.active &&
+        customerInfo.entitlements.active["premium"]
+      ) {
+        console.error('[BILLING] ✅ VERIFIED PURCHASE SUCCESS');
+        // Premium will be updated via BillingContext
+        setPaymentError(null);
+      } else {
+        console.error('[BILLING] ❌ Purchase not verified - no premium entitlement');
+        setPaymentError('Purchase not verified. Please try restore.');
+      }
 
     } catch (error) {
-      console.error('[BILLING] ERROR:', JSON.stringify(error));
+      console.error('[BILLING] ❌ ERROR:', JSON.stringify(error));
+      
+      if (error?.code === 'PURCHASE_CANCELLED' || error?.message?.includes('cancel')) {
+        console.error('[BILLING] User cancelled');
+        // No error message for cancellation
+      } else if (error?.message?.includes('already')) {
+        setPaymentError('You may already own this. Tap "Restore Purchases".');
+      } else {
+        setPaymentError(error?.message || 'Purchase failed. Please try again.');
+      }
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
